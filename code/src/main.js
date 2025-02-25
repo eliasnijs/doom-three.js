@@ -62,11 +62,12 @@ async function main(renderer) {
 	console.log('starting loop')
 	renderer.setAnimationLoop((time_ms) => {
 		nextframe(time_ms, state);
-	}).then(() => {
-		imgui_die()
-		window_die(renderer)
 	})
 
+	// TODO(...): figure out where this needs to go and wether it is
+	// necessary in the first place.
+	// imgui_die();
+	// window_die(renderer);
 }
 
 const renderer = new THREE.WebGLRenderer();
