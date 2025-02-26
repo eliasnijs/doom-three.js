@@ -2,11 +2,13 @@ import { BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
+import { DebugPanel } from './debug-panel.ts'
 
 const ROTATION_SPEED = 0.001
 
 export class RotatingCube extends GameObject {
 	mesh: Mesh
+	debugPanel: DebugPanel | undefined
 
 	constructor(state: State) {
 		super(state)
@@ -15,9 +17,14 @@ export class RotatingCube extends GameObject {
 		const material = new MeshBasicMaterial({ color: 0x00ff00 })
 		this.mesh = new Mesh(geometry, material)
 		state.scene.add(this.mesh)
+
+		this.debugPanel = state.findFirstGameObjectOfType(DebugPanel)
 	}
 
 	animate(deltaTime: number): void {
 		this.mesh.rotation.y += ROTATION_SPEED * deltaTime
+		if (this.debugPanel) {
+			this.debugPanel.setData('cube rotation', this.mesh.rotation.y.toFixed(2))
+		}
 	}
 }

@@ -1,15 +1,16 @@
 import { Color, WebGLRenderer } from 'three'
 
-import { createState, State, updateState } from './engine/state.ts'
+import { State } from './engine/state.ts'
 import { window_init } from './engine/window.ts'
 import { FlyCameraControls } from './game-objects/fly-camera-controls.ts'
 import { RotatingCube } from './game-objects/rotating-cube.ts'
+import { DebugPanel } from './game-objects/debug-panel.ts'
 
 function animate(time_ms: number, state: State) {
 	renderer.setClearColor(new Color(0, 0, 0)) // Set background color to black
 
 	// update state
-	updateState(state, time_ms)
+	state.animate(time_ms)
 
 	// render and swap
 	renderer.render(state.scene, state.camera)
@@ -19,8 +20,9 @@ function animate(time_ms: number, state: State) {
 async function main(renderer: WebGLRenderer) {
 	window_init(renderer)
 
-	const state = createState()
+	const state = new State()
 
+	new DebugPanel(state)
 	new RotatingCube(state)
 	new FlyCameraControls(state, renderer)
 
