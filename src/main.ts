@@ -1,70 +1,39 @@
-import * as THREE from 'three'
-
 import { window_init } from './engine/window.ts'
+import { createState, State, updateState } from './engine/state.ts'
+import { Color, WebGLRenderer } from 'three'
+import { RotatingCube } from './game-objects/rotating-cube.ts'
+import { FlyCameraControls } from './game-objects/fly-camera-controls.ts'
 
-export type State = {
-	scene: THREE.Scene
-	camera: THREE.PerspectiveCamera
-	instances: THREE.Object3D[]
-	last_time_ms: number
-	clear_color: number[]
-}
-
-function nextframe(time_ms: number, state: State) {
-	renderer.setClearColor(
-		new THREE.Color(state.clear_color[0], state.clear_color[1], state.clear_color[2]),
-	)
-	// handle controls
+function animate(time_ms: number, state: State) {
+	renderer.setClearColor(new Color(0, 0, 0)) // Set background color to black
 
 	// update state
-	state.instances.forEach(cube => {
-		// cube.rotation.x += 0.01
-		cube.rotation.y += 0.01
-	})
+	updateState(state, time_ms)
 
 	// render and swap
 	renderer.render(state.scene, state.camera)
 	renderer.state.reset()
-	state.last_time_ms = time_ms
 }
 
-async function main(renderer: THREE.WebGLRenderer) {
+async function main(renderer: WebGLRenderer) {
 	window_init(renderer)
-	const scene = new THREE.Scene()
 
-	const camera = new THREE.PerspectiveCamera(
-		75,
-		window.innerWidth / window.innerHeight,
-		0.1,
-		1000,
-	)
-	camera.position.z = 5
+	const state = createState()
 
-	const state: State = {
-		scene,
-		camera,
-		instances: [],
-		last_time_ms: 0.0,
-		clear_color: [0.0, 0.0, 0.0],
-	}
-
-	const geometry = new THREE.BoxGeometry(1, 1, 1)
-	const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-	const cube = new THREE.Mesh(geometry, material)
-	state.instances.push(cube)
-	state.scene.add(cube)
+	new RotatingCube(state)
+	new FlyCameraControls(state, renderer)
 
 	console.log('starting loop')
 	renderer.setAnimationLoop(time_ms => {
-		nextframe(time_ms, state)
+		animate(time_ms, state)
 	})
 
-	// TODO(...): figure out where this needs to go and wether it is
+	// TODO(...): figure out where this needs to go and whether it is
 	// necessary in the first place.
 	// window_die(renderer);
 }
 
-const renderer = new THREE.WebGLRenderer()
+const renderer = new WebGLRenderer()
 document.body.appendChild(renderer.domElement)
 renderer.setSize(window.innerWidth, window.innerHeight)
 
