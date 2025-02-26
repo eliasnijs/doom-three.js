@@ -1,25 +1,21 @@
 import * as THREE from 'three'
 
-import { window_init, window_die } from './engine/window.ts'
-import { ImGui, imgui_init, imgui_start_frame, imgui_end_frame, imgui_render, imgui_die } from './engine/imgui.ts'
+import { imgui_end_frame, imgui_init, imgui_render, imgui_start_frame } from './engine/imgui.ts'
+import { window_init } from './engine/window.ts'
 import { gui_debug_window } from './gui.ts'
 
 export type State = {
-	scene:			THREE.Scene
-	camera:			THREE.PerspectiveCamera
-	instances:		THREE.Object3D[]
-	last_time_ms:	number
-	clear_color:	number[]
+	scene: THREE.Scene
+	camera: THREE.PerspectiveCamera
+	instances: THREE.Object3D[]
+	last_time_ms: number
+	clear_color: number[]
 }
 
 function nextframe(time_ms: number, state: State) {
 	renderer.setClearColor(
-		new THREE.Color(
-			state.clear_color[0],
-			state.clear_color[1],
-			state.clear_color[2],
-		),
-	);
+		new THREE.Color(state.clear_color[0], state.clear_color[1], state.clear_color[2]),
+	)
 	// handle controls
 
 	// update state
@@ -45,7 +41,12 @@ async function main(renderer: THREE.WebGLRenderer) {
 	await imgui_init(renderer)
 	const scene = new THREE.Scene()
 
-	const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+	const camera = new THREE.PerspectiveCamera(
+		75,
+		window.innerWidth / window.innerHeight,
+		0.1,
+		1000,
+	)
 	camera.position.z = 5
 
 	const state: State = {
@@ -76,4 +77,4 @@ const renderer = new THREE.WebGLRenderer()
 document.body.appendChild(renderer.domElement)
 renderer.setSize(window.innerWidth, window.innerHeight)
 
-main(renderer)
+void main(renderer)
