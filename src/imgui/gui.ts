@@ -10,7 +10,7 @@ export function gui_debug_window(time_ms: number, state: State) {
 	ImGui.Text(`dt:   ${(time_ms - state.last_time_ms).toFixed(2)}ms`)
 	ImGui.Text(`fps:  ${(1000 / (time_ms - state.last_time_ms)).toFixed(2)}`)
 	ImGui.Separator()
-	ImGui.ColorEdit3('clear color', state.clear_color)
+	// ImGui.ColorEdit3('clear color', state.clear_color)
 	ImGui.Separator()
 	const cube = state.instances[0]
 	if (cube && cube instanceof Mesh) {

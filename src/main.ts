@@ -1,8 +1,6 @@
 import * as THREE from 'three'
 
-import { imgui_end_frame, imgui_init, imgui_render, imgui_start_frame } from './engine/imgui.ts'
 import { window_init } from './engine/window.ts'
-import { gui_debug_window } from './gui.ts'
 
 export type State = {
 	scene: THREE.Scene
@@ -20,25 +18,18 @@ function nextframe(time_ms: number, state: State) {
 
 	// update state
 	state.instances.forEach(cube => {
-		cube.rotation.x += 0.01
+		// cube.rotation.x += 0.01
 		cube.rotation.y += 0.01
 	})
 
-	// update gui overlay
-	imgui_start_frame(time_ms)
-	gui_debug_window(time_ms, state)
-	imgui_end_frame()
-
 	// render and swap
 	renderer.render(state.scene, state.camera)
-	imgui_render()
 	renderer.state.reset()
 	state.last_time_ms = time_ms
 }
 
 async function main(renderer: THREE.WebGLRenderer) {
 	window_init(renderer)
-	await imgui_init(renderer)
 	const scene = new THREE.Scene()
 
 	const camera = new THREE.PerspectiveCamera(
