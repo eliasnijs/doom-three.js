@@ -1,5 +1,4 @@
-import * as THREE from 'three'
-import { PerspectiveCamera, Scene } from 'three'
+import { AmbientLight, DirectionalLight, Object3D, PerspectiveCamera, Scene } from 'three'
 
 import { GameObject } from './game-object.ts'
 
@@ -8,18 +7,43 @@ export class State {
 	camera: PerspectiveCamera
 	gameObjects: GameObject[]
 	last_time_ms: number
+	ambientLight: AmbientLight
+	directionalLight: DirectionalLight
 
 	constructor() {
-		this.scene = new THREE.Scene()
-		this.camera = new THREE.PerspectiveCamera(
+		this.scene = new Scene()
+		this.camera = new PerspectiveCamera(
 			75,
 			window.innerWidth / window.innerHeight,
 			0.1,
 			1000,
 		)
-		this.camera.position.z = 5
+		this.camera.position.z = 3
 		this.gameObjects = []
 		this.last_time_ms = 0.0
+
+		// Create an ambient light
+		this.ambientLight = new AmbientLight(0xffffff, 0.5)
+		this.scene.add(this.ambientLight)
+
+		// Create a directional light
+		this.directionalLight = new DirectionalLight(0xffffff, 5)
+		this.directionalLight.position.set(5, 5, 0)
+
+		// Create a target object below the light
+		const lightTarget = new Object3D()
+		lightTarget.position.set(0, 0, 0) // Adjust as needed
+		this.scene.add(lightTarget)
+
+		// Enable shadow casting
+		this.directionalLight.castShadow = true
+		this.directionalLight.shadow.mapSize.width = 2048 // Higher resolution shadows
+		this.directionalLight.shadow.mapSize.height = 2048
+		this.directionalLight.shadow.camera.near = 0.5
+		this.directionalLight.shadow.camera.far = 50
+
+		// Set the light to point at the target
+		this.scene.add(this.directionalLight)
 	}
 
 	animate(time_ms: number) {
@@ -53,6 +77,7 @@ export class State {
 				gameObjects.push(gameObject)
 			}
 		}
+
 		return gameObjects
 	}
 }

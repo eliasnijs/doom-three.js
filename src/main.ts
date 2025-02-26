@@ -2,9 +2,9 @@ import { Color, WebGLRenderer } from 'three'
 
 import { State } from './engine/state.ts'
 import { window_init } from './engine/window.ts'
-import { FlyCameraControls } from './game-objects/fly-camera-controls.ts'
-import { RotatingCube } from './game-objects/rotating-cube.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
+import { FlyCameraControls } from './game-objects/fly-camera-controls.ts'
+import { RotatingTv } from './game-objects/rotating-tv.ts'
 
 function animate(time_ms: number, state: State) {
 	renderer.setClearColor(new Color(0, 0, 0)) // Set background color to black
@@ -23,7 +23,7 @@ async function main(renderer: WebGLRenderer) {
 	const state = new State()
 
 	new DebugPanel(state)
-	new RotatingCube(state)
+	new RotatingTv(state)
 	new FlyCameraControls(state, renderer)
 
 	console.log('starting loop')
