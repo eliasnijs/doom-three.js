@@ -16,7 +16,7 @@ export class RotatingTv extends GameObject {
 
 		this.debugPanel = state.findFirstGameObjectOfType(DebugPanel)
 
-		loadGLTF('tv', 'Television_01_1k.gltf').then(gltf => {
+		void loadGLTF('tv', 'Television_01_1k.gltf').then(gltf => {
 			this.mesh = gltf.scene
 
 			state.scene.add(this.mesh)

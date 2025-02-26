@@ -3,14 +3,13 @@ import { Color, WebGLRenderer } from 'three'
 import { State } from './engine/state.ts'
 import { window_init } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
-import { FlyCameraControls } from './game-objects/fly-camera-controls.ts'
 import { RotatingTv } from './game-objects/rotating-tv.ts'
 
-function animate(time_ms: number, state: State) {
+function animate(time_ms: number, state: State, renderer: WebGLRenderer) {
 	renderer.setClearColor(new Color(0, 0, 0)) // Set background color to black
 
 	// update state
-	state.animate(time_ms)
+	state.animate(time_ms, renderer)
 
 	// render and swap
 	renderer.render(state.scene, state.camera)
@@ -22,13 +21,12 @@ async function main(renderer: WebGLRenderer) {
 
 	const state = new State()
 
-	new DebugPanel(state)
+	new DebugPanel(state, renderer)
 	new RotatingTv(state)
-	new FlyCameraControls(state, renderer)
 
 	console.log('starting loop')
 	renderer.setAnimationLoop(time_ms => {
-		animate(time_ms, state)
+		animate(time_ms, state, renderer)
 	})
 
 	// TODO(...): figure out where this needs to go and whether it is

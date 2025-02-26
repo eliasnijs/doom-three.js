@@ -31,4 +31,8 @@ export class FlyCameraControls extends GameObject {
 			)
 		}
 	}
+
+	destroy() {
+		this.flyControls.dispose()
+	}
 }

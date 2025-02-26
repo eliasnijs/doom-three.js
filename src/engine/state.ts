@@ -1,6 +1,15 @@
-import { AmbientLight, DirectionalLight, Object3D, PerspectiveCamera, Scene } from 'three'
+import {
+	AmbientLight,
+	DirectionalLight,
+	Object3D,
+	PerspectiveCamera,
+	Scene,
+	WebGLRenderer,
+} from 'three'
 
 import { GameObject } from './game-object.ts'
+
+type Constructor<T> = { new (...args: never[]): T }
 
 export class State {
 	scene: Scene
@@ -46,11 +55,11 @@ export class State {
 		this.scene.add(this.directionalLight)
 	}
 
-	animate(time_ms: number) {
+	animate(time_ms: number, renderer: WebGLRenderer) {
 		const delta = time_ms - this.last_time_ms
 		this.last_time_ms = time_ms
 
-		this.gameObjects.forEach(gameObject => gameObject.animate(delta))
+		this.gameObjects.forEach(gameObject => gameObject.animate(delta, this, renderer))
 	}
 
 	// Register a game object with the state
@@ -59,9 +68,7 @@ export class State {
 	}
 
 	// Get the first game object of a given type, useful for finding singletons
-	findFirstGameObjectOfType<T extends GameObject>(
-		type: new (state: State) => T,
-	): T | undefined {
+	findFirstGameObjectOfType<T extends GameObject>(type: Constructor<T>): T | undefined {
 		for (const gameObject of this.gameObjects) {
 			if (gameObject instanceof type) {
 				return gameObject
@@ -70,7 +77,7 @@ export class State {
 	}
 
 	// Get all game objects of a given type
-	findAllGameObjectsOfType<T extends GameObject>(type: new (state: State) => T): T[] {
+	findAllGameObjectsOfType<T extends GameObject>(type: Constructor<T>): T[] {
 		const gameObjects: T[] = []
 		for (const gameObject of this.gameObjects) {
 			if (gameObject instanceof type) {
