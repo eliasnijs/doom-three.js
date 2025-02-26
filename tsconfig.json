@@ -24,6 +24,6 @@
   },
   "include": [
     "**/*.ts",
-    "./.vite.config.ts"
+    "./vite.config.ts"
   ]
 }

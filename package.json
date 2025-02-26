@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "globals": "^16.0.0",
+    "imgui-js": "github:flyover/imgui-js",
     "three": "^0.173.0"
   }
 }
