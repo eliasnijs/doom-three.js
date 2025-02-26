@@ -1,8 +1,9 @@
-import { window_init } from './engine/window.ts'
-import { createState, State, updateState } from './engine/state.ts'
 import { Color, WebGLRenderer } from 'three'
-import { RotatingCube } from './game-objects/rotating-cube.ts'
+
+import { createState, State, updateState } from './engine/state.ts'
+import { window_init } from './engine/window.ts'
 import { FlyCameraControls } from './game-objects/fly-camera-controls.ts'
+import { RotatingCube } from './game-objects/rotating-cube.ts'
 
 function animate(time_ms: number, state: State) {
 	renderer.setClearColor(new Color(0, 0, 0)) // Set background color to black

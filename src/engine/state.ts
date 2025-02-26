@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { PerspectiveCamera, Scene } from 'three'
+
 import { GameObject } from './game-object.ts'
 
 export type State = {

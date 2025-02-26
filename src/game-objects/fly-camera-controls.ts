@@ -1,7 +1,8 @@
+import { WebGLRenderer } from 'three'
 import { FlyControls } from 'three/examples/jsm/Addons.js'
+
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
-import { WebGLRenderer } from 'three'
 
 export class FlyCameraControls extends GameObject {
 	flyControls: FlyControls

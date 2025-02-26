@@ -1,6 +1,7 @@
+import { BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
+
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
-import { BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
 
 const ROTATION_SPEED = 0.001
 
