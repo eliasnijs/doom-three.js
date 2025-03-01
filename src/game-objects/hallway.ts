@@ -30,7 +30,7 @@ export class Hallway extends GameObject {
 
 		// Determine the type of hallway
 		if (count === 0) {
-			throw new Error('Hallway must have at least one open direction')
+			throw new Error('Hallway must have at least one open side')
 		} else if (count === 1) {
 			this.type = 'Hall_End'
 			this.rotation = openSides.indexOf(true) * -90

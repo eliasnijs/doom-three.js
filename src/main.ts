@@ -4,6 +4,7 @@ import { State } from './engine/state.ts'
 import { window_init } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
 import { Hallway } from './game-objects/hallway.ts'
+import { generate } from './utils/generate-maze.ts'
 import { loadHallwayObjects } from './utils/hallway-utils.ts'
 
 function animate(time_ms: number, state: State, renderer: WebGLRenderer) {
@@ -26,17 +27,28 @@ async function main(renderer: WebGLRenderer) {
 	// new RotatingTv(state)
 
 	const hallwayObjects = await loadHallwayObjects()
-	new Hallway(state, hallwayObjects, 0, 0, [true, false, true, false])
-	new Hallway(state, hallwayObjects, 0, 1, [false, false, true, true])
-	new Hallway(state, hallwayObjects, 1, 1, [false, true, false, true])
-	new Hallway(state, hallwayObjects, 2, 1, [false, true, true, false])
-	new Hallway(state, hallwayObjects, 2, 0, [true, true, false, false])
-	new Hallway(state, hallwayObjects, 1, 0, [false, false, true, true])
-	new Hallway(state, hallwayObjects, 1, -1, [true, true, true, false])
-	new Hallway(state, hallwayObjects, 0, -1, [true, true, true, true])
-	new Hallway(state, hallwayObjects, 1, -2, [true, true, false, false])
-	new Hallway(state, hallwayObjects, 0, -2, [true, false, false, true])
-	new Hallway(state, hallwayObjects, -1, -1, [false, false, false, true])
+
+	const X_SIZE = 16
+	const Z_SIZE = 10
+	const grid = generate(Z_SIZE, X_SIZE)
+
+	for (let row = 0; row < grid.n_rows; row++) {
+		for (let col = 0; col < grid.n_cols; col++) {
+			const i = row * grid.n_cols + col
+			const x = col - Math.floor(X_SIZE / 2)
+			const z = row - Math.floor(Z_SIZE / 2)
+
+			new Hallway(
+				state,
+				hallwayObjects,
+				-x,
+				-z,
+				grid.cells[i].walls.map(w => !w) as [boolean, boolean, boolean, boolean],
+			)
+		}
+	}
+
+	// new Hallway(state, hallwayObjects, 0, 0, [true, false, false, false])
 
 	console.log('starting loop')
 	renderer.setAnimationLoop(time_ms => {

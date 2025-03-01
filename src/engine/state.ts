@@ -27,8 +27,9 @@ export class State {
 			0.1,
 			1000,
 		)
-		this.camera.position.z = -50
-		this.camera.position.y = 50
+		this.camera.position.z = -25
+		this.camera.position.y = 150
+		// this.camera.position.x = 50
 		this.gameObjects = []
 		this.last_time_ms = 0.0
 
