@@ -201,40 +201,107 @@ export function render(grid: Grid, A: Pos, B: Pos, path: Pos[]) {
 }
 
 export function randomCell(grid: Grid): Pos {
-	return [Math.floor(Math.random() * grid.nRows), Math.floor(Math.random() * grid.nCols)]
+	return [
+		Math.floor(Math.random() * grid.nRows),
+		Math.floor(Math.random() * grid.nCols)
+	]
+}
+
+export function distManhattan(a: Pos, b: Pos): number {
+	return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1])
+}
+
+export function idx2pos(grid: Grid, i: number): Pos {
+	const row = Math.floor(i / grid.nCols)
+	const col = i % grid.nCols
+	return [row, col]
+}
+
+export function reconstructPath(grid: Grid, parents: Record<number, number>, iNode: number): Pos[] {
+	let path: Pos[] = [idx2pos(grid, iNode)]
+	while (iNode in parents) {
+		iNode = parents[iNode]
+		path.unshift(idx2pos(grid, iNode))
+	}
+	return path
 }
 
 export function pathfind(grid: Grid, A: Pos, B: Pos): Pos[] {
-	const aIdx = idx(grid, A)!
-	const bIdx = idx(grid, B)!
+	const iA = idx(grid, A)
+	const iB = idx(grid, B)
 
-	const open: number[] = [aIdx]
-	const parents: Record<number, number | null> = { [aIdx]: null } // Mark start as visited
+	// Handle invalid positions
+	if (iA === undefined || iB === undefined) {
+		return []
+	}
+
+	const gScore: number[] = new Array(grid.nRows * grid.nCols).fill(Infinity)
+	const fScore: number[] = new Array(grid.nRows * grid.nCols).fill(Infinity)
+	const parents: Record<number, number> = {}
+	const open: number[] = [iA]
+
+	gScore[iA] = 0
+	fScore[iA] = distManhattan(A, B)
 
 	while (open.length > 0) {
-		let currentIdx = open.shift()!
-		if (currentIdx === bIdx) {
-			const path: Pos[] = []
-			while (currentIdx !== null) {
-				path.unshift([Math.floor(currentIdx / grid.nCols), currentIdx % grid.nCols])
-				currentIdx = parents[currentIdx]!
-			}
+		let iCurrent = open[0]
+		let f = fScore[iCurrent]
 
-			return path
+		// Find node with lowest f-score
+		for (const iNew of open) {
+			const fNew = fScore[iNew]
+			if (fNew < f) {
+				f = fNew
+				iCurrent = iNew
+			}
 		}
 
+		// If reached goal, reconstruct and return path
+		if (iB === iCurrent) {
+			return reconstructPath(grid, parents, iCurrent)
+		}
+
+		// Remove current node from open list
+		open.splice(open.indexOf(iCurrent), 1)
+
+		// Check neighbors
 		for (const dir of NEIGHBOR_DIRECTIONS) {
-			const pos: Pos = [
-				Math.floor(currentIdx / grid.nCols) + dir[0],
-				(currentIdx % grid.nCols) + dir[1],
-			]
-			const neighborIdx = idx(grid, pos)
-			if (neighborIdx !== undefined && !(neighborIdx in parents)) {
-				parents[neighborIdx] = currentIdx
-				open.push(neighborIdx)
+			const pos = idx2pos(grid, iCurrent)
+			const neighborPos: Pos = [pos[0] + dir[0], pos[1] + dir[1]]
+			const iNeighbor = idx(grid, neighborPos)
+
+			if (iNeighbor === undefined) {
+				continue
+			}
+
+			// Check if there's a wall in this direction
+			let wallExists = false
+			if (dir[0] === -1) wallExists = grid.cells[iCurrent].walls[0]      // North
+			else if (dir[0] === 1) wallExists = grid.cells[iCurrent].walls[2]  // South
+			else if (dir[1] === -1) wallExists = grid.cells[iCurrent].walls[3] // West
+			else if (dir[1] === 1) wallExists = grid.cells[iCurrent].walls[1]  // East
+
+			if (wallExists) {
+				continue
+			}
+
+			// Calculate new g-score
+			const g = gScore[iCurrent] + 1 // Cost to move is 1
+			const gNeighbor = gScore[iNeighbor]
+
+			if (g < gNeighbor) {
+				// This path is better, record it
+				parents[iNeighbor] = iCurrent
+				gScore[iNeighbor] = g
+				fScore[iNeighbor] = g + distManhattan(idx2pos(grid, iNeighbor), B)
+
+				if (!open.includes(iNeighbor)) {
+					open.push(iNeighbor)
+				}
 			}
 		}
 	}
 
+	// No path found
 	return []
 }
