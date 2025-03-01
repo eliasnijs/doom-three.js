@@ -17,6 +17,7 @@ export class DebugPanel extends GameObject {
 	cameraButton: HTMLButtonElement
 	cameraTypeActive: CameraType
 	camera: OrbitCameraControls | FlyCameraControls
+	debugButton: HTMLButtonElement
 
 	constructor(state: State, renderer: WebGLRenderer) {
 		super(state)
@@ -49,6 +50,20 @@ export class DebugPanel extends GameObject {
 		this.container.appendChild(this.cameraButton)
 		this.setCameraButtonLabel()
 
+		// Add a button to toggle debug mode
+		this.debugButton = document.createElement('button')
+		this.debugButton.onclick = () => {
+			state.debug = !state.debug
+			this.setWireframeButtonLabel(state)
+			// Loop all objects and set the wireframe
+			for (const obj of state.gameObjects) {
+				obj.setDebug(state.debug)
+			}
+		}
+
+		this.container.appendChild(this.debugButton)
+		this.setWireframeButtonLabel(state)
+
 		// Add another container for the text
 		this.textContainer = document.createElement('div')
 		this.container.appendChild(this.textContainer)
@@ -73,6 +88,10 @@ export class DebugPanel extends GameObject {
 	setCameraButtonLabel() {
 		this.cameraButton.innerText =
 			this.cameraTypeActive == CameraType.FLY ? '📷 Switch to Orbit' : '📷 Switch to Fly'
+	}
+
+	setWireframeButtonLabel(state: State) {
+		this.debugButton.innerText = state.debug ? '🔲 Disable Debug' : '🔳 Enable Debug'
 	}
 
 	animate(deltaTime: number) {

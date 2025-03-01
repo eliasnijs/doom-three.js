@@ -7,18 +7,18 @@ const NEIGHBOR_DIRECTIONS: [number, number][] = [
 ]
 
 /* types */
-type Cell = {
+export type Cell = {
 	walls: [boolean, boolean, boolean, boolean]
 	visited: boolean
 }
 
-type Grid = {
+export type Grid = {
 	cells: Cell[]
 	nRows: number
 	nCols: number
 }
 
-type Pos = [number, number]
+export type Pos = [number, number]
 
 /* functions */
 function idx(grid: Grid, pos: Pos): number | undefined {
@@ -209,15 +209,15 @@ export function pathfind(grid: Grid, A: Pos, B: Pos): Pos[] {
 	const bIdx = idx(grid, B)!
 
 	const open: number[] = [aIdx]
-	const parents: Record<number, number> = {}
+	const parents: Record<number, number | null> = { [aIdx]: null } // Mark start as visited
 
 	while (open.length > 0) {
 		let currentIdx = open.shift()!
 		if (currentIdx === bIdx) {
 			const path: Pos[] = []
-			while (currentIdx in parents) {
+			while (currentIdx !== null) {
 				path.unshift([Math.floor(currentIdx / grid.nCols), currentIdx % grid.nCols])
-				currentIdx = parents[currentIdx]
+				currentIdx = parents[currentIdx]!
 			}
 
 			return path

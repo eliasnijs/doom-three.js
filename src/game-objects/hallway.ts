@@ -1,4 +1,4 @@
-import { Object3D } from 'three'
+import { MeshStandardMaterial, Object3D } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
@@ -72,5 +72,13 @@ export class Hallway extends GameObject {
 		this.mesh.scale.set(HALLWAY_SCALE, HALLWAY_SCALE, HALLWAY_SCALE)
 	}
 
-	animate() {}
+	animate(): void {}
+
+	setDebug(wireframe: boolean): void {
+		this.mesh.traverse(child => {
+			if ('material' in child) {
+				;(child.material as MeshStandardMaterial).wireframe = wireframe
+			}
+		})
+	}
 }

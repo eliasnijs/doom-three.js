@@ -19,6 +19,7 @@ export class State {
 	last_time_ms: number
 	ambientLight: AmbientLight
 	directionalLight: DirectionalLight
+	debug: boolean = false
 
 	constructor() {
 		this.scene = new Scene()

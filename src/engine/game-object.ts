@@ -21,4 +21,9 @@ export abstract class GameObject {
 		this.cleanup()
 		state.unregisterGameObject(this)
 	}
+
+	// This method sets the game object to debug mode
+	setDebug(debug: boolean): void {
+		void debug
+	}
 }

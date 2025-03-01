@@ -4,8 +4,9 @@ import { State } from './engine/state.ts'
 import { windowInit } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
 import { Hallway } from './game-objects/hallway.ts'
-import { generate } from './utils/generate-maze.ts'
+import { generate, pathfind, randomCell } from './utils/generate-maze.ts'
 import { loadHallwayObjects } from './utils/hallway-utils.ts'
+import { PathVisualisation } from './game-objects/pathVisualisation.ts'
 
 export const MAZE_X_SIZE = 16
 export const MAZE_Z_SIZE = 10
@@ -29,7 +30,7 @@ async function main(renderer: WebGLRenderer) {
 
 	const state = new State()
 
-	new DebugPanel(state, renderer)
+	const debugPanel = new DebugPanel(state, renderer)
 	// new RotatingTv(state)
 
 	const hallwayObjects = await loadHallwayObjects()
@@ -50,7 +51,14 @@ async function main(renderer: WebGLRenderer) {
 		}
 	}
 
-	// new Hallway(state, hallwayObjects, 0, 0, [true, false, false, false])
+	// Choose a random start and destination cell
+	const start = randomCell(grid)
+	const destination = randomCell(grid)
+	debugPanel.setData('route', `(${start.toString()}) -> (${destination.toString()})`)
+
+	const path = pathfind(grid, start, destination)
+
+	new PathVisualisation(state, path)
 
 	console.log('starting loop')
 	renderer.setAnimationLoop(time_ms => {
