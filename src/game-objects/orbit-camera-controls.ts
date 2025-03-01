@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/Addons.js'
 
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
+import { MAZE_X_CENTER, MAZE_Z_CENTER } from '../main.ts'
 import { DebugPanel } from './debug-panel.ts'
 
 export class OrbitCameraControls extends GameObject {
@@ -13,6 +14,7 @@ export class OrbitCameraControls extends GameObject {
 		super(state)
 
 		this.orbitControls = new OrbitControls(state.camera, renderer.domElement)
+		this.orbitControls.target.set(MAZE_X_CENTER, 0, MAZE_Z_CENTER)
 
 		this.debugPanel = state.findFirstGameObjectOfType(DebugPanel)
 	}

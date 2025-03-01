@@ -7,6 +7,7 @@ import {
 	WebGLRenderer,
 } from 'three'
 
+import { MAZE_X_CENTER, MAZE_Z_CENTER } from '../main.ts'
 import { GameObject } from './game-object.ts'
 
 type Constructor<T> = { new (...args: never[]): T }
@@ -27,9 +28,11 @@ export class State {
 			0.1,
 			1000,
 		)
-		this.camera.position.z = -25
+
+		this.camera.position.z = MAZE_Z_CENTER - 25
+		this.camera.position.x = MAZE_X_CENTER
 		this.camera.position.y = 150
-		// this.camera.position.x = 50
+
 		this.gameObjects = []
 		this.last_time_ms = 0.0
 

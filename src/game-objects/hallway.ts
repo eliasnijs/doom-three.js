@@ -2,10 +2,10 @@ import { Object3D } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
+import { GRID_SIZE } from '../main.ts'
 import { HallwayObjects } from '../utils/hallway-utils.ts'
 
 const HALLWAY_SCALE = 1.25
-const GRID_SIZE = 10
 
 export class Hallway extends GameObject {
 	mesh: Object3D

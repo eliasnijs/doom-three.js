@@ -7,6 +7,12 @@ import { Hallway } from './game-objects/hallway.ts'
 import { generate } from './utils/generate-maze.ts'
 import { loadHallwayObjects } from './utils/hallway-utils.ts'
 
+export const MAZE_X_SIZE = 16
+export const MAZE_Z_SIZE = 10
+export const GRID_SIZE = 10
+export const MAZE_X_CENTER = GRID_SIZE * Math.floor(MAZE_X_SIZE / 2)
+export const MAZE_Z_CENTER = GRID_SIZE * Math.floor(MAZE_Z_SIZE / 2)
+
 function animate(time_ms: number, state: State, renderer: WebGLRenderer) {
 	renderer.setClearColor(new Color(0, 0, 0)) // Set background color to black
 
@@ -28,21 +34,17 @@ async function main(renderer: WebGLRenderer) {
 
 	const hallwayObjects = await loadHallwayObjects()
 
-	const X_SIZE = 16
-	const Z_SIZE = 10
-	const grid = generate(Z_SIZE, X_SIZE)
+	const grid = generate(MAZE_Z_SIZE, MAZE_X_SIZE)
 
 	for (let row = 0; row < grid.n_rows; row++) {
 		for (let col = 0; col < grid.n_cols; col++) {
 			const i = row * grid.n_cols + col
-			const x = col - Math.floor(X_SIZE / 2)
-			const z = row - Math.floor(Z_SIZE / 2)
 
 			new Hallway(
 				state,
 				hallwayObjects,
-				-x,
-				-z,
+				MAZE_X_SIZE - col,
+				MAZE_Z_SIZE - row,
 				grid.cells[i].walls.map(w => !w) as [boolean, boolean, boolean, boolean],
 			)
 		}
