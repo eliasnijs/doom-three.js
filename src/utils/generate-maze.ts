@@ -47,9 +47,9 @@ function next(grid: Grid, pos: Pos): Pos | undefined {
 		return undefined
 	}
 
-	const i_selected = Math.floor(Math.random() * neighbors.length)
+	const selectedIdx = Math.floor(Math.random() * neighbors.length)
 
-	return neighbors[i_selected]
+	return neighbors[selectedIdx]
 }
 
 function removeWall(grid: Grid, p1: Pos, p2: Pos): void {
@@ -173,11 +173,11 @@ export function render(grid: Grid, A: Pos, B: Pos, path: Pos[]) {
 	drawSquare(canvas, w * A[1], h * A[0], w, h, '#f00')
 	drawSquare(canvas, w * B[1], h * B[0], w, h, '#f00')
 
-	for (let i_row = 0; i_row < grid.nRows; ++i_row) {
-		for (let i_col = 0; i_col < grid.nCols; ++i_col) {
-			const { walls } = grid.cells[i_row * grid.nCols + i_col]
-			const x = i_col * w
-			const y = i_row * h
+	for (let rowIdx = 0; rowIdx < grid.nRows; ++rowIdx) {
+		for (let colIdx = 0; colIdx < grid.nCols; ++colIdx) {
+			const { walls } = grid.cells[rowIdx * grid.nCols + colIdx]
+			const x = colIdx * w
+			const y = rowIdx * h
 
 			// if (visited) draw_square(canvas, x, y, w, h, 'rgba(224, 49, 49, 0.2)');
 
