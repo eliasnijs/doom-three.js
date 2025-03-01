@@ -1,8 +1,9 @@
+import { BufferGeometry, CatmullRomCurve3, Line, LineBasicMaterial, Vector3 } from 'three'
+
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
-import { Pos } from '../utils/generate-maze.ts'
-import { BufferGeometry, CatmullRomCurve3, Line, LineBasicMaterial, Vector3 } from 'three'
 import { GRID_SIZE } from '../main.ts'
+import { Pos } from '../utils/generate-maze.ts'
 
 export class PathVisualisation extends GameObject {
 	constructor(state: State, path: Pos[]) {

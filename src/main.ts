@@ -4,9 +4,9 @@ import { State } from './engine/state.ts'
 import { windowInit } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
 import { Hallway } from './game-objects/hallway.ts'
+import { PathVisualisation } from './game-objects/pathVisualisation.ts'
 import { generate, pathfind, randomCell } from './utils/generate-maze.ts'
 import { loadHallwayObjects } from './utils/hallway-utils.ts'
-import { PathVisualisation } from './game-objects/pathVisualisation.ts'
 
 export const MAZE_X_SIZE = 16
 export const MAZE_Z_SIZE = 10
