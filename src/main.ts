@@ -5,7 +5,7 @@ import { windowInit } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
 import { Hallway } from './game-objects/hallway.ts'
 import { PathVisualisation } from './game-objects/pathVisualisation.ts'
-import { generate, pathfind, randomCell } from './utils/generate-maze.ts'
+import { generate, Pos, randomCell } from './utils/generate-maze.ts'
 import { loadHallwayObjects } from './utils/hallway-utils.ts'
 
 export const MAZE_X_SIZE = 16
@@ -44,8 +44,8 @@ async function main(renderer: WebGLRenderer) {
 			new Hallway(
 				state,
 				hallwayObjects,
-				MAZE_X_SIZE - col,
-				MAZE_Z_SIZE - row,
+				MAZE_X_SIZE - 1 - col,
+				MAZE_Z_SIZE - 1 - row,
 				grid.cells[i].walls.map(w => !w) as [boolean, boolean, boolean, boolean],
 			)
 		}
@@ -56,7 +56,15 @@ async function main(renderer: WebGLRenderer) {
 	const destination = randomCell(grid)
 	debugPanel.setData('route', `(${start.toString()}) -> (${destination.toString()})`)
 
-	const path = pathfind(grid, start, destination)
+	// const path = pathfind(grid, start, destination)
+
+	const path: Pos[] = [
+		[0, 0],
+		[0, 9],
+		[15, 9],
+		[5, 5],
+	]
+	console.log(path)
 
 	new PathVisualisation(state, path)
 
