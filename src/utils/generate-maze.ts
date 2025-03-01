@@ -1,4 +1,6 @@
 /* constants */
+import { MAZE_X_SIZE, MAZE_Z_SIZE } from '../main.ts'
+
 const NEIGHBOR_DIRECTIONS: [number, number][] = [
 	[-1, 0],
 	[0, 1],
@@ -201,10 +203,7 @@ export function render(grid: Grid, A: Pos, B: Pos, path: Pos[]) {
 }
 
 export function randomCell(grid: Grid): Pos {
-	return [
-		Math.floor(Math.random() * grid.nRows),
-		Math.floor(Math.random() * grid.nCols)
-	]
+	return [Math.floor(Math.random() * grid.nRows), Math.floor(Math.random() * grid.nCols)]
 }
 
 export function distManhattan(a: Pos, b: Pos): number {
@@ -217,7 +216,11 @@ export function idx2pos(grid: Grid, i: number): Pos {
 	return [row, col]
 }
 
-export function reconstructPath(grid: Grid, parents: Record<number, number>, iNode: number): Pos[] {
+export function reconstructPath(
+	grid: Grid,
+	parents: Record<number, number>,
+	iNode: number,
+): Pos[] {
 	let path: Pos[] = [idx2pos(grid, iNode)]
 	while (iNode in parents) {
 		iNode = parents[iNode]
@@ -276,10 +279,13 @@ export function pathfind(grid: Grid, A: Pos, B: Pos): Pos[] {
 
 			// Check if there's a wall in this direction
 			let wallExists = false
-			if (dir[0] === -1) wallExists = grid.cells[iCurrent].walls[0]      // North
-			else if (dir[0] === 1) wallExists = grid.cells[iCurrent].walls[2]  // South
-			else if (dir[1] === -1) wallExists = grid.cells[iCurrent].walls[3] // West
-			else if (dir[1] === 1) wallExists = grid.cells[iCurrent].walls[1]  // East
+			if (dir[0] === -1)
+				wallExists = grid.cells[iCurrent].walls[0] // North
+			else if (dir[0] === 1)
+				wallExists = grid.cells[iCurrent].walls[2] // South
+			else if (dir[1] === -1)
+				wallExists = grid.cells[iCurrent].walls[3] // West
+			else if (dir[1] === 1) wallExists = grid.cells[iCurrent].walls[1] // East
 
 			if (wallExists) {
 				continue
@@ -304,4 +310,8 @@ export function pathfind(grid: Grid, A: Pos, B: Pos): Pos[] {
 
 	// No path found
 	return []
+}
+
+export function mazeGridToWorldGrid([x, y]: Pos): Pos {
+	return [MAZE_X_SIZE - 1 - x, MAZE_Z_SIZE - 1 - y]
 }

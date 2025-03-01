@@ -2,7 +2,7 @@ import { Group } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
-import { loadGLTF } from '../engine/utilts.ts'
+import { loadGLTF } from '../engine/loader-utils.ts'
 import { DebugPanel } from './debug-panel.ts'
 
 const ROTATION_SPEED = 0.001

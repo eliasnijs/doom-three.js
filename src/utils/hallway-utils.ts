@@ -1,6 +1,6 @@
 import { Object3D } from 'three'
 
-import { loadGLTF } from '../engine/utilts.ts'
+import { loadGLTF } from './loader-utils.ts'
 
 export type HallwayObjects = Record<string, Object3D>
 
