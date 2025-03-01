@@ -14,23 +14,23 @@ type Cell = {
 
 type Grid = {
 	cells: Cell[]
-	n_rows: number
-	n_cols: number
+	nRows: number
+	nCols: number
 }
 
 type Pos = [number, number]
 
 /* functions */
 function idx(grid: Grid, pos: Pos): number | undefined {
-	if (pos[0] < 0 || pos[0] >= grid.n_rows) {
+	if (pos[0] < 0 || pos[0] >= grid.nRows) {
 		return undefined
 	}
 
-	if (pos[1] < 0 || pos[1] >= grid.n_cols) {
+	if (pos[1] < 0 || pos[1] >= grid.nCols) {
 		return undefined
 	}
 
-	return pos[0] * grid.n_cols + pos[1]
+	return pos[0] * grid.nCols + pos[1]
 }
 
 function next(grid: Grid, pos: Pos): Pos | undefined {
@@ -52,7 +52,7 @@ function next(grid: Grid, pos: Pos): Pos | undefined {
 	return neighbors[i_selected]
 }
 
-function remove_wall(grid: Grid, p1: Pos, p2: Pos): void {
+function removeWall(grid: Grid, p1: Pos, p2: Pos): void {
 	const i1 = idx(grid, p1)
 	const i2 = idx(grid, p2)
 	if (i1 === undefined || i2 === undefined) {
@@ -85,12 +85,12 @@ function remove_wall(grid: Grid, p1: Pos, p2: Pos): void {
 	}
 }
 
-export function generate(n_rows: number, n_cols: number): Grid {
-	const cells: Cell[] = new Array(n_rows * n_cols).fill(null).map(() => ({
+export function generate(nRows: number, nCols: number): Grid {
+	const cells: Cell[] = new Array(nRows * nCols).fill(null).map(() => ({
 		walls: [true, true, true, true],
 		visited: false,
 	}))
-	const grid: Grid = { cells, n_rows, n_cols }
+	const grid: Grid = { cells, nRows: nRows, nCols: nCols }
 
 	const stack: Pos[] = []
 	let pos: Pos = [0, 0]
@@ -98,11 +98,11 @@ export function generate(n_rows: number, n_cols: number): Grid {
 	stack.push(pos)
 	while (stack.length > 0) {
 		pos = stack[stack.length - 1]
-		const next_pos = next(grid, pos)
-		if (next_pos) {
-			grid.cells[idx(grid, next_pos)!].visited = true
-			remove_wall(grid, pos, next_pos)
-			stack.push(next_pos)
+		const nextPos = next(grid, pos)
+		if (nextPos) {
+			grid.cells[idx(grid, nextPos)!].visited = true
+			removeWall(grid, pos, nextPos)
+			stack.push(nextPos)
 		} else {
 			stack.pop()
 		}
@@ -111,7 +111,7 @@ export function generate(n_rows: number, n_cols: number): Grid {
 	return grid
 }
 
-function draw_line(
+function drawLine(
 	canvas: HTMLCanvasElement,
 	x1: number,
 	y1: number,
@@ -133,7 +133,7 @@ function draw_line(
 	ctx.stroke()
 }
 
-export function draw_square(
+export function drawSquare(
 	canvas: HTMLCanvasElement,
 	x: number,
 	y: number,
@@ -162,62 +162,62 @@ export function render(grid: Grid, A: Pos, B: Pos, path: Pos[]) {
 	}
 
 	ctx.clearRect(0, 0, canvas.width, canvas.height)
-	const w = Math.floor(canvas.width / grid.n_cols)
-	const h = Math.floor(canvas.height / grid.n_rows)
+	const w = Math.floor(canvas.width / grid.nCols)
+	const h = Math.floor(canvas.height / grid.nRows)
 
 	const pad = 0
 	path.forEach(C =>
-		draw_square(canvas, w * C[1] + pad / 2, h * C[0] + pad / 2, w - pad, h - pad, '#FAA'),
+		drawSquare(canvas, w * C[1] + pad / 2, h * C[0] + pad / 2, w - pad, h - pad, '#FAA'),
 	)
 
-	draw_square(canvas, w * A[1], h * A[0], w, h, '#f00')
-	draw_square(canvas, w * B[1], h * B[0], w, h, '#f00')
+	drawSquare(canvas, w * A[1], h * A[0], w, h, '#f00')
+	drawSquare(canvas, w * B[1], h * B[0], w, h, '#f00')
 
-	for (let i_row = 0; i_row < grid.n_rows; ++i_row) {
-		for (let i_col = 0; i_col < grid.n_cols; ++i_col) {
-			const { walls } = grid.cells[i_row * grid.n_cols + i_col]
+	for (let i_row = 0; i_row < grid.nRows; ++i_row) {
+		for (let i_col = 0; i_col < grid.nCols; ++i_col) {
+			const { walls } = grid.cells[i_row * grid.nCols + i_col]
 			const x = i_col * w
 			const y = i_row * h
 
 			// if (visited) draw_square(canvas, x, y, w, h, 'rgba(224, 49, 49, 0.2)');
 
 			if (walls[0]) {
-				draw_line(canvas, x, y, x + w, y, 1, '#000')
+				drawLine(canvas, x, y, x + w, y, 1, '#000')
 			} // North
 
 			if (walls[1]) {
-				draw_line(canvas, x + w, y, x + w, y + h, 1, '#000')
+				drawLine(canvas, x + w, y, x + w, y + h, 1, '#000')
 			} // East
 
 			if (walls[2]) {
-				draw_line(canvas, x, y + h, x + w, y + h, 1, '#000')
+				drawLine(canvas, x, y + h, x + w, y + h, 1, '#000')
 			} // South
 
 			if (walls[3]) {
-				draw_line(canvas, x, y, x, y + h, 1, '#000')
+				drawLine(canvas, x, y, x, y + h, 1, '#000')
 			} // West
 		}
 	}
 }
 
-export function random_cell(grid: Grid): Pos {
-	return [Math.floor(Math.random() * grid.n_rows), Math.floor(Math.random() * grid.n_cols)]
+export function randomCell(grid: Grid): Pos {
+	return [Math.floor(Math.random() * grid.nRows), Math.floor(Math.random() * grid.nCols)]
 }
 
 export function pathfind(grid: Grid, A: Pos, B: Pos): Pos[] {
-	const i_A = idx(grid, A)!
-	const i_B = idx(grid, B)!
+	const aIdx = idx(grid, A)!
+	const bIdx = idx(grid, B)!
 
-	const open: number[] = [i_A]
+	const open: number[] = [aIdx]
 	const parents: Record<number, number> = {}
 
 	while (open.length > 0) {
-		let i_current = open.shift()!
-		if (i_current === i_B) {
+		let currentIdx = open.shift()!
+		if (currentIdx === bIdx) {
 			const path: Pos[] = []
-			while (i_current in parents) {
-				path.unshift([Math.floor(i_current / grid.n_cols), i_current % grid.n_cols])
-				i_current = parents[i_current]
+			while (currentIdx in parents) {
+				path.unshift([Math.floor(currentIdx / grid.nCols), currentIdx % grid.nCols])
+				currentIdx = parents[currentIdx]
 			}
 
 			return path
@@ -225,13 +225,13 @@ export function pathfind(grid: Grid, A: Pos, B: Pos): Pos[] {
 
 		for (const dir of NEIGHBOR_DIRECTIONS) {
 			const pos: Pos = [
-				Math.floor(i_current / grid.n_cols) + dir[0],
-				(i_current % grid.n_cols) + dir[1],
+				Math.floor(currentIdx / grid.nCols) + dir[0],
+				(currentIdx % grid.nCols) + dir[1],
 			]
-			const i_neighbor = idx(grid, pos)
-			if (i_neighbor !== undefined && !(i_neighbor in parents)) {
-				parents[i_neighbor] = i_current
-				open.push(i_neighbor)
+			const neighborIdx = idx(grid, pos)
+			if (neighborIdx !== undefined && !(neighborIdx in parents)) {
+				parents[neighborIdx] = currentIdx
+				open.push(neighborIdx)
 			}
 		}
 	}

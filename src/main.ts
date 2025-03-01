@@ -36,9 +36,9 @@ async function main(renderer: WebGLRenderer) {
 
 	const grid = generate(MAZE_Z_SIZE, MAZE_X_SIZE)
 
-	for (let row = 0; row < grid.n_rows; row++) {
-		for (let col = 0; col < grid.n_cols; col++) {
-			const i = row * grid.n_cols + col
+	for (let row = 0; row < grid.nRows; row++) {
+		for (let col = 0; col < grid.nCols; col++) {
+			const i = row * grid.nCols + col
 
 			new Hallway(
 				state,

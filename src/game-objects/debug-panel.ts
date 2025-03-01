@@ -75,7 +75,11 @@ export class DebugPanel extends GameObject {
 			this.cameraTypeActive == CameraType.FLY ? '📷 Switch to Orbit' : '📷 Switch to Fly'
 	}
 
-	animate() {
+	animate(deltaTime: number) {
+		// Add FPS to the data
+		this.setData('FPS', (1 / (deltaTime / 1000)).toFixed(2))
+
+		// Add a title to the div
 		this.textContainer.innerHTML = 'DEBUG PANEL'
 
 		// Add all records to the div
