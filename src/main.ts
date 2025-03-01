@@ -1,7 +1,7 @@
 import { Color, WebGLRenderer } from 'three'
 
 import { State } from './engine/state.ts'
-import { window_init } from './engine/window.ts'
+import { windowInit } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
 import { Hallway } from './game-objects/hallway.ts'
 import { generate } from './utils/generate-maze.ts'
@@ -25,7 +25,7 @@ function animate(time_ms: number, state: State, renderer: WebGLRenderer) {
 }
 
 async function main(renderer: WebGLRenderer) {
-	window_init(renderer)
+	windowInit(renderer)
 
 	const state = new State()
 
