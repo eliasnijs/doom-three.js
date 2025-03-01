@@ -12,7 +12,13 @@ export abstract class GameObject {
 	abstract animate(deltaTime: number, state: State, renderer: WebGLRenderer): void
 
 	// This method is called when the object is destroyed
-	destroy(): void {
-		console.warn('GameObject was destroyed but destroy() was not implemented')
+	cleanup(): void {
+		console.warn('Trying to clean up a game object that does not have a destroy method')
+	}
+
+	// This method is called when the object is destroyed
+	destroy(state: State): void {
+		this.cleanup()
+		state.unregisterGameObject(this)
 	}
 }

@@ -58,7 +58,7 @@ export class DebugPanel extends GameObject {
 	}
 
 	changeCameraType(state: State, renderer: WebGLRenderer) {
-		this.camera.destroy()
+		this.camera.destroy(state)
 		if (this.cameraTypeActive === CameraType.FLY) {
 			this.cameraTypeActive = CameraType.ORBIT
 			this.camera = new OrbitCameraControls(state, renderer)

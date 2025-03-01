@@ -13,8 +13,8 @@ export class FlyCameraControls extends GameObject {
 		super(state)
 
 		this.flyControls = new FlyControls(state.camera, renderer.domElement)
-		this.flyControls.movementSpeed = 5
-		this.flyControls.rollSpeed = Math.PI / 24
+		this.flyControls.movementSpeed = 20
+		// this.flyControls.rollSpeed = Math.PI / 24
 		this.flyControls.autoForward = false
 		this.flyControls.dragToLook = true
 
@@ -23,6 +23,7 @@ export class FlyCameraControls extends GameObject {
 
 	animate(deltaTime: number): void {
 		this.flyControls.update(deltaTime / 1000)
+		this.flyControls.rollSpeed = (10 * Math.PI) / 24
 
 		if (this.debugPanel) {
 			this.debugPanel.setData(
@@ -32,7 +33,7 @@ export class FlyCameraControls extends GameObject {
 		}
 	}
 
-	destroy() {
+	cleanup() {
 		this.flyControls.dispose()
 	}
 }

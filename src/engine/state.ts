@@ -27,7 +27,8 @@ export class State {
 			0.1,
 			1000,
 		)
-		this.camera.position.z = 3
+		this.camera.position.z = -50
+		this.camera.position.y = 50
 		this.gameObjects = []
 		this.last_time_ms = 0.0
 
@@ -65,6 +66,14 @@ export class State {
 	// Register a game object with the state
 	registerGameObject(gameObject: GameObject) {
 		this.gameObjects.push(gameObject)
+	}
+
+	// Remove a game object from the state
+	unregisterGameObject(gameObject: GameObject) {
+		const index = this.gameObjects.indexOf(gameObject)
+		if (index !== -1) {
+			this.gameObjects.splice(index, 1)
+		}
 	}
 
 	// Get the first game object of a given type, useful for finding singletons

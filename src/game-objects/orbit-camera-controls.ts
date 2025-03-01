@@ -28,7 +28,7 @@ export class OrbitCameraControls extends GameObject {
 		}
 	}
 
-	destroy() {
+	cleanup() {
 		this.orbitControls.dispose()
 	}
 }
