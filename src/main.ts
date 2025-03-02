@@ -4,8 +4,6 @@ import { createMap } from './engine/map.ts'
 import { State } from './engine/state.ts'
 import { windowInit } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
-import { Floor } from './game-objects/floor.ts'
-import { Player } from './game-objects/player.ts'
 
 export const MAZE_X_SIZE = 10
 export const MAZE_Z_SIZE = 10
@@ -32,8 +30,6 @@ async function main(renderer: WebGLRenderer) {
 	const debugPanel = new DebugPanel(state, renderer)
 	// new RotatingTv(state)
 	await createMap(debugPanel, state)
-	new Floor(state)
-	new Player(state).enableCamera(state)
 
 	console.log('starting loop')
 	renderer.setAnimationLoop(time_ms => {

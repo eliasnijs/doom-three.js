@@ -3,6 +3,8 @@ import { PerspectiveCamera } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
+import { GRID_SIZE } from '../main.ts'
+import { mazeGridToWorldGrid, Pos } from '../utils/generate-maze.ts'
 
 const PLAYER_SPEED = 1
 const PLAYER_MOUSE_SENSITIVITY = 0.002
@@ -19,7 +21,7 @@ export class Player extends GameObject {
 	camera: PerspectiveCamera
 	isLocked = false
 
-	constructor(state: State) {
+	constructor(state: State, [x, z]: Pos) {
 		super(state)
 
 		// Create a player
@@ -29,7 +31,8 @@ export class Player extends GameObject {
 		})
 
 		// Set the position of the player
-		this.body.position.set(0, PLAYER_HEIGHT / 2, 0)
+		const [newX, newZ] = mazeGridToWorldGrid([z, x])
+		this.body.position.set(newX * GRID_SIZE, PLAYER_HEIGHT, newZ * GRID_SIZE)
 
 		// Limit the angular velocity
 		this.body.angularDamping = 1
