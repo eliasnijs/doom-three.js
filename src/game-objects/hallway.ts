@@ -3,7 +3,7 @@ import { MeshStandardMaterial, Object3D } from 'three'
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
 import { GRID_SIZE } from '../main.ts'
-import { HallwayObjects } from '../utils/hallway-utils.ts'
+import { getRandomItem, HallwayObjects } from '../utils/hallway-utils.ts'
 
 const HALLWAY_SCALE = 1.25
 
@@ -36,13 +36,13 @@ export class Hallway extends GameObject {
 			this.rotation = openSides.indexOf(true) * -90
 		} else if (count === 2) {
 			if (north && south) {
-				this.type = 'Hall_Light'
+				this.type = getRandomItem(['Hall_Light', 'Hall_NoLight'])
 				this.rotation = 0
 			} else if (east && west) {
-				this.type = 'Hall_Light'
+				this.type = getRandomItem(['Hall_Light', 'Hall_NoLight'])
 				this.rotation = 90
 			} else {
-				this.type = 'Hall_Light_90Turn'
+				this.type = getRandomItem(['Hall_Light_90Turn', 'Hall_NoLight__90Turn'])
 				this.rotation = 0
 				if (north && east) {
 					this.rotation = 0
