@@ -27,6 +27,7 @@
     "vite": "^6.2.0"
   },
   "dependencies": {
+    "cannon": "^0.6.2",
     "globals": "^16.0.0",
     "imgui-js": "github:flyover/imgui-js",
     "three": "^0.173.0"
