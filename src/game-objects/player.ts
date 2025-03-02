@@ -6,7 +6,7 @@ import { State } from '../engine/state.ts'
 
 const PLAYER_SPEED = 1
 const PLAYER_MOUSE_SENSITIVITY = 0.002
-const PLAYER_HEIGHT = 5
+const PLAYER_HEIGHT = 7
 const PLAYER_RADIUS = 1
 const CAMERA_HEIGHT_OFFSET = 1.5
 
@@ -29,7 +29,7 @@ export class Player extends GameObject {
 		})
 
 		// Set the position of the player
-		this.body.position.set(0, 2.5, 0)
+		this.body.position.set(0, PLAYER_HEIGHT / 2, 0)
 
 		// Limit the angular velocity
 		this.body.angularDamping = 1
