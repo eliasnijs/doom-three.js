@@ -213,6 +213,7 @@ export function distManhattan(a: Pos, b: Pos): number {
 export function idx2pos(grid: Grid, i: number): Pos {
 	const row = Math.floor(i / grid.nCols)
 	const col = i % grid.nCols
+
 	return [row, col]
 }
 
@@ -221,11 +222,12 @@ export function reconstructPath(
 	parents: Record<number, number>,
 	iNode: number,
 ): Pos[] {
-	let path: Pos[] = [idx2pos(grid, iNode)]
+	const path: Pos[] = [idx2pos(grid, iNode)]
 	while (iNode in parents) {
 		iNode = parents[iNode]
 		path.unshift(idx2pos(grid, iNode))
 	}
+
 	return path
 }
 
@@ -279,13 +281,18 @@ export function pathfind(grid: Grid, A: Pos, B: Pos): Pos[] {
 
 			// Check if there's a wall in this direction
 			let wallExists = false
-			if (dir[0] === -1)
-				wallExists = grid.cells[iCurrent].walls[0] // North
-			else if (dir[0] === 1)
-				wallExists = grid.cells[iCurrent].walls[2] // South
-			else if (dir[1] === -1)
-				wallExists = grid.cells[iCurrent].walls[3] // West
-			else if (dir[1] === 1) wallExists = grid.cells[iCurrent].walls[1] // East
+			if (dir[0] === -1) {
+				wallExists = grid.cells[iCurrent].walls[0]
+			} // North
+			else if (dir[0] === 1) {
+				wallExists = grid.cells[iCurrent].walls[2]
+			} // South
+			else if (dir[1] === -1) {
+				wallExists = grid.cells[iCurrent].walls[3]
+			} // West
+			else if (dir[1] === 1) {
+				wallExists = grid.cells[iCurrent].walls[1]
+			} // East
 
 			if (wallExists) {
 				continue

@@ -1,7 +1,9 @@
+import { Vec3, World } from 'cannon-es'
+import CannonDebugger from 'cannon-es-debugger'
 import {
 	AmbientLight,
 	DirectionalLight,
-	Object3D,
+	Mesh,
 	PerspectiveCamera,
 	Scene,
 	WebGLRenderer,
@@ -14,28 +16,36 @@ type Constructor<T> = { new (...args: never[]): T }
 
 export class State {
 	scene: Scene
-	camera: PerspectiveCamera
+	debugCamera: PerspectiveCamera
 	gameObjects: GameObject[]
 	last_time_ms: number
 	ambientLight: AmbientLight
 	directionalLight: DirectionalLight
 	debug: boolean = false
+	physicsWorld: World
+	cannonDebugger?: { update: () => void }
+	cannonDebuggerMeshes: Mesh[] = []
+	activeCamera: PerspectiveCamera
 
 	constructor() {
 		this.scene = new Scene()
-		this.camera = new PerspectiveCamera(
+
+		// Create a debug camera
+		this.debugCamera = new PerspectiveCamera(
 			75,
 			window.innerWidth / window.innerHeight,
 			0.1,
 			1000,
 		)
-
-		this.camera.position.z = MAZE_Z_CENTER - 25
-		this.camera.position.x = MAZE_X_CENTER
-		this.camera.position.y = 150
+		this.debugCamera.position.z = MAZE_Z_CENTER - 25
+		this.debugCamera.position.x = MAZE_X_CENTER
+		this.debugCamera.position.y = 150
 
 		this.gameObjects = []
 		this.last_time_ms = 0.0
+
+		// Set the active camera
+		this.activeCamera = this.debugCamera
 
 		// Create an ambient light
 		this.ambientLight = new AmbientLight(0xffffff, 0.5)
@@ -45,11 +55,6 @@ export class State {
 		this.directionalLight = new DirectionalLight(0xffffff, 5)
 		this.directionalLight.position.set(5, 5, 0)
 
-		// Create a target object below the light
-		const lightTarget = new Object3D()
-		lightTarget.position.set(0, 0, 0) // Adjust as needed
-		this.scene.add(lightTarget)
-
 		// Enable shadow casting
 		this.directionalLight.castShadow = true
 		this.directionalLight.shadow.mapSize.width = 2048 // Higher resolution shadows
@@ -57,14 +62,48 @@ export class State {
 		this.directionalLight.shadow.camera.near = 0.5
 		this.directionalLight.shadow.camera.far = 50
 
-		// Set the light to point at the target
+		// Add the light to the scene
 		this.scene.add(this.directionalLight)
+
+		// Create the physics world
+		this.physicsWorld = new World({
+			gravity: new Vec3(0, -9.82, 0),
+		})
+
+		// Update the cannon-es debugger
+		this.cannonDebugger = CannonDebugger(this.scene, this.physicsWorld, {
+			color: 0xff0000,
+			onInit: (_, mesh) => {
+				this.cannonDebuggerMeshes.push(mesh)
+				mesh.visible = this.debug
+			},
+		})
+	}
+
+	toggleDebug() {
+		// Loop all objects and set the wireframe
+		this.debug = !this.debug
+		for (const obj of this.gameObjects) {
+			obj.setDebug(this.debug)
+		}
+
+		// Toggle the visibility of the cannon-es debugger
+		for (const mesh of this.cannonDebuggerMeshes) {
+			mesh.visible = this.debug
+		}
 	}
 
 	animate(time_ms: number, renderer: WebGLRenderer) {
 		const delta = time_ms - this.last_time_ms
 		this.last_time_ms = time_ms
 
+		// Run the physics simulation
+		this.physicsWorld.step(delta / 1000)
+
+		// Update the cannon-es debugger
+		this.cannonDebugger?.update()
+
+		// Update all game objects
 		this.gameObjects.forEach(gameObject => gameObject.animate(delta, this, renderer))
 	}
 

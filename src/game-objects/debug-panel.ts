@@ -4,19 +4,23 @@ import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
 import { FlyCameraControls } from './fly-camera-controls.ts'
 import { OrbitCameraControls } from './orbit-camera-controls.ts'
+import { Player } from './player.ts'
 
 enum CameraType {
 	FLY,
 	ORBIT,
+	FIRST_PERSON,
 }
 
 export class DebugPanel extends GameObject {
 	container: HTMLDivElement
 	textContainer: HTMLDivElement
 	data: Record<string, string>
-	cameraButton: HTMLButtonElement
+	flyButton: HTMLButtonElement
+	orbitButton: HTMLButtonElement
+	firstPersonButton: HTMLButtonElement
 	cameraTypeActive: CameraType
-	camera: OrbitCameraControls | FlyCameraControls
+	camera: OrbitCameraControls | FlyCameraControls | null = null
 	debugButton: HTMLButtonElement
 
 	constructor(state: State, renderer: WebGLRenderer) {
@@ -24,7 +28,7 @@ export class DebugPanel extends GameObject {
 
 		// Set the camera type to fly
 		this.cameraTypeActive = CameraType.ORBIT
-		this.camera = new OrbitCameraControls(state, renderer)
+		this.changeCameraType(state, renderer, CameraType.ORBIT)
 
 		// Add a div to the body to display the debug info
 		this.container = document.createElement('div')
@@ -44,25 +48,43 @@ export class DebugPanel extends GameObject {
 		this.container.style.gap = '10px'
 		this.container.style.width = '300px'
 
-		// Add a button to change the camera type
-		this.cameraButton = document.createElement('button')
-		this.cameraButton.onclick = () => this.changeCameraType(state, renderer)
-		this.container.appendChild(this.cameraButton)
-		this.setCameraButtonLabel()
+		// Stop pointer events from propagating to the canvas
+		this.container.onpointerdown = e => e.stopPropagation()
+
+		// Add a div for the camera type buttons
+		const cameraTypeContainer = document.createElement('div')
+		cameraTypeContainer.style.display = 'flex'
+		this.container.appendChild(cameraTypeContainer)
+
+		// Add a button to change the camera type to orbit
+		this.orbitButton = document.createElement('button')
+		this.orbitButton.onclick = () =>
+			this.changeCameraType(state, renderer, CameraType.ORBIT)
+		cameraTypeContainer.appendChild(this.orbitButton)
+		this.orbitButton.innerText = '🌍'
+
+		// Add a button to change the camera type to fly
+		this.flyButton = document.createElement('button')
+		this.flyButton.onclick = () => this.changeCameraType(state, renderer, CameraType.FLY)
+		cameraTypeContainer.appendChild(this.flyButton)
+		this.flyButton.innerText = '✈️'
+
+		// Add a button to change the camera type to first person
+		this.firstPersonButton = document.createElement('button')
+		this.firstPersonButton.onclick = () =>
+			this.changeCameraType(state, renderer, CameraType.FIRST_PERSON)
+		cameraTypeContainer.appendChild(this.firstPersonButton)
+		this.firstPersonButton.innerText = '👤'
 
 		// Add a button to toggle debug mode
 		this.debugButton = document.createElement('button')
 		this.debugButton.onclick = () => {
-			state.debug = !state.debug
-			this.setWireframeButtonLabel(state)
-			// Loop all objects and set the wireframe
-			for (const obj of state.gameObjects) {
-				obj.setDebug(state.debug)
-			}
+			state.toggleDebug()
+			this.setDebugButtonLabel(state)
 		}
 
 		this.container.appendChild(this.debugButton)
-		this.setWireframeButtonLabel(state)
+		this.setDebugButtonLabel(state)
 
 		// Add another container for the text
 		this.textContainer = document.createElement('div')
@@ -72,25 +94,28 @@ export class DebugPanel extends GameObject {
 		this.data = {}
 	}
 
-	changeCameraType(state: State, renderer: WebGLRenderer) {
-		this.camera.destroy(state)
+	changeCameraType(state: State, renderer: WebGLRenderer, cameraType: CameraType) {
+		this.cameraTypeActive = cameraType
+		this.camera?.destroy(state)
 		if (this.cameraTypeActive === CameraType.FLY) {
-			this.cameraTypeActive = CameraType.ORBIT
-			this.camera = new OrbitCameraControls(state, renderer)
-		} else {
-			this.cameraTypeActive = CameraType.FLY
 			this.camera = new FlyCameraControls(state, renderer)
+			state.activeCamera = state.debugCamera
+		} else if (this.cameraTypeActive === CameraType.ORBIT) {
+			this.camera = new OrbitCameraControls(state, renderer)
+			state.activeCamera = state.debugCamera
+		} else {
+			this.camera = null
+			// Find player
+			const player = state.findFirstGameObjectOfType(Player)
+			if (player) {
+				player.enableCamera(state)
+			} else {
+				console.warn('Trying to enable first person camera but no player found')
+			}
 		}
-
-		this.setCameraButtonLabel()
 	}
 
-	setCameraButtonLabel() {
-		this.cameraButton.innerText =
-			this.cameraTypeActive == CameraType.FLY ? '📷 Switch to Orbit' : '📷 Switch to Fly'
-	}
-
-	setWireframeButtonLabel(state: State) {
+	setDebugButtonLabel(state: State) {
 		this.debugButton.innerText = state.debug ? '🔲 Disable Debug' : '🔳 Enable Debug'
 	}
 

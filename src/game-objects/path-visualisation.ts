@@ -2,8 +2,8 @@ import { Sprite, SpriteMaterial, Vector3 } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
-import { mazeGridToWorldGrid, Pos } from '../utils/generate-maze.ts'
 import { GRID_SIZE } from '../main.ts'
+import { mazeGridToWorldGrid, Pos } from '../utils/generate-maze.ts'
 import { loadTexture } from '../utils/loader-utils.ts'
 
 export class PathVisualisation extends GameObject {

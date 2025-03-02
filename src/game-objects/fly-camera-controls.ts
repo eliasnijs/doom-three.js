@@ -12,7 +12,7 @@ export class FlyCameraControls extends GameObject {
 	constructor(state: State, renderer: WebGLRenderer) {
 		super(state)
 
-		this.flyControls = new FlyControls(state.camera, renderer.domElement)
+		this.flyControls = new FlyControls(state.debugCamera, renderer.domElement)
 		this.flyControls.movementSpeed = 20
 		// this.flyControls.rollSpeed = Math.PI / 24
 		this.flyControls.autoForward = false

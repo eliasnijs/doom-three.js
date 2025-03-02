@@ -13,7 +13,7 @@ export class OrbitCameraControls extends GameObject {
 	constructor(state: State, renderer: WebGLRenderer) {
 		super(state)
 
-		this.orbitControls = new OrbitControls(state.camera, renderer.domElement)
+		this.orbitControls = new OrbitControls(state.debugCamera, renderer.domElement)
 		this.orbitControls.target.set(MAZE_X_CENTER, 0, MAZE_Z_CENTER)
 
 		this.debugPanel = state.findFirstGameObjectOfType(DebugPanel)
