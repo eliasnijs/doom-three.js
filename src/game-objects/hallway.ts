@@ -1,3 +1,4 @@
+import { Body, Box, Vec3 } from 'cannon-es'
 import { MeshStandardMaterial, Object3D } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
@@ -6,6 +7,7 @@ import { GRID_SIZE } from '../main.ts'
 import { getRandomItem, HallwayObjects } from '../utils/hallway-utils.ts'
 
 const HALLWAY_SCALE = 1.25
+const COLLIDER_THICKNESS = 0.1
 
 export class Hallway extends GameObject {
 	mesh: Object3D
@@ -70,6 +72,37 @@ export class Hallway extends GameObject {
 		this.mesh.position.set(this.grid_x * GRID_SIZE, 0, this.grid_z * GRID_SIZE)
 		this.mesh.rotation.y = (this.rotation * Math.PI) / 180
 		this.mesh.scale.set(HALLWAY_SCALE, HALLWAY_SCALE, HALLWAY_SCALE)
+
+		// Add colliders to the hallway
+		this.addColliders(state, openSides)
+	}
+
+	addColliders(state: State, openSides: [boolean, boolean, boolean, boolean]): void {
+		const [north, east, south, west] = openSides
+
+		const wallPositions = [
+			{ x: 0, z: GRID_SIZE / 2, xw: GRID_SIZE / 2, zw: COLLIDER_THICKNESS, open: north },
+			{ x: -GRID_SIZE / 2, z: 0, xw: COLLIDER_THICKNESS, zw: GRID_SIZE / 2, open: east },
+			{ x: 0, z: -GRID_SIZE / 2, xw: GRID_SIZE / 2, zw: COLLIDER_THICKNESS, open: south },
+			{ x: GRID_SIZE / 2, z: 0, xw: COLLIDER_THICKNESS, zw: GRID_SIZE / 2, open: west },
+		]
+
+		for (const { x, z, xw, zw, open } of wallPositions) {
+			if (!open) {
+				const wallCollider = new Body({
+					type: Body.STATIC,
+					shape: new Box(new Vec3(xw, GRID_SIZE / 2, zw)),
+				})
+
+				wallCollider.position.set(
+					this.grid_x * GRID_SIZE + x,
+					GRID_SIZE / 2,
+					this.grid_z * GRID_SIZE + z,
+				)
+
+				state.physicsWorld.addBody(wallCollider)
+			}
+		}
 	}
 
 	animate(): void {}
