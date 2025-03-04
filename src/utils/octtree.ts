@@ -2,13 +2,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Data Layouts
 
-interface vec3 {
+export interface vec3 {
   x: number
   y: number
   z: number
 }
 
-enum Octant {
+export enum Octant {
 	OCTANT_BBL,
 	OCTANT_BBR,
 	OCTANT_BTL,
@@ -18,23 +18,23 @@ enum Octant {
 	OCTANT_FTL,
 	OCTANT_FTR,
 }
-const OCTANT_STRING_TABLE: string[] = [
+export const OCTANT_STRING_TABLE: string[] = [
     "Back-Bottom-Left", "Back-Bottom-Right", "Back-Top-Left", "Back-Top-Right",
     "Front-Bottom-Left", "Front-Bottom-Right", "Front-Top-Left", "Front-Top-Right"
 ];
 
-enum CTU_State {
+export enum CTU_State {
 	CTU_LEAF,
 	CTU_NODE
 }
 
-interface CTU_LeafData {
+export interface CTU_LeafData {
 	n_capacity:	number
 	n_fill:		number
 	indices:	number[]
 }
 
-interface CTU {
+export interface CTU {
 	origin:		vec3 // most left,bottom,back point
 	size:		number
 	state:		CTU_State
@@ -43,13 +43,13 @@ interface CTU {
 }
 
 // Define what will be stored in the global list
-interface OctreeElement {
+export interface OctreeElement {
 	position: vec3
 	// Add any other properties needed for your game objects
 	// For example: size, type, reference to actual game object, etc.
 }
 
-interface OctTree {
+export interface OctTree {
 	root:			CTU
 	elements:		OctreeElement[]
 	maxDepth:		number
