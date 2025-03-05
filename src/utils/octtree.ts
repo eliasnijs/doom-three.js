@@ -34,18 +34,16 @@ export interface CTU_LeafData {
 }
 
 export interface CTU {
-	origin:		Vec3 // most left,bottom,back point
+	origin:		Vec3 // most back,bottom,left point
 	size:		number
 	state:		CTU_State
 	octants:	[CTU, CTU, CTU, CTU, CTU, CTU, CTU, CTU] | null
 	leaf:		CTU_LeafData | null
 }
 
-// Define what will be stored in the global list
 export interface OctreeElement {
-	position: Vec3
-	// Add any other properties needed for your game objects
-	// For example: size, type, reference to actual game object, etc.
+	bbl: Vec3	// most back, bottom, left point of the element
+	ftr: Vec3   // most fron, top, right point of the element
 }
 
 export interface OctTree {
@@ -58,17 +56,25 @@ export interface OctTree {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Utility Functions
 
-function getOctant(origin: Vec3, size: number, position: Vec3): Octant {
-	const halfsize = size / 2
-    const centerX = origin.x + halfsize
-    const centerY = origin.y + halfsize
-    const centerZ = origin.z + halfsize
+function getOctants(origin: Vec3, size: number, bbl: Vec3, ftr: Vec3): Octant[] {
+	const midPoint = origin.clone().vadd(new Vec3(size/2, size/2, size/2));
+	const atLeft   = bbl.x < midPoint.x;
+	const atRight  = ftr.x >= midPoint.x
+	const atBottom = bbl.y < midPoint.y;
+	const atTop    = ftr.y >= midPoint.y
+	const atBack   = bbl.z < midPoint.z;
+	const atFront  = ftr.z >= midPoint.z;
 
-    const isRight = position.x >= centerX;  // +X is right
-    const isTop = position.y >= centerY; // +Y is top
-    const isFront = position.z >= centerZ; // +Z is front
-
-	return (isFront << 2) | (isTop << 1) | isRight
+	const result:Octant[] = [];
+	for (let i = 0; i < 8; ++i) {
+		const xCond = (i & 1) ? atRight : atLeft;
+		const yCond = (i & 2) ? atTop : atBottom;
+		const zCond = (i & 4) ? atFront : atBack;
+		if (xCond && yCond && zCond) {
+			result.push(i as Octant);
+		}
+	}
+	return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,8 +101,15 @@ initialize(origin: Vec3, size: number, n_capacity: number, maxDepth: number): Oc
     };
 }
 
-
-
+function
+recurse(tree:OctTree, n: CTU, i:number, remainingDepth:number): void {
+	const bbl = tree.elements[i].bbl;
+	const ftr = tree.elements[i].ftr;
+	const octants = getOctants(n.origin, n.size, bbl, ftr);
+	for (const octant of octants) {
+		_insert(tree, n.octants[octant], i, remainingDepth - 1)
+	}
+}
 
 function
 _insert(tree:OctTree, n: CTU, i_element:number , remainingDepth:number): void {
@@ -133,19 +146,17 @@ _insert(tree:OctTree, n: CTU, i_element:number , remainingDepth:number): void {
 					}
 				};
 			}
+
 			for (const i of n.leaf.indices) {
-				const pos = tree.elements[i].position;
-				const octant = getOctant(n.origin, n.size, pos);
-				_insert(tree, n.octants[octant], i, remainingDepth - 1)
+				recurse(tree, n, i, remainingDepth - 1)
 			}
 			n.leaf = null
 		}
 	}
 
-	const pos = tree.elements[i_element].position;
-	const octant = getOctant(n.origin, n.size, pos);
-	_insert(tree, n.octants[octant], i_element, remainingDepth - 1)
+	recurse(tree, n, i_element, remainingDepth - 1)
 }
+
 
 export function
 insert(tree: OctTree, element: OctreeElement): void {
