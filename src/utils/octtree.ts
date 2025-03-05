@@ -1,12 +1,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-///// Data Layouts
+///// Dependencies
 
-export interface vec3 {
-  x: number
-  y: number
-  z: number
-}
+import { Vec3 } from 'cannon-es'
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+///// Data Layouts
 
 export enum Octant {
 	OCTANT_BBL,
@@ -35,7 +34,7 @@ export interface CTU_LeafData {
 }
 
 export interface CTU {
-	origin:		vec3 // most left,bottom,back point
+	origin:		Vec3 // most left,bottom,back point
 	size:		number
 	state:		CTU_State
 	octants:	[CTU, CTU, CTU, CTU, CTU, CTU, CTU, CTU] | null
@@ -44,7 +43,7 @@ export interface CTU {
 
 // Define what will be stored in the global list
 export interface OctreeElement {
-	position: vec3
+	position: Vec3
 	// Add any other properties needed for your game objects
 	// For example: size, type, reference to actual game object, etc.
 }
@@ -59,7 +58,7 @@ export interface OctTree {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Utility Functions
 
-function getOctant(origin: vec3, size: number, position: vec3): Octant {
+function getOctant(origin: Vec3, size: number, position: Vec3): Octant {
 	const halfsize = size / 2
     const centerX = origin.x + halfsize
     const centerY = origin.y + halfsize
@@ -77,7 +76,7 @@ function getOctant(origin: vec3, size: number, position: vec3): Octant {
 
 
 export function
-initialize(origin: vec3, size: number, n_capacity: number, maxDepth: number): OctTree {
+initialize(origin: Vec3, size: number, n_capacity: number, maxDepth: number): OctTree {
     const root: CTU = {
         origin:		origin,
         size:		size,
@@ -96,63 +95,63 @@ initialize(origin: vec3, size: number, n_capacity: number, maxDepth: number): Oc
     };
 }
 
-// TODO(Elias): take into account bouding box when inputting,
-// sometimes we might have to put the index in more than one bucket
+
+
+
+function
+_insert(tree:OctTree, n: CTU, i_element:number , remainingDepth:number): void {
+	if (remainingDepth == 0) {
+		n.leaf.n_capacity = Number.MAX_SAFE_INTEGER;
+		n.leaf.indices.push(i_element);
+		++n.leaf.n_fill;
+		return;
+	} else if (n.state === CTU_State.CTU_LEAF) {
+		if (n.leaf.n_fill < n.leaf.n_capacity) {
+			n.leaf.indices.push(i_element);
+			++n.leaf.n_fill;
+			return;
+		} else {
+			n.state = CTU_State.CTU_NODE;
+			n.octants = [] as [CTU, CTU, CTU, CTU, CTU, CTU, CTU, CTU]
+
+			const size = n.size / 2;
+			for (let octant = 0; octant < 8; ++octant) {
+				const origin = new Vec3(
+					n.origin.x + (octant & 1 ? size : 0),
+					n.origin.y + (octant & 2 ? size : 0),
+					n.origin.z + (octant & 4 ? size : 0)
+				)
+				n.octants[octant] = {
+					origin: origin,
+					size: size,
+					state: CTU_State.CTU_LEAF,
+					octants: null,
+					leaf: {
+						n_capacity: n.leaf.n_capacity,
+						n_fill: 0,
+						indices: []
+					}
+				};
+			}
+			for (const i of n.leaf.indices) {
+				const pos = tree.elements[i].position;
+				const octant = getOctant(n.origin, n.size, pos);
+				_insert(tree, n.octants[octant], i, remainingDepth - 1)
+			}
+			n.leaf = null
+		}
+	}
+
+	const pos = tree.elements[i_element].position;
+	const octant = getOctant(n.origin, n.size, pos);
+	_insert(tree, n.octants[octant], i_element, remainingDepth - 1)
+}
+
 export function
-insert(tree: OctTree, n: CTU, element: OctreeElement): void {
+insert(tree: OctTree, element: OctreeElement): void {
     const i_element = tree.elements.length;
     tree.elements.push(element);
-
-	let depth = 0;
-	while (depth <= tree.maxDepth) {
-		if (depth == tree.maxDepth) {
-				n.leaf.n_capacity = Number.MAX_SAFE_INTEGER;
-				n.leaf.indices.push(i_element);
-				n.leaf.n_fill++;
-				return
-		}
-		if (n.state === CTU_State.CTU_LEAF) {
-			if (n.leaf.n_fill < n.leaf.n_capacity) {
-				n.leaf.indices.push(i_element);
-				n.leaf.n_fill++;
-				return;
-			} else {
-				n.octants = [] as unknown as [CTU, CTU, CTU, CTU, CTU, CTU, CTU, CTU]
-				const halfSize = n.size / 2;
-				for (let octant = 0; octant < 8; octant++) {
-					n.octants[octant] = {
-						origin: {
-							x: n.origin.x + (octant & 1 ? halfSize : 0),
-							y: n.origin.y + (octant & 2 ? halfSize : 0),
-							z: n.origin.z + (octant & 4 ? halfSize : 0)
-						},
-						size: halfSize,
-						state: CTU_State.CTU_LEAF,
-						octants: null,
-						leaf: {
-							n_capacity: n.leaf.n_capacity,
-							n_fill: 0,
-							indices: []
-						}
-					};
-				}
-
-				for (const i of n.leaf.indices) {
-					const position_ = tree.elements[i].position;
-					const octant = getOctant(n.origin, n.size, position_);
-					const octantNode = n.octants[octant];
-					octantNode.leaf.indices.push(i);
-					octantNode.leaf.n_fill++;
-				}
-
-				n.leaf  = null
-				n.state = CTU_State.CTU_NODE;
-			}
-		}
-
-		const octant = getOctant(n.origin, n.size, element.position);
-		n = n.octants[octant];
-		depth++;
-	}
+	_insert(tree, tree.root, i_element, tree.maxDepth)
 }
+
 

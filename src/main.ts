@@ -1,5 +1,6 @@
 import { Color, WebGLRenderer } from 'three'
 
+import { Vec3 } from 'cannon-es'
 import { createMap } from './engine/map.ts'
 import { State } from './engine/state.ts'
 import { windowInit } from './engine/window.ts'
@@ -42,36 +43,22 @@ async function main(renderer: WebGLRenderer) {
 		5                            // max depth
 	)
 
-	// Create cubes at random positions and add them to the octree
 	const numCubes = 30;
-
 	for (let i = 0; i < numCubes; i++) {
-		// Generate random position within the octree bounds
-		const position = {
-			x: (Math.random() * 80) - 40, // -40 to 40
-			y: (Math.random() * 80) - 40, // -40 to 40
-			z: (Math.random() * 80) - 40  // -40 to 40
-		};
-
-		// Create a cube at this position
+		const position = new Vec3(
+			(Math.random() * 80) - 40, // -40 to 40
+			(Math.random() * 80) - 40, // -40 to 40
+			(Math.random() * 80) - 40  // -40 to 40
+		);
 		const cube = new Cube(state, position);
-
-		// Add to octree
 		const element = {
 			position: position,
-			reference: cube // Store reference to the cube object
+			reference: cube
 		};
-
-		insert(octree, octree.root, element);
-
-		// Log each cube's position
-		console.log(`Cube ${i}: Position (${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`);
+		insert(octree, element);
 	}
 
-	// Create the octree visualizer
 	new OctreeVisualizer(state, octree)
-
-	// Log the octree to the browser console
 	console.log('Octree structure:', octree)
 
 	console.log('starting loop')
