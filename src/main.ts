@@ -37,10 +37,10 @@ async function main(renderer: WebGLRenderer) {
 
 	// Create an octree
 	const octree = initialize(
-		{ x: -50, y: -50, z: -50 }, // origin
-		100,                         // size
-		4,                           // capacity (how many objects per node before subdividing)
-		5                            // max depth
+		new Vec3(-50, -50, -50), // origin
+		100,                     // size
+		4,                       // capacity (how many objects per node before subdividing)
+		5                        // max depth
 	)
 
 	const numCubes = 30;
@@ -51,8 +51,24 @@ async function main(renderer: WebGLRenderer) {
 			(Math.random() * 80) - 40  // -40 to 40
 		);
 		const cube = new Cube(state, position);
+
+		// Create bounding box vectors for the element
+		// Assuming cube size of 1x1x1 (adjust as needed)
+		const cubeSize = 1;
+		const bbl = new Vec3(
+			position.x - cubeSize,
+			position.y - cubeSize,
+			position.z - cubeSize
+		);
+		const ftr = new Vec3(
+			position.x + cubeSize,
+			position.y + cubeSize,
+			position.z + cubeSize
+		);
+
 		const element = {
-			position: position,
+			bbl: bbl,
+			ftr: ftr,
 			reference: cube
 		};
 		insert(octree, element);
