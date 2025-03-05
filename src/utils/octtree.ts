@@ -102,7 +102,7 @@ initialize(origin: Vec3, size: number, n_capacity: number, maxDepth: number): Oc
 }
 
 function
-recurse(tree:OctTree, n: CTU, i:number, remainingDepth:number): void {
+_insert_recurse(tree:OctTree, n: CTU, i:number, remainingDepth:number): void {
 	const bbl = tree.elements[i].bbl;
 	const ftr = tree.elements[i].ftr;
 	const octants = getOctants(n.origin, n.size, bbl, ftr);
@@ -148,13 +148,13 @@ _insert(tree:OctTree, n: CTU, i_element:number , remainingDepth:number): void {
 			}
 
 			for (const i of n.leaf.indices) {
-				recurse(tree, n, i, remainingDepth - 1)
+				_insert_recurse(tree, n, i, remainingDepth - 1)
 			}
 			n.leaf = null
 		}
 	}
 
-	recurse(tree, n, i_element, remainingDepth - 1)
+	_insert_recurse(tree, n, i_element, remainingDepth - 1)
 }
 
 
@@ -164,5 +164,30 @@ insert(tree: OctTree, element: OctreeElement): void {
     tree.elements.push(element);
 	_insert(tree, tree.root, i_element, tree.maxDepth)
 }
+
+
+
+function
+_get(tree: OctTree, n: CTU, bbl: Vec3, ftr: Vec3, result: Set<number>): void
+{
+	if (n.state === CTU_State.CTU_LEAF) {
+		for (const i of n.leaf.indices) {
+			result.add(i);
+		}
+		return;
+	}
+	const octants = getOctants(n.origin, n.size, bbl, ftr);
+	for (const octant of octants) {
+		_get(tree, n.octants[octant], bbl, ftr, result);
+	}
+}
+
+export function
+get(tree: OctTree, bbl: Vec3, ftr: Vec3):number[] {
+	const result: Set<number> = new Set<number>();
+	_get(tree, tree.root, bbl, ftr, result);
+	return Array.from(result);
+}
+
 
 
