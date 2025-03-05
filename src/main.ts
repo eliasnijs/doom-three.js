@@ -7,7 +7,7 @@ import { windowInit } from './engine/window.ts'
 import { Cube } from './game-objects/cube.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
 import { OctreeVisualizer } from './game-objects/octree-visualizer.ts'
-import { initialize, insert } from './utils/octtree.ts'
+import { octtree_initialize, octtree_insert } from './utils/octtree.ts'
 
 export const MAZE_X_SIZE = 42
 export const MAZE_Z_SIZE = 42
@@ -36,7 +36,7 @@ async function main(renderer: WebGLRenderer) {
 	// await createMap(debugPanel, state)
 
 	// Create an octree
-	const octree = initialize(
+	const octree = octtree_initialize(
 		new Vec3(-50, -50, -50), // origin
 		100,                     // size
 		4,                       // capacity (how many objects per node before subdividing)
@@ -50,28 +50,14 @@ async function main(renderer: WebGLRenderer) {
 			(Math.random() * 80) - 40, // -40 to 40
 			(Math.random() * 80) - 40  // -40 to 40
 		);
-		const cube = new Cube(state, position);
+		const cubeSize = 5;
+		const cube = new Cube(state, position, cubeSize);
 
 		// Create bounding box vectors for the element
-		// Assuming cube size of 1x1x1 (adjust as needed)
-		const cubeSize = 1;
-		const bbl = new Vec3(
-			position.x - cubeSize,
-			position.y - cubeSize,
-			position.z - cubeSize
-		);
-		const ftr = new Vec3(
-			position.x + cubeSize,
-			position.y + cubeSize,
-			position.z + cubeSize
-		);
-
-		const element = {
-			bbl: bbl,
-			ftr: ftr,
-			reference: cube
-		};
-		insert(octree, element);
+		const bbl = new Vec3(position.x - cubeSize/2, position.y - cubeSize/2, position.z - cubeSize/2);
+		const ftr = new Vec3(position.x + cubeSize/2, position.y + cubeSize/2, position.z + cubeSize/2);
+		const element = {bbl: bbl, ftr: ftr, reference: cube};
+		octtree_insert(octree, element);
 	}
 
 	new OctreeVisualizer(state, octree)

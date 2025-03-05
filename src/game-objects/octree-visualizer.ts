@@ -21,18 +21,13 @@ export class OctreeVisualizer extends GameObject {
   }
 
   private renderOctree(): void {
-    // Clear any existing visualization
     this.clearVisualization()
-
-    // Start rendering from the root node
     this.renderNode(this.octree.root, 0)
   }
 
   private renderNode(node: CTU, depth: number): void {
-    // Don't render beyond max depth
     if (depth > this.maxDepthToRender) return
 
-    // Create a wireframe box for this node
     const geometry = new BoxGeometry(node.size, node.size, node.size)
     const edges = new EdgesGeometry(geometry)
 
@@ -49,18 +44,15 @@ export class OctreeVisualizer extends GameObject {
 
     const wireframe = new LineSegments(edges, material)
 
-    // Position the box at the center of the node
     wireframe.position.set(
       node.origin.x + node.size / 2,
       node.origin.y + node.size / 2,
       node.origin.z + node.size / 2
     )
 
-    // Add to scene and keep track for cleanup
     this.scene.add(wireframe)
     this.lines.push(wireframe)
 
-    // If this is a node with children, recursively render children
     if (node.state === CTU_State.CTU_NODE && node.octants) {
       for (let i = 0; i < 8; i++) {
         this.renderNode(node.octants[i], depth + 1)
@@ -68,12 +60,10 @@ export class OctreeVisualizer extends GameObject {
     }
   }
 
-  // Update visualization (called when octree changes)
   updateVisualization(): void {
     this.renderOctree()
   }
 
-  // Clear all visualization elements
   private clearVisualization(): void {
     for (const line of this.lines) {
       this.scene.remove(line)
@@ -82,14 +72,13 @@ export class OctreeVisualizer extends GameObject {
   }
 
   animate(deltaTime: number, state: State, renderer: WebGLRenderer): void {
-    // Nothing to do here for static visualization
+	  // pass
   }
 
   cleanup(): void {
     this.clearVisualization()
   }
 
-  // Allow toggling the maximum depth to render
   setMaxDepth(depth: number): void {
     this.maxDepthToRender = depth
     this.renderOctree()

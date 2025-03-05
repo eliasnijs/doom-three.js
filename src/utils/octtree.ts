@@ -1,4 +1,15 @@
 
+// TODO(Elias): complete the documentation, add exported functions and structures, add example
+// usage and guidance on using a static and dynamic tree, also add something about the
+// distinction between elements and indices
+/***********************************************************************************************
+
+Octtree Implementation
+
+***********************************************************************************************/
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Dependencies
 
@@ -41,9 +52,12 @@ export interface CTU {
 	leaf:		CTU_LeafData | null
 }
 
-export interface OctreeElement {
+
+// TODO(Elias): discuss linking to the actual engine and implement
+export interface OctreeElement<T=any> {
 	bbl: Vec3	// most back, bottom, left point of the element
 	ftr: Vec3   // most fron, top, right point of the element
+	ref: T
 }
 
 export interface OctTree {
@@ -82,7 +96,7 @@ function getOctants(origin: Vec3, size: number, bbl: Vec3, ftr: Vec3): Octant[] 
 
 
 export function
-initialize(origin: Vec3, size: number, n_capacity: number, maxDepth: number): OctTree {
+octtree_initialize(origin: Vec3, size: number, n_capacity: number, maxDepth: number): OctTree {
     const root: CTU = {
         origin:		origin,
         size:		size,
@@ -159,7 +173,7 @@ _insert(tree:OctTree, n: CTU, i_element:number , remainingDepth:number): void {
 
 
 export function
-insert(tree: OctTree, element: OctreeElement): void {
+octtree_insert(tree: OctTree, element: OctreeElement): void {
     const i_element = tree.elements.length;
     tree.elements.push(element);
 	_insert(tree, tree.root, i_element, tree.maxDepth)
@@ -183,7 +197,7 @@ _get(tree: OctTree, n: CTU, bbl: Vec3, ftr: Vec3, result: Set<number>): void
 }
 
 export function
-get(tree: OctTree, bbl: Vec3, ftr: Vec3):number[] {
+octtree_get(tree: OctTree, bbl: Vec3, ftr: Vec3):number[] {
 	const result: Set<number> = new Set<number>();
 	_get(tree, tree.root, bbl, ftr, result);
 	return Array.from(result);
