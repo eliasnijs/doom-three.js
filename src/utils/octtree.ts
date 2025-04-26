@@ -104,6 +104,7 @@ export interface OctTree {
 	root:			CTU
 	elements:		BoxCollider[]
 	maxDepth:		number
+	n_capacity:		number
 }
 
 
@@ -152,6 +153,7 @@ octtree_initialize(origin: Vector3, width: number, n_capacity: number, maxDepth:
         root: root,
         elements: [],
 		maxDepth: maxDepth,
+		n_capacity: n_capacity
     };
 }
 
@@ -214,7 +216,7 @@ _insert(tree:OctTree, n: CTU, i_element:number , remainingDepth:number): void {
 
 
 export function
-octtree_insert(tree: OctTree, element: OctreeElement): void {
+octtree_insert(tree: OctTree, element: BoxCollider): void {
     const i_element = tree.elements.length;
 	tree.elements.push(element);
 	_insert(tree, tree.root, i_element, tree.maxDepth)
@@ -245,20 +247,26 @@ octtree_get(tree: OctTree, bbl: Vector3, ftr: Vector3):number[] {
 }
 
 
-// ANCHOR(Elias)
 export function
-octrree_mark_dead(tree: OctTree, element: BoxCollider) {
-	// TODO(Elias): write this
-	// just replace the reference in the list with an undefined or somethign
-	// -> rebuild, skipd the undefined
+octtree_mark_dead(tree: OctTree, element: BoxCollider): void {
+	const index = tree.elements.findIndex(e => e === element);
+	if (index !== -1) {
+		tree.elements[index] = undefined;
+	}
 }
 
-
 export function
-octrree_rebuild(tree: OctTree, element: BoxCollider) {
-	// TODO(Elias): write this
-}
+octtree_rebuild(tree: OctTree): void {
+	const validElements = tree.elements.filter(element => element !== undefined) as BoxCollider[];
+	const newTree = octtree_initialize(tree.root.origin.clone(), tree.root.size,
+									   tree.n_capacity, tree.maxDepth);
+	for (const element of validElements) {
+		octtree_insert(newTree, element);
+	}
 
+	tree.root = newTree.root;
+	tree.elements = newTree.elements;
+}
 
 
 

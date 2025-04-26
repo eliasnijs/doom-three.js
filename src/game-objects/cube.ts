@@ -10,20 +10,10 @@ export class Cube extends GameObject {
 
 	constructor(state: State, position = { x: 0, y: 5, z: 0 }, size = 5) {
 		super(state)
-
 		const geometry = new BoxGeometry(size, size, size)
 		const material = new MeshStandardMaterial({ color: 0xff0000 })
 		this.mesh = new Mesh(geometry, material)
 		state.scene.add(this.mesh)
-
-		// create physics body
-		this.body = new Body({
-			mass: 0, // Mass of 0 makes it static (won't fall)
-			shape: new BoxBody(new Vec3(size/2, size/2, size/2)),
-		})
-
-		this.body.position.set(position.x, position.y, position.z)
-		state.physicsWorld.addBody(this.body)
 	}
 
 	animate(deltaTime: number, state: State, renderer: WebGLRenderer): void {
