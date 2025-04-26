@@ -19,6 +19,7 @@ export class Floor extends GameObject {
 		this.body.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
 
 		// Add the body to the world
+		// TODO(Elias): replace with correct collider
 		state.physicsWorld.addBody(this.body)
 	}
 

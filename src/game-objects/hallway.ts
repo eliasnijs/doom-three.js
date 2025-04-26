@@ -1,7 +1,8 @@
-import { Body, Box, Vec3 } from 'cannon-es'
-import { MeshStandardMaterial, Object3D } from 'three'
+import { Body, Box } from 'cannon-es'
+import { MeshStandardMaterial, Object3D, Vector3  } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
+import { BoxCollider } from '../engine/box-collider.ts'
 import { State } from '../engine/state.ts'
 import { GRID_SIZE } from '../main.ts'
 import { getRandomItem, HallwayObjects } from '../utils/hallway-utils.ts'
@@ -81,26 +82,32 @@ export class Hallway extends GameObject {
 		const [north, east, south, west] = openSides
 
 		const wallPositions = [
-			{ x: 0, z: GRID_SIZE / 2, xw: GRID_SIZE / 2, zw: COLLIDER_THICKNESS, open: north },
-			{ x: -GRID_SIZE / 2, z: 0, xw: COLLIDER_THICKNESS, zw: GRID_SIZE / 2, open: east },
-			{ x: 0, z: -GRID_SIZE / 2, xw: GRID_SIZE / 2, zw: COLLIDER_THICKNESS, open: south },
-			{ x: GRID_SIZE / 2, z: 0, xw: COLLIDER_THICKNESS, zw: GRID_SIZE / 2, open: west },
+			{ x: 0,				 z: GRID_SIZE / 2,	xw: GRID_SIZE / 2,		zw: COLLIDER_THICKNESS, open: north },
+			{ x: -GRID_SIZE / 2, z: 0,				xw: COLLIDER_THICKNESS, zw: GRID_SIZE / 2,		open: east  },
+			{ x: 0,				 z: -GRID_SIZE / 2, xw: GRID_SIZE / 2,		zw: COLLIDER_THICKNESS, open: south },
+			{ x: GRID_SIZE / 2,	 z: 0,				xw: COLLIDER_THICKNESS, zw: GRID_SIZE / 2,		open: west  },
 		]
 
+		// ANCHOR(Elias)
 		for (const { x, z, xw, zw, open } of wallPositions) {
 			if (!open) {
-				const wallCollider = new Body({
-					type: Body.STATIC,
-					shape: new Box(new Vec3(xw, GRID_SIZE / 2, zw)),
-				})
+				// TODO(Elias): remove this outdated code
+				// const wallCollider = new Body({
+				// 	type: Body.STATIC,
+				// 	shape: new Box(new Vector3(xw, GRID_SIZE / 2, zw)),
+				// })
 
-				wallCollider.position.set(
+				const pos = new Vector3(
 					this.grid_x * GRID_SIZE + x,
 					GRID_SIZE / 2,
-					this.grid_z * GRID_SIZE + z,
+					this.grid_z * GRID_SIZE + z
 				)
-
-				state.physicsWorld.addBody(wallCollider)
+				const c: BoxCollider = {
+					ref:	 this,
+					bbl_rel: pos.clone().add(new Vector3(-xw, -GRID_SIZE / 2, -zw)),
+					ftr_rel: pos.clone().add(new Vector3(-xw,  GRID_SIZE / 2,  zw)),
+				}
+				state.registerCollider(c, false)
 			}
 		}
 	}

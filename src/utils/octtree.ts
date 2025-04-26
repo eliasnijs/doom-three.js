@@ -2,20 +2,55 @@
 // TODO(Elias): complete the documentation, add exported functions and structures, add example
 // usage and guidance on using a static and dynamic tree, also add something about the
 // distinction between elements and indices
+
 /***********************************************************************************************
 
 Octtree Implementation
+
+
+
+
+Example:
+```
+const octree = octtree_initialize(
+	new Vector3(-50, -50, -50), // origin
+	100,                     // size
+	4,                       // capacity (how many objects per node before subdividing)
+	5                        // max depth
+)
+
+const numCubes = 30;
+for (let i = 0; i < numCubes; i++) {
+	const position = new Vector3(
+		(Math.random() * 80) - 40, // -40 to 40
+		(Math.random() * 80) - 40, // -40 to 40
+		(Math.random() * 80) - 40  // -40 to 40
+	);
+	const cubeSize = 5;
+	const cube = new Cube(state, position, cubeSize);
+
+	const element = {
+		bbl: new Vector3(position.x - cubeSize/2, position.y - cubeSize/2, position.z - cubeSize/2),
+		ftr: new Vector3(position.x + cubeSize/2, position.y + cubeSize/2, position.z + cubeSize/2),
+		ref: cube
+	};
+	octtree_insert(octree, element);
+}
+
+new OctreeVisualizer(state, octree)
+console.log('Octree structure:', octree)
+```
 
 ***********************************************************************************************/
 
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Dependencies
 
-import { Vec3 } from 'cannon-es'
+import { Vector3 } from 'three'
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Data Layouts
 
 export enum Octant {
@@ -27,7 +62,9 @@ export enum Octant {
 	OCTANT_FBR,
 	OCTANT_FTL,
 	OCTANT_FTR,
+	OCTANT_COUNT,
 }
+
 export const OCTANT_STRING_TABLE: string[] = [
     "Back-Bottom-Left", "Back-Bottom-Right", "Back-Top-Left", "Back-Top-Right",
     "Front-Bottom-Left", "Front-Bottom-Right", "Front-Top-Left", "Front-Top-Right"
@@ -45,33 +82,36 @@ export interface CTU_LeafData {
 }
 
 export interface CTU {
-	origin:		Vec3 // most back,bottom,left point
-	size:		number
+	origin:		Vector3		// most back,bottom,left point
+	size:		number		// width of the side of the square the CTU represents
 	state:		CTU_State
 	octants:	[CTU, CTU, CTU, CTU, CTU, CTU, CTU, CTU] | null
 	leaf:		CTU_LeafData | null
 }
 
 
-// TODO(Elias): discuss linking to the actual engine and implement
+/*
+NOTE(Elias): This could server as a general element of the octtree. However, since, we are only
+using the tree for collision detection, it can directly store colliders at the moment.
 export interface OctreeElement<T=any> {
-	bbl: Vec3	// most back, bottom, left point of the element
-	ftr: Vec3   // most fron, top, right point of the element
+	bbl: Vector3	// most back, bottom, left point of the element
+	ftr: Vector3   // most fron, top, right point of the element
 	ref: T
 }
+*/
 
 export interface OctTree {
 	root:			CTU
-	elements:		OctreeElement[]
+	elements:		BoxCollider[]
 	maxDepth:		number
 }
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Utility Functions
 
-function getOctants(origin: Vec3, size: number, bbl: Vec3, ftr: Vec3): Octant[] {
-	const midPoint = origin.clone().vadd(new Vec3(size/2, size/2, size/2));
+function getOctants(origin: Vector3, size: number, bbl: Vector3, ftr: Vector3): Octant[] {
+	const midPoint = origin.clone().add(new Vector3(size/2, size/2, size/2));
 	const atLeft   = bbl.x < midPoint.x;
 	const atRight  = ftr.x >= midPoint.x
 	const atBottom = bbl.y < midPoint.y;
@@ -88,22 +128,22 @@ function getOctants(origin: Vec3, size: number, bbl: Vec3, ftr: Vec3): Octant[] 
 			result.push(i as Octant);
 		}
 	}
+
 	return result;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Implementation
 
-
 export function
-octtree_initialize(origin: Vec3, size: number, n_capacity: number, maxDepth: number): OctTree {
+octtree_initialize(origin: Vector3, width: number, n_capacity: number, maxDepth: number): OctTree {
     const root: CTU = {
         origin:		origin,
-        size:		size,
+        size:		width,
         state:		CTU_State.CTU_LEAF,
         octants:	null,
         leaf: {
-			n_capacity,
+			n_capacity: n_capacity,
             n_fill: 0,
             indices: []
         }
@@ -117,8 +157,9 @@ octtree_initialize(origin: Vec3, size: number, n_capacity: number, maxDepth: num
 
 function
 _insert_recurse(tree:OctTree, n: CTU, i:number, remainingDepth:number): void {
-	const bbl = tree.elements[i].bbl;
-	const ftr = tree.elements[i].ftr;
+	const pos = tree.elements[i].ref.mesh.position
+	const bbl = pos.clone().add(tree.elements[i].bbl_rel);
+	const ftr = pos.clone().add(tree.elements[i].ftr_rel);
 	const octants = getOctants(n.origin, n.size, bbl, ftr);
 	for (const octant of octants) {
 		_insert(tree, n.octants[octant], i, remainingDepth - 1)
@@ -143,7 +184,7 @@ _insert(tree:OctTree, n: CTU, i_element:number , remainingDepth:number): void {
 
 			const size = n.size / 2;
 			for (let octant = 0; octant < 8; ++octant) {
-				const origin = new Vec3(
+				const origin = new Vector3(
 					n.origin.x + (octant & 1 ? size : 0),
 					n.origin.y + (octant & 2 ? size : 0),
 					n.origin.z + (octant & 4 ? size : 0)
@@ -175,14 +216,14 @@ _insert(tree:OctTree, n: CTU, i_element:number , remainingDepth:number): void {
 export function
 octtree_insert(tree: OctTree, element: OctreeElement): void {
     const i_element = tree.elements.length;
-    tree.elements.push(element);
+	tree.elements.push(element);
 	_insert(tree, tree.root, i_element, tree.maxDepth)
 }
 
 
 
 function
-_get(tree: OctTree, n: CTU, bbl: Vec3, ftr: Vec3, result: Set<number>): void
+_get(tree: OctTree, n: CTU, bbl: Vector3, ftr: Vector3, result: Set<number>): void
 {
 	if (n.state === CTU_State.CTU_LEAF) {
 		for (const i of n.leaf.indices) {
@@ -197,11 +238,29 @@ _get(tree: OctTree, n: CTU, bbl: Vec3, ftr: Vec3, result: Set<number>): void
 }
 
 export function
-octtree_get(tree: OctTree, bbl: Vec3, ftr: Vec3):number[] {
+octtree_get(tree: OctTree, bbl: Vector3, ftr: Vector3):number[] {
 	const result: Set<number> = new Set<number>();
 	_get(tree, tree.root, bbl, ftr, result);
 	return Array.from(result);
 }
+
+
+// ANCHOR(Elias)
+export function
+octrree_mark_dead(tree: OctTree, element: BoxCollider) {
+	// TODO(Elias): write this
+	// just replace the reference in the list with an undefined or somethign
+	// -> rebuild, skipd the undefined
+}
+
+
+export function
+octrree_rebuild(tree: OctTree, element: BoxCollider) {
+	// TODO(Elias): write this
+}
+
+
+
 
 
 

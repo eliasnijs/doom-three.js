@@ -11,21 +11,23 @@ export class OctreeVisualizer extends GameObject {
   private scene: Scene
   private depth: number = 0
   private maxDepthToRender: number = 10
+  private greenIntensity:number = 0.0
 
-  constructor(state: State, octree: OctTree, maxDepthToRender = 10) {
+  constructor(state: State, octree: OctTree, greenIntensity:number, maxDepthToRender = 10) {
     super(state)
     this.octree = octree
     this.scene = state.scene
     this.maxDepthToRender = maxDepthToRender
     this.renderOctree()
+	this.greenIntensity = 40.0
   }
 
-  private renderOctree(): void {
+  renderOctree(): void {
     this.clearVisualization()
     this.renderNode(this.octree.root, 0)
   }
 
-  private renderNode(node: CTU, depth: number): void {
+  private renderNode(node: CTU, depth: number, ): void {
     if (depth > this.maxDepthToRender) return
 
     const geometry = new BoxGeometry(node.size, node.size, node.size)
@@ -33,7 +35,7 @@ export class OctreeVisualizer extends GameObject {
 
     // Set color based on depth - deeper nodes are more blue, shallower are more red
     const depthRatio = Math.min(depth / 8, 1) // Normalize depth to 0-1 range
-    const color = new Color(1 - depthRatio, 0.2, depthRatio)
+    const color = new Color(1 - depthRatio, this.greenIntensity, depthRatio)
 
     const material = new LineBasicMaterial({
       color: color,
@@ -58,10 +60,6 @@ export class OctreeVisualizer extends GameObject {
         this.renderNode(node.octants[i], depth + 1)
       }
     }
-  }
-
-  updateVisualization(): void {
-    this.renderOctree()
   }
 
   private clearVisualization(): void {

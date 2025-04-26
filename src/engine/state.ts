@@ -1,4 +1,4 @@
-import { Vec3, World } from 'cannon-es'
+import { World } from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger'
 import {
 	AmbientLight,
@@ -7,25 +7,38 @@ import {
 	PerspectiveCamera,
 	Scene,
 	WebGLRenderer,
+	Vector3
 } from 'three'
 
 import { MAZE_X_CENTER, MAZE_Z_CENTER } from '../main.ts'
 import { GameObject } from './game-object.ts'
+import { OctTree, octrree_rebuild, octtree_insert, octtree_initialize} from '../utils/octtree.ts'
+import { BoxCollider } from '../engine/box-collider.ts'
+import { OctreeVisualizer } from '../game-objects/octree-visualizer.ts'
 
 type Constructor<T> = { new (...args: never[]): T }
 
 export class State {
-	scene: Scene
-	debugCamera: PerspectiveCamera
-	gameObjects: GameObject[]
-	last_time_ms: number
-	ambientLight: AmbientLight
-	directionalLight: DirectionalLight
-	debug: boolean = false
-	physicsWorld: World
-	cannonDebugger?: { update: () => void }
-	cannonDebuggerMeshes: Mesh[] = []
-	activeCamera: PerspectiveCamera
+	// TODO(Elias): check if this is nessecary: `physicsWorld:World`
+
+	scene:					Scene
+	activeCamera:			PerspectiveCamera
+	gameObjects:			GameObject[]
+
+	dynamicCollisionTree:	OctTree // stores colliders that are updated each frame
+	staticCollisionTree:	OctTree // stores colliders that are updated on load
+	octtreevision:			OctTreeVisualizer[]
+
+	ambientLight:			AmbientLight
+	directionalLight:		DirectionalLight
+
+	last_time_ms:			number
+
+	debugCamera:			PerspectiveCamera
+	debug:					boolean				= false
+	cannonDebugger?:		{ update: () => void }
+	cannonDebuggerMeshes:	Mesh[] = []
+
 
 	constructor() {
 		this.scene = new Scene()
@@ -43,6 +56,13 @@ export class State {
 
 		this.gameObjects = []
 		this.last_time_ms = 0.0
+
+		this.dynamicCollisionTree = octtree_initialize(new Vector3(-10.0,-10,-10), 450, 8, 8)
+		this.staticCollisionTree  = octtree_initialize(new Vector3(-10.0,-10,-10), 450, 8, 8)
+
+		this.octtreevision = []
+		// this.octreevision.push(new OctreeVisualizer(this, this.dynamicCollisionTree, 0.2))
+		// this.octtreevision.push(new OctreeVisualizer(this, this.staticCollisionTree, 0.8))
 
 		// Set the active camera
 		this.activeCamera = this.debugCamera
@@ -62,12 +82,13 @@ export class State {
 		this.directionalLight.shadow.camera.near = 0.5
 		this.directionalLight.shadow.camera.far = 50
 
+
 		// Add the light to the scene
 		this.scene.add(this.directionalLight)
 
 		// Create the physics world
 		this.physicsWorld = new World({
-			gravity: new Vec3(0, -9.82, 0),
+			gravity: new Vector3(0, -9.82, 0),
 		})
 
 		// Update the cannon-es debugger
@@ -91,6 +112,7 @@ export class State {
 		for (const mesh of this.cannonDebuggerMeshes) {
 			mesh.visible = this.debug
 		}
+
 	}
 
 	animate(time_ms: number, renderer: WebGLRenderer) {
@@ -105,6 +127,7 @@ export class State {
 
 		// Update all game objects
 		this.gameObjects.forEach(gameObject => gameObject.animate(delta, this, renderer))
+
 	}
 
 	// Register a game object with the state
@@ -118,6 +141,20 @@ export class State {
 		if (index !== -1) {
 			this.gameObjects.splice(index, 1)
 		}
+	}
+
+	// ANCHOR(Elias)
+	registerCollider(collider: BoxCollider, isDynamic:bool) {
+		if (isDynamic) {
+			octtree_insert(this.dynamicCollisionTree, collider)
+		} else {
+			octtree_insert(this.staticCollisionTree, collider)
+		}
+	}
+
+	unregisterCollider(collider: BoxCollider) {
+		octtree_mark_dead(this.dynamicCollisionTree, collider)
+		octtree_mark_dead(this.staticCollisionTree,  collider)
 	}
 
 	// Get the first game object of a given type, useful for finding singletons
