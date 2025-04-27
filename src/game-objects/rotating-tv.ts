@@ -8,17 +8,14 @@ import { DebugPanel } from './debug-panel.ts'
 const ROTATION_SPEED = 0.001
 
 export class RotatingTv extends GameObject {
-	mesh: Group | undefined
+	mesh:		Group | undefined
 	debugPanel: DebugPanel | undefined
 
 	constructor(state: State) {
 		super(state)
-
 		this.debugPanel = state.findFirstGameObjectOfType(DebugPanel)
-
 		void loadGLTF('tv', 'Television_01_1k.gltf').then(gltf => {
 			this.mesh = gltf.scene
-
 			state.scene.add(this.mesh)
 		})
 	}
@@ -31,4 +28,5 @@ export class RotatingTv extends GameObject {
 			}
 		}
 	}
+
 }

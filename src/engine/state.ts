@@ -1,118 +1,146 @@
-import { Vec3, World } from 'cannon-es'
-import CannonDebugger from 'cannon-es-debugger'
-import {
-	AmbientLight,
-	DirectionalLight,
-	Mesh,
-	PerspectiveCamera,
-	Scene,
-	WebGLRenderer,
-} from 'three'
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///// Dependencies
+
+import {AmbientLight, DirectionalLight, Mesh, PerspectiveCamera, Scene, WebGLRenderer, Vector3} from 'three'
 
 import { MAZE_X_CENTER, MAZE_Z_CENTER } from '../main.ts'
 import { GameObject } from './game-object.ts'
+import { BoxCollider } from './physics.ts'
+import { OctTree, octtree_rebuild, octtree_insert, octtree_initialize, octtree_mark_dead } from '../engine/octtree.ts'
+import { BoxColliderVisualizer } from '../game-objects/box-collider-visualizer.ts'
+import { OctreeVisualizer } from '../game-objects/octree-visualizer.ts'
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///// Types
 
 type Constructor<T> = { new (...args: never[]): T }
 
-export class State {
-	scene: Scene
-	debugCamera: PerspectiveCamera
-	gameObjects: GameObject[]
-	last_time_ms: number
-	ambientLight: AmbientLight
-	directionalLight: DirectionalLight
-	debug: boolean = false
-	physicsWorld: World
-	cannonDebugger?: { update: () => void }
-	cannonDebuggerMeshes: Mesh[] = []
-	activeCamera: PerspectiveCamera
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///// Configuration
 
-	constructor() {
-		this.scene = new Scene()
+const DYNAMIC_TREE_MAX_DEPTH	= 8		// max depth of the dynamic spatial partitioning octtree
+const DYNAMIC_TREE_N_CAPACITY	= 8		// max capacity of a leaf in the dynamic spatial partitioning octtree
+const STATIC_TREE_MAX_DEPTH		= 8		// max depth of the static spatial partitioning octtree
+const STATIC_TREE_N_CAPACITY	= 8		// max capacity of a leaf in the static spatial partitioning octtree
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///// Data Layouts
+
+export class State {
+	scene:					Scene
+	last_time_ms:			number
+	physicsWorld:			PhysicsWorld
+
+	gameObjects:			GameObject[]
+
+	// NOTE(Elias): management of the colliders is the responsibility of the owner of the colliders, meaning
+	// that the owner is also responsible for cleaning up it's colliders using the 'unregister' function.
+	dynamicCollisionTree:	OctTree // stores colliders that are updated each frame
+	staticCollisionTree:	OctTree // stores colliders that are updated on load
+
+	activeCamera:			PerspectiveCamera
+	ambientLight:			AmbientLight
+	directionalLight:		DirectionalLight
+
+	debugCamera:			PerspectiveCamera
+	debug:					boolean					= false
+	cannonDebugger?:		{ update: () => void }
+	cannonDebuggerMeshes:	Mesh[] = []
+	boxColliderVisualizer?: BoxColliderVisualizer
+	octreeVisualizer?: OctreeVisualizer
+
+
+	constructor(worldsize) {
+		this.scene			= new Scene()
+		this.last_time_ms	= 0.0
+		this.physicWorld	= {gravity: new Vector3(0, -9.82, 0)}
+
+		this.gameObjects = [];
+		this.dynamicCollisionTree = octtree_initialize(new Vector3(-10.0, -10, -10), worldsize,
+													   DYNAMIC_TREE_N_CAPACITY, DYNAMIC_TREE_MAX_DEPTH);
+		this.staticCollisionTree = octtree_initialize(new Vector3(-10.0, -10, -10), worldsize,
+													  STATIC_TREE_N_CAPACITY, STATIC_TREE_MAX_DEPTH);
 
 		// Create a debug camera
-		this.debugCamera = new PerspectiveCamera(
-			75,
-			window.innerWidth / window.innerHeight,
-			0.1,
-			1000,
-		)
+		this.debugCamera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 		this.debugCamera.position.z = MAZE_Z_CENTER - 25
 		this.debugCamera.position.x = MAZE_X_CENTER
 		this.debugCamera.position.y = 150
-
-		this.gameObjects = []
-		this.last_time_ms = 0.0
-
-		// Set the active camera
 		this.activeCamera = this.debugCamera
 
-		// Create an ambient light
+		// Set lighting
 		this.ambientLight = new AmbientLight(0xffffff, 0.5)
 		this.scene.add(this.ambientLight)
 
-		// Create a directional light
 		this.directionalLight = new DirectionalLight(0xffffff, 5)
 		this.directionalLight.position.set(5, 5, 0)
-
-		// Enable shadow casting
-		this.directionalLight.castShadow = true
-		this.directionalLight.shadow.mapSize.width = 2048 // Higher resolution shadows
+		this.directionalLight.castShadow			= true
+		this.directionalLight.shadow.mapSize.width	= 1024 // Higher resolution shadows
 		this.directionalLight.shadow.mapSize.height = 2048
-		this.directionalLight.shadow.camera.near = 0.5
-		this.directionalLight.shadow.camera.far = 50
-
-		// Add the light to the scene
+		this.directionalLight.shadow.camera.near	= 0.5
+		this.directionalLight.shadow.camera.far		= 50
 		this.scene.add(this.directionalLight)
-
-		// Create the physics world
-		this.physicsWorld = new World({
-			gravity: new Vec3(0, -9.82, 0),
-		})
-
-		// Update the cannon-es debugger
-		this.cannonDebugger = CannonDebugger(this.scene, this.physicsWorld, {
-			color: 0xff0000,
-			onInit: (_, mesh) => {
-				this.cannonDebuggerMeshes.push(mesh)
-				mesh.visible = this.debug
-			},
-		})
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//// Configuring Functions
+
 	toggleDebug() {
-		// Loop all objects and set the wireframe
 		this.debug = !this.debug
+
 		for (const obj of this.gameObjects) {
 			obj.setDebug(this.debug)
 		}
 
-		// Toggle the visibility of the cannon-es debugger
-		for (const mesh of this.cannonDebuggerMeshes) {
-			mesh.visible = this.debug
+		if (this.debug) {
+			const staticColliders = this.getAllCollidersFromTree(this.staticCollisionTree);
+			const dynamicColliders = this.getAllCollidersFromTree(this.dynamicCollisionTree);
+			const allColliders = [...staticColliders, ...dynamicColliders];
+			if (!this.boxColliderVisualizer) {
+				this.boxColliderVisualizer = new BoxColliderVisualizer(this, allColliders);
+			} else {
+				this.boxColliderVisualizer.setColliders(allColliders);
+			}
+			if (!this.octreeVisualizer) {
+				this.octreeVisualizer = new OctreeVisualizer(this, this.staticCollisionTree, 0.8, 8);
+				new OctreeVisualizer(this, this.dynamicCollisionTree, 0.2, 8);
+			}
+		} else {
+			if (this.boxColliderVisualizer) {
+				this.boxColliderVisualizer.cleanup();
+				this.unregisterGameObject(this.boxColliderVisualizer);
+				this.boxColliderVisualizer = undefined;
+			}
+			const octreeVisualizers = this.findAllGameObjectsOfType(OctreeVisualizer);
+			for (const visualizer of octreeVisualizers) {
+				visualizer.cleanup();
+				this.unregisterGameObject(visualizer);
+			}
+			this.octreeVisualizer = undefined;
 		}
 	}
+
+	private getAllCollidersFromTree(tree: OctTree): BoxCollider[] {
+		return tree.elements.filter((element): element is BoxCollider => element !== undefined);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//// Updates
 
 	animate(time_ms: number, renderer: WebGLRenderer) {
 		const delta = time_ms - this.last_time_ms
 		this.last_time_ms = time_ms
-
-		// Run the physics simulation
-		this.physicsWorld.step(delta / 1000)
-
-		// Update the cannon-es debugger
-		this.cannonDebugger?.update()
-
-		// Update all game objects
+		octtree_rebuild(this.dynamicCollisionTree)
 		this.gameObjects.forEach(gameObject => gameObject.animate(delta, this, renderer))
 	}
 
-	// Register a game object with the state
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//// Handling GameObjects
+
 	registerGameObject(gameObject: GameObject) {
 		this.gameObjects.push(gameObject)
 	}
 
-	// Remove a game object from the state
 	unregisterGameObject(gameObject: GameObject) {
 		const index = this.gameObjects.indexOf(gameObject)
 		if (index !== -1) {
@@ -140,4 +168,21 @@ export class State {
 
 		return gameObjects
 	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///// Physics
+
+	registerCollider(collider: BoxCollider, isDynamic:bool) {
+		if (isDynamic) {
+			octtree_insert(this.dynamicCollisionTree, collider)
+		} else {
+			octtree_insert(this.staticCollisionTree, collider)
+		}
+	}
+
+	unregisterCollider(collider: BoxCollider) {
+		octtree_mark_dead(this.dynamicCollisionTree, collider)
+		octtree_mark_dead(this.staticCollisionTree,  collider)
+	}
+
 }

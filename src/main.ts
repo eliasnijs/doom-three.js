@@ -1,23 +1,24 @@
 import { Color, WebGLRenderer } from 'three'
 
+import { Vector3 } from 'THREE'
 import { createMap } from './engine/map.ts'
 import { State } from './engine/state.ts'
 import { windowInit } from './engine/window.ts'
+import { Cube } from './game-objects/cube.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
 
-export const MAZE_X_SIZE = 20
-export const MAZE_Z_SIZE = 20
+export const MAZE_X_SIZE = 42
+export const MAZE_Z_SIZE = 42
 export const GRID_SIZE = 10
 export const MAZE_X_CENTER = GRID_SIZE * Math.floor(MAZE_X_SIZE / 2)
 export const MAZE_Z_CENTER = GRID_SIZE * Math.floor(MAZE_Z_SIZE / 2)
 
+
 function animate(time_ms: number, state: State, renderer: WebGLRenderer) {
 	renderer.setClearColor(new Color(0, 0, 0)) // Set background color to black
 
-	// update state
 	state.animate(time_ms, renderer)
 
-	// render and swap
 	renderer.render(state.scene, state.activeCamera)
 	renderer.state.reset()
 }
@@ -25,10 +26,8 @@ function animate(time_ms: number, state: State, renderer: WebGLRenderer) {
 async function main(renderer: WebGLRenderer) {
 	windowInit(renderer)
 
-	const state = new State()
-
+	const state = new State(450)
 	const debugPanel = new DebugPanel(state, renderer)
-	// new RotatingTv(state)
 	await createMap(debugPanel, state)
 
 	console.log('starting loop')

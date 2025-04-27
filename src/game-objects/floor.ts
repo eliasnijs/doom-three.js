@@ -1,5 +1,3 @@
-import { Body, Plane } from 'cannon-es'
-
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
 
@@ -8,18 +6,6 @@ export class Floor extends GameObject {
 
 	constructor(state: State) {
 		super(state)
-
-		// Create a plane
-		this.body = new Body({
-			type: Body.STATIC,
-			shape: new Plane(),
-		})
-
-		// Set the rotation of the plane
-		this.body.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
-
-		// Add the body to the world
-		state.physicsWorld.addBody(this.body)
 	}
 
 	animate(): void {}

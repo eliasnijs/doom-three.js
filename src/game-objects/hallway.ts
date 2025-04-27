@@ -1,13 +1,13 @@
-import { Body, Box, Vec3 } from 'cannon-es'
-import { MeshStandardMaterial, Object3D } from 'three'
+import { MeshStandardMaterial, Object3D, Vector3  } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
+import { BoxCollider } from '../engine/physics.ts'
 import { State } from '../engine/state.ts'
 import { GRID_SIZE } from '../main.ts'
 import { getRandomItem, HallwayObjects } from '../utils/hallway-utils.ts'
 
 const HALLWAY_SCALE = 1.25
-const COLLIDER_THICKNESS = 0.1
+const COLLIDER_THICKNESS = 0.5
 
 export class Hallway extends GameObject {
 	mesh: Object3D
@@ -46,15 +46,10 @@ export class Hallway extends GameObject {
 			} else {
 				this.type = getRandomItem(['Hall_Light_90Turn', 'Hall_NoLight__90Turn'])
 				this.rotation = 0
-				if (north && east) {
-					this.rotation = 0
-				} else if (east && south) {
-					this.rotation = -90
-				} else if (south && west) {
-					this.rotation = -180
-				} else if (west && north) {
-					this.rotation = -270
-				}
+				if      (north && east) { this.rotation = 0    }
+				else if (east && south) { this.rotation = -90  }
+				else if (south && west) { this.rotation = -180 }
+				else if (west && north) { this.rotation = -270 }
 			}
 		} else if (count === 3) {
 			this.type = 'Hall_Junction_T'
@@ -74,35 +69,26 @@ export class Hallway extends GameObject {
 		this.mesh.scale.set(HALLWAY_SCALE, HALLWAY_SCALE, HALLWAY_SCALE)
 
 		// Add colliders to the hallway
-		this.addColliders(state, openSides)
-	}
-
-	addColliders(state: State, openSides: [boolean, boolean, boolean, boolean]): void {
-		const [north, east, south, west] = openSides
-
 		const wallPositions = [
-			{ x: 0, z: GRID_SIZE / 2, xw: GRID_SIZE / 2, zw: COLLIDER_THICKNESS, open: north },
-			{ x: -GRID_SIZE / 2, z: 0, xw: COLLIDER_THICKNESS, zw: GRID_SIZE / 2, open: east },
-			{ x: 0, z: -GRID_SIZE / 2, xw: GRID_SIZE / 2, zw: COLLIDER_THICKNESS, open: south },
-			{ x: GRID_SIZE / 2, z: 0, xw: COLLIDER_THICKNESS, zw: GRID_SIZE / 2, open: west },
+			{ x: 0,				 z: GRID_SIZE / 2,	xw: GRID_SIZE / 2,		zw: COLLIDER_THICKNESS, open: north },
+			{ x: -GRID_SIZE / 2, z: 0,				xw: COLLIDER_THICKNESS, zw: GRID_SIZE / 2,		open: east  },
+			{ x: 0,				 z: -GRID_SIZE / 2, xw: GRID_SIZE / 2,		zw: COLLIDER_THICKNESS, open: south },
+			{ x: GRID_SIZE / 2,	 z: 0,				xw: COLLIDER_THICKNESS, zw: GRID_SIZE / 2,		open: west  },
 		]
 
 		for (const { x, z, xw, zw, open } of wallPositions) {
 			if (!open) {
-				const wallCollider = new Body({
-					type: Body.STATIC,
-					shape: new Box(new Vec3(xw, GRID_SIZE / 2, zw)),
-				})
-
-				wallCollider.position.set(
-					this.grid_x * GRID_SIZE + x,
-					GRID_SIZE / 2,
-					this.grid_z * GRID_SIZE + z,
-				)
-
-				state.physicsWorld.addBody(wallCollider)
+				const c: BoxCollider = {
+					ref:	 this,
+					bbl_rel: new Vector3(x - xw, 0, z - zw),
+					ftr_rel: new Vector3(x + xw,  GRID_SIZE, z + zw),
+				}
+				state.registerCollider(c, false)
 			}
 		}
+	}
+
+	addColliders(state: State, openSides: [boolean, boolean, boolean, boolean]): void {
 	}
 
 	animate(): void {}
@@ -115,3 +101,4 @@ export class Hallway extends GameObject {
 		})
 	}
 }
+
