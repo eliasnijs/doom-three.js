@@ -1,9 +1,8 @@
-import { BoxGeometry, Color, LineBasicMaterial, LineSegments, Scene, WebGLRenderer } from 'three'
-import { EdgesGeometry } from 'three'
+import { BoxGeometry, Color, LineBasicMaterial, LineSegments, Scene, EdgesGeometry, WebGLRenderer } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
-import { CTU, CTU_State, OctTree } from '../utils/octtree.ts'
+import { CTU, CTU_State, OctTree } from '../engine/octtree.ts'
 
 export class OctreeVisualizer extends GameObject {
   private octree: OctTree

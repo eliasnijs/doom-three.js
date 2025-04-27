@@ -1,44 +1,39 @@
-import { Body, Cylinder, Quaternion, Vec3 } from 'cannon-es'
-import { PerspectiveCamera } from 'three'
+import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, Vector3 } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
+import { BoxCollider } from '../engine/physics.ts'
 import { State } from '../engine/state.ts'
 import { GRID_SIZE } from '../main.ts'
 import { mazeGridToWorldGrid, Pos } from '../utils/generate-maze.ts'
 
-const PLAYER_SPEED = 1
+const PLAYER_SPEED = 10
 const PLAYER_MOUSE_SENSITIVITY = 0.002
-const PLAYER_HEIGHT = 7
-const PLAYER_RADIUS = 1
+const PLAYER_HEIGHT = 4
+const PLAYER_WIDTH = 1
 const CAMERA_HEIGHT_OFFSET = 1.5
 
 export class Player extends GameObject {
-	body: Body
-	keys: { [key: string]: boolean }
-	velocity = new Vec3()
-	rotationY = 0
-	rotationX = 0
-	camera: PerspectiveCamera
-	isLocked = false
+	mesh:		Object3D
+	keys:		{ [key: string]: boolean }
+	velocity:	Vector3	= new Vector3(0.0, 0.0, 0.0)
+	rotationY:	number = 0
+	rotationX:	number = 0
+	camera:		PerspectiveCamera
+	isLocked	= false
 
 	constructor(state: State, [x, z]: Pos) {
 		super(state)
 
-		// Create a player
-		this.body = new Body({
-			mass: 75,
-			shape: new Cylinder(PLAYER_RADIUS, PLAYER_RADIUS, PLAYER_HEIGHT, 16),
-		})
-
 		// Set the position of the player
 		const [newX, newZ] = mazeGridToWorldGrid([z, x])
-		this.body.position.set(newX * GRID_SIZE, PLAYER_HEIGHT, newZ * GRID_SIZE)
+		const position = new Vector3(newX * GRID_SIZE, PLAYER_HEIGHT, newZ * GRID_SIZE)
 
-		// Limit the angular velocity
-		this.body.angularDamping = 1
-
-		// Add the body to the world
-		state.physicsWorld.addBody(this.body)
+		// Create a simple mesh for the player
+		const geometry = new BoxGeometry(PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_WIDTH)
+		const material = new MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.7 })
+		this.mesh = new Mesh(geometry, material)
+		this.mesh.position.copy(position)
+		state.scene.add(this.mesh)
 
 		// Create a camera
 		this.camera = new PerspectiveCamera(
@@ -50,6 +45,15 @@ export class Player extends GameObject {
 		this.camera.position.z = 0
 		this.camera.position.x = 0
 		this.camera.position.y = CAMERA_HEIGHT_OFFSET
+
+		// Add dynamic collider
+		const c: BoxCollider = {
+			ref:	 this,
+			bbl_rel: new Vector3(-PLAYER_WIDTH/2, -PLAYER_HEIGHT/2, -PLAYER_WIDTH/2),
+			ftr_rel: new Vector3(PLAYER_WIDTH/2, PLAYER_HEIGHT/2, PLAYER_WIDTH/2)
+		}
+		state.registerCollider(c, false)
+
 
 		// Initialize the controls
 		this.keys = {}
@@ -81,7 +85,7 @@ export class Player extends GameObject {
 			this.rotationY -= event.movementX * PLAYER_MOUSE_SENSITIVITY
 
 			// Apply the rotations
-			this.body.quaternion.setFromEuler(0, this.rotationY, 0)
+			this.mesh.rotation.y = this.rotationY
 			this.camera.rotation.set(this.rotationX, this.rotationY, 0, 'YXZ')
 		}
 	}
@@ -91,8 +95,8 @@ export class Player extends GameObject {
 	}
 
 	animate(deltaTime: number): void {
-		let moveX = 0,
-			moveZ = 0
+		let moveX = 0
+		let	moveZ = 0
 		if (this.keys['KeyW']) {
 			moveZ -= 1
 		}
@@ -109,25 +113,37 @@ export class Player extends GameObject {
 			moveX += 1
 		}
 
-		const moveDir = new Vec3(moveX, 0, moveZ)
-		moveDir.normalize()
+		// Create movement vector
+		const moveVec = new Vector3(moveX, 0, moveZ)
+		if (moveVec.length() > 0) {
+			moveVec.normalize()
+		}
 
 		// Rotate the movement vector by the player's Y rotation
-		const quaternion = new Quaternion()
-		quaternion.setFromAxisAngle(new Vec3(0, 1, 0), this.rotationY)
-
-		const transformedMove = new Vec3()
-		quaternion.vmult(moveDir, transformedMove) // Apply rotation
+		const direction = new Vector3()
+		direction.copy(moveVec)
+		direction.applyAxisAngle(new Vector3(0, 1, 0), this.rotationY)
 
 		// Scale movement by speed and deltaTime
-		transformedMove.scale(PLAYER_SPEED * deltaTime, this.velocity)
+		direction.multiplyScalar(PLAYER_SPEED * deltaTime / 1000)
 
-		// Apply velocity
-		this.body.velocity.x = this.velocity.x
-		this.body.velocity.z = this.velocity.z
+		// Apply movement to mesh position
+		this.mesh.position.add(direction)
 
-		// Update the camera position
-		this.camera.position.copy(this.body.position)
+		// Rotate the mesh to face the direction of movement
+		if (moveVec.length() > 0) {
+			this.mesh.rotation.y = this.rotationY
+		}
+
+		// Update the camera position to follow the mesh
+		this.camera.position.copy(this.mesh.position)
 		this.camera.position.y += CAMERA_HEIGHT_OFFSET
+
+		// TODO(Elias): resolve collision with terrain
+		// 1. take all colliders
+		// 2. resolve collisions to get displacement vectors
+		// 3. sum displacement vectors
+		// 4. update position
 	}
 }
+

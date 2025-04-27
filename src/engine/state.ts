@@ -1,160 +1,115 @@
-import { World } from 'cannon-es'
-import CannonDebugger from 'cannon-es-debugger'
-import {
-	AmbientLight,
-	DirectionalLight,
-	Mesh,
-	PerspectiveCamera,
-	Scene,
-	WebGLRenderer,
-	Vector3
-} from 'three'
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///// Dependencies
+
+import {AmbientLight, DirectionalLight, Mesh, PerspectiveCamera, Scene, WebGLRenderer, Vector3} from 'three'
 
 import { MAZE_X_CENTER, MAZE_Z_CENTER } from '../main.ts'
 import { GameObject } from './game-object.ts'
-import { OctTree, octrree_rebuild, octtree_insert, octtree_initialize} from '../utils/octtree.ts'
-import { BoxCollider } from '../engine/box-collider.ts'
+import { OctTree, octrree_rebuild, octtree_insert, octtree_initialize} from '../engine/octtree.ts'
 import { OctreeVisualizer } from '../game-objects/octree-visualizer.ts'
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///// Types
 
 type Constructor<T> = { new (...args: never[]): T }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///// Configuration
+
+const DYNAMIC_TREE_MAX_DEPTH	= 8		// max depth of the dynamic spatial partitioning octtree
+const DYNAMIC_TREE_N_CAPACITY	= 8		// max capacity of a leaf in the dynamic spatial partitioning octtree
+const STATIC_TREE_MAX_DEPTH		= 8		// max depth of the static spatial partitioning octtree
+const STATIC_TREE_N_CAPACITY	= 8		// max capacity of a leaf in the static spatial partitioning octtree
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///// Data Layouts
+
 export class State {
-	// TODO(Elias): check if this is nessecary: `physicsWorld:World`
-
 	scene:					Scene
-	activeCamera:			PerspectiveCamera
-	gameObjects:			GameObject[]
+	last_time_ms:			number
+	physicsWorld:			PhysicsWorld
 
+	gameObjects:			GameObject[]
 	dynamicCollisionTree:	OctTree // stores colliders that are updated each frame
 	staticCollisionTree:	OctTree // stores colliders that are updated on load
-	octtreevision:			OctTreeVisualizer[]
 
+	activeCamera:			PerspectiveCamera
 	ambientLight:			AmbientLight
 	directionalLight:		DirectionalLight
 
-	last_time_ms:			number
-
 	debugCamera:			PerspectiveCamera
-	debug:					boolean				= false
+	debug:					boolean					= false
 	cannonDebugger?:		{ update: () => void }
 	cannonDebuggerMeshes:	Mesh[] = []
 
 
-	constructor() {
-		this.scene = new Scene()
+	constructor(worldsize) {
+		this.scene			= new Scene()
+		this.last_time_ms	= 0.0
+		this.physicWorld	= {gravity: new Vector3(0, -9.82, 0)}
 
-		// Create a debug camera
-		this.debugCamera = new PerspectiveCamera(
-			75,
-			window.innerWidth / window.innerHeight,
-			0.1,
-			1000,
-		)
-		this.debugCamera.position.z = MAZE_Z_CENTER - 25
-		this.debugCamera.position.x = MAZE_X_CENTER
-		this.debugCamera.position.y = 150
-
-		this.gameObjects = []
-		this.last_time_ms = 0.0
-
-		this.dynamicCollisionTree = octtree_initialize(new Vector3(-10.0,-10,-10), 450, 8, 8)
-		this.staticCollisionTree  = octtree_initialize(new Vector3(-10.0,-10,-10), 450, 8, 8)
-
+		this.gameObjects = [];
+		this.dynamicCollisionTree = octtree_initialize(new Vector3(-10.0, -10, -10), worldsize,
+													   DYNAMIC_TREE_N_CAPACITY, DYNAMIC_TREE_MAX_DEPTH);
+		this.staticCollisionTree = octtree_initialize(new Vector3(-10.0, -10, -10), worldsize,
+													  STATIC_TREE_N_CAPACITY, STATIC_TREE_MAX_DEPTH);
 		this.octtreevision = []
 		// this.octreevision.push(new OctreeVisualizer(this, this.dynamicCollisionTree, 0.2))
 		// this.octtreevision.push(new OctreeVisualizer(this, this.staticCollisionTree, 0.8))
 
-		// Set the active camera
+		// Create a debug camera
+		this.debugCamera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+		this.debugCamera.position.z = MAZE_Z_CENTER - 25
+		this.debugCamera.position.x = MAZE_X_CENTER
+		this.debugCamera.position.y = 150
 		this.activeCamera = this.debugCamera
 
-		// Create an ambient light
+		// Set lighting
 		this.ambientLight = new AmbientLight(0xffffff, 0.5)
 		this.scene.add(this.ambientLight)
 
-		// Create a directional light
 		this.directionalLight = new DirectionalLight(0xffffff, 5)
 		this.directionalLight.position.set(5, 5, 0)
-
-		// Enable shadow casting
-		this.directionalLight.castShadow = true
-		this.directionalLight.shadow.mapSize.width = 2048 // Higher resolution shadows
+		this.directionalLight.castShadow			= true
+		this.directionalLight.shadow.mapSize.width	= 1024 // Higher resolution shadows
 		this.directionalLight.shadow.mapSize.height = 2048
-		this.directionalLight.shadow.camera.near = 0.5
-		this.directionalLight.shadow.camera.far = 50
-
-
-		// Add the light to the scene
+		this.directionalLight.shadow.camera.near	= 0.5
+		this.directionalLight.shadow.camera.far		= 50
 		this.scene.add(this.directionalLight)
-
-		// Create the physics world
-		this.physicsWorld = new World({
-			gravity: new Vector3(0, -9.82, 0),
-		})
-
-		// Update the cannon-es debugger
-		this.cannonDebugger = CannonDebugger(this.scene, this.physicsWorld, {
-			color: 0xff0000,
-			onInit: (_, mesh) => {
-				this.cannonDebuggerMeshes.push(mesh)
-				mesh.visible = this.debug
-			},
-		})
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//// Configuring Functions
+
 	toggleDebug() {
-		// Loop all objects and set the wireframe
 		this.debug = !this.debug
 		for (const obj of this.gameObjects) {
 			obj.setDebug(this.debug)
 		}
-
-		// Toggle the visibility of the cannon-es debugger
-		for (const mesh of this.cannonDebuggerMeshes) {
-			mesh.visible = this.debug
-		}
-
 	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//// Updates
 
 	animate(time_ms: number, renderer: WebGLRenderer) {
 		const delta = time_ms - this.last_time_ms
 		this.last_time_ms = time_ms
-
-		// Run the physics simulation
-		this.physicsWorld.step(delta / 1000)
-
-		// Update the cannon-es debugger
-		this.cannonDebugger?.update()
-
-		// Update all game objects
 		this.gameObjects.forEach(gameObject => gameObject.animate(delta, this, renderer))
-
 	}
 
-	// Register a game object with the state
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//// Handling GameObjects
+
 	registerGameObject(gameObject: GameObject) {
 		this.gameObjects.push(gameObject)
 	}
 
-	// Remove a game object from the state
 	unregisterGameObject(gameObject: GameObject) {
 		const index = this.gameObjects.indexOf(gameObject)
 		if (index !== -1) {
 			this.gameObjects.splice(index, 1)
 		}
-	}
-
-	// ANCHOR(Elias)
-	registerCollider(collider: BoxCollider, isDynamic:bool) {
-		if (isDynamic) {
-			octtree_insert(this.dynamicCollisionTree, collider)
-		} else {
-			octtree_insert(this.staticCollisionTree, collider)
-		}
-	}
-
-	unregisterCollider(collider: BoxCollider) {
-		octtree_mark_dead(this.dynamicCollisionTree, collider)
-		octtree_mark_dead(this.staticCollisionTree,  collider)
+		// TODO(Elias): Also unregister colliders
 	}
 
 	// Get the first game object of a given type, useful for finding singletons
@@ -177,4 +132,21 @@ export class State {
 
 		return gameObjects
 	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///// Physics
+
+	registerCollider(collider: BoxCollider, isDynamic:bool) {
+		if (isDynamic) {
+			octtree_insert(this.dynamicCollisionTree, collider)
+		} else {
+			octtree_insert(this.staticCollisionTree, collider)
+		}
+	}
+
+	unregisterCollider(collider: BoxCollider) {
+		octtree_mark_dead(this.dynamicCollisionTree, collider)
+		octtree_mark_dead(this.staticCollisionTree,  collider)
+	}
+
 }

@@ -6,8 +6,6 @@ import { State } from './engine/state.ts'
 import { windowInit } from './engine/window.ts'
 import { Cube } from './game-objects/cube.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
-import { OctreeVisualizer } from './game-objects/octree-visualizer.ts'
-import { octtree_initialize, octtree_insert } from './utils/octtree.ts'
 
 export const MAZE_X_SIZE = 42
 export const MAZE_Z_SIZE = 42

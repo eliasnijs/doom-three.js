@@ -1,11 +1,9 @@
-import { Body, Box as BoxBody, Vec3 } from 'cannon-es'
 import { BoxGeometry, Mesh, MeshStandardMaterial, WebGLRenderer } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
 
 export class Cube extends GameObject {
-	body: Body
 	mesh: Mesh
 
 	constructor(state: State, position = { x: 0, y: 5, z: 0 }, size = 5) {

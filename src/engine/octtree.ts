@@ -159,6 +159,9 @@ octtree_initialize(origin: Vector3, width: number, n_capacity: number, maxDepth:
 
 function
 _insert_recurse(tree:OctTree, n: CTU, i:number, remainingDepth:number): void {
+	if (tree.elements[i] === undefined) {
+		return
+	}
 	const pos = tree.elements[i].ref.mesh.position
 	const bbl = pos.clone().add(tree.elements[i].bbl_rel);
 	const ftr = pos.clone().add(tree.elements[i].ftr_rel);
