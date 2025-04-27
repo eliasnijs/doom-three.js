@@ -5,84 +5,88 @@ import { State } from '../engine/state.ts'
 import { BoxCollider } from '../engine/physics.ts'
 
 export class BoxColliderVisualizer extends GameObject {
-  private colliders: BoxCollider[] = []
-  private lines: LineSegments[] = []
-  private scene: Scene
-  private color: Color = new Color(0, 1, 0) // Default color: green
+	private colliders: BoxCollider[] = []
+	private lines: LineSegments[] = []
+	private scene: Scene
+	private color: Color = new Color(0, 1, 0) // default color: green
 
-  constructor(state: State, colliders: BoxCollider[] = [], color?: Color) {
-    super(state)
-    this.colliders = colliders
-    this.scene = state.scene
-    if (color) {
-      this.color = color
-    }
-    this.renderColliders()
-  }
+	constructor(state: State, colliders: BoxCollider[] = [], color?: Color) {
+		super(state)
+		this.colliders = colliders
+		this.scene = state.scene
+		if (color) {
+			this.color = color
+		}
+		this.renderColliders()
+	}
 
-  setColliders(colliders: BoxCollider[]): void {
-    this.colliders = colliders
-    this.renderColliders()
-  }
+	setColliders(colliders: BoxCollider[]): void {
+		this.colliders = colliders
+		this.renderColliders()
+	}
 
-  renderColliders(): void {
-    this.clearVisualization()
-    
-    for (const collider of this.colliders) {
-      this.renderCollider(collider)
-    }
-  }
+	renderColliders(): void {
+		this.clearVisualization()
 
-  private renderCollider(collider: BoxCollider): void {
-    // Get object position (assuming mesh property for position)
-    const pos = (collider.ref as any).mesh?.position || new Vector3(0, 0, 0)
-    
-    // Calculate min and max points in world space
-    const min = new Vector3().addVectors(pos, collider.bbl_rel)
-    const max = new Vector3().addVectors(pos, collider.ftr_rel)
-    
-    // Calculate box dimensions
-    const width = Math.abs(max.x - min.x)
-    const height = Math.abs(max.y - min.y)
-    const depth = Math.abs(max.z - min.z)
-    
-    // Create box geometry
-    const geometry = new BoxGeometry(width, height, depth)
-    const edges = new EdgesGeometry(geometry)
-    
-    const material = new LineBasicMaterial({
-      color: this.color,
-      linewidth: 2,
-      transparent: true,
-      opacity: 0.7
-    })
-    
-    const wireframe = new LineSegments(edges, material)
-    
-    // Position the box at the center of the collider
-    wireframe.position.set(
-      min.x + width / 2,
-      min.y + height / 2,
-      min.z + depth / 2
-    )
-    
-    this.scene.add(wireframe)
-    this.lines.push(wireframe)
-  }
+		for (const collider of this.colliders) {
+			this.renderCollider(collider)
+		}
+	}
 
-  private clearVisualization(): void {
-    for (const line of this.lines) {
-      this.scene.remove(line)
-    }
-    this.lines = []
-  }
+	private renderCollider(collider: BoxCollider): void {
+		const pos = (collider.ref as any).mesh?.position || new Vector3(0, 0, 0)
 
-  animate(deltaTime: number, state: State, renderer: WebGLRenderer): void {
-    // Update positions of colliders that might have moved
-    this.renderColliders()
-  }
+		const min = new Vector3().addVectors(pos, collider.bbl_rel)
+		const max = new Vector3().addVectors(pos, collider.ftr_rel)
 
-  cleanup(): void {
-    this.clearVisualization()
-  }
+		const width = Math.abs(max.x - min.x)
+		const height = Math.abs(max.y - min.y)
+		const depth = Math.abs(max.z - min.z)
+
+		const geometry = new BoxGeometry(width, height, depth)
+		const edges = new EdgesGeometry(geometry)
+
+		const material = new LineBasicMaterial({
+			color: this.color,
+			linewidth: 2,
+			transparent: true,
+			opacity: 0.7
+		})
+
+		const wireframe = new LineSegments(edges, material)
+
+		wireframe.position.set(
+			min.x + width / 2,
+			min.y + height / 2,
+			min.z + depth / 2
+		)
+
+		this.scene.add(wireframe)
+		this.lines.push(wireframe)
+	}
+
+	private clearVisualization(): void {
+		for (const line of this.lines) {
+			this.scene.remove(line)
+			if (line.geometry) line.geometry.dispose()
+				if (line.material) {
+					if (Array.isArray(line.material)) {
+						line.material.forEach(material => material.dispose())
+					} else {
+						line.material.dispose()
+					}
+				}
+		}
+		this.lines = []
+	}
+
+	animate(deltaTime: number, state: State, renderer: WebGLRenderer): void {
+		this.renderColliders()
+	}
+
+	cleanup(): void {
+		this.clearVisualization()
+	}
 }
+
+
