@@ -47,6 +47,7 @@ export class State {
 	cannonDebugger?:		{ update: () => void }
 	cannonDebuggerMeshes:	Mesh[] = []
 	boxColliderVisualizer?: BoxColliderVisualizer
+	octreeVisualizer?: OctreeVisualizer
 
 
 	constructor(worldsize) {
@@ -59,9 +60,6 @@ export class State {
 													   DYNAMIC_TREE_N_CAPACITY, DYNAMIC_TREE_MAX_DEPTH);
 		this.staticCollisionTree = octtree_initialize(new Vector3(-10.0, -10, -10), worldsize,
 													  STATIC_TREE_N_CAPACITY, STATIC_TREE_MAX_DEPTH);
-		this.octtreevision = []
-		// this.octreevision.push(new OctreeVisualizer(this, this.dynamicCollisionTree, 0.2))
-		// this.octtreevision.push(new OctreeVisualizer(this, this.staticCollisionTree, 0.8))
 
 		// Create a debug camera
 		this.debugCamera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
@@ -103,11 +101,22 @@ export class State {
 			} else {
 				this.boxColliderVisualizer.setColliders(allColliders);
 			}
-		} else if (this.boxColliderVisualizer) {
-			// Remove visualizer when debug is disabled
-			this.boxColliderVisualizer.cleanup();
-			this.unregisterGameObject(this.boxColliderVisualizer);
-			this.boxColliderVisualizer = undefined;
+			if (!this.octreeVisualizer) {
+				this.octreeVisualizer = new OctreeVisualizer(this, this.staticCollisionTree, 0.8, 8);
+				new OctreeVisualizer(this, this.dynamicCollisionTree, 0.2, 8);
+			}
+		} else {
+			if (this.boxColliderVisualizer) {
+				this.boxColliderVisualizer.cleanup();
+				this.unregisterGameObject(this.boxColliderVisualizer);
+				this.boxColliderVisualizer = undefined;
+			}
+			const octreeVisualizers = this.findAllGameObjectsOfType(OctreeVisualizer);
+			for (const visualizer of octreeVisualizers) {
+				visualizer.cleanup();
+				this.unregisterGameObject(visualizer);
+			}
+			this.octreeVisualizer = undefined;
 		}
 	}
 

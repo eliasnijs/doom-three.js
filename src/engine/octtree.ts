@@ -14,7 +14,7 @@ import { BoxCollider } from './physics.ts'
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Data Layouts
 
-enum Octant {
+export enum Octant {
 	OCTANT_BBL,
 	OCTANT_BBR,
 	OCTANT_BTL,
@@ -26,17 +26,17 @@ enum Octant {
 	OCTANT_COUNT,
 }
 
-const OCTANT_STRING_TABLE: string[] = [
+export const OCTANT_STRING_TABLE: string[] = [
     "Back-Bottom-Left", "Back-Bottom-Right", "Back-Top-Left", "Back-Top-Right",
     "Front-Bottom-Left", "Front-Bottom-Right", "Front-Top-Left", "Front-Top-Right"
 ];
 
-enum CTU_State {
+export enum CTU_State {
 	CTU_LEAF,
 	CTU_NODE
 }
 
-interface CTU_LeafData {
+export interface CTU_LeafData {
 	n_capacity:	number
 	n_fill:		number
 	indices:	number[]
