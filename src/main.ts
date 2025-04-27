@@ -27,7 +27,7 @@ function animate(time_ms: number, state: State, renderer: WebGLRenderer) {
 async function main(renderer: WebGLRenderer) {
 	windowInit(renderer)
 
-	const state = new State()
+	const state = new State(450)
 	const debugPanel = new DebugPanel(state, renderer)
 	await createMap(debugPanel, state)
 

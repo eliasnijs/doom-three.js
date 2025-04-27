@@ -5,7 +5,7 @@ import {AmbientLight, DirectionalLight, Mesh, PerspectiveCamera, Scene, WebGLRen
 
 import { MAZE_X_CENTER, MAZE_Z_CENTER } from '../main.ts'
 import { GameObject } from './game-object.ts'
-import { OctTree, octrree_rebuild, octtree_insert, octtree_initialize} from '../engine/octtree.ts'
+import { OctTree, octtree_rebuild, octtree_insert, octtree_initialize, octtree_mark_dead} from '../engine/octtree.ts'
 import { OctreeVisualizer } from '../game-objects/octree-visualizer.ts'
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

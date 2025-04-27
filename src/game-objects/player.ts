@@ -1,7 +1,8 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, Vector3 } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
-import { BoxCollider } from '../engine/physics.ts'
+import { OctTree, octtree_get } from '../engine/octtree.ts'
+import { BoxCollider, getCollisionCorrection } from '../engine/physics.ts'
 import { State } from '../engine/state.ts'
 import { GRID_SIZE } from '../main.ts'
 import { mazeGridToWorldGrid, Pos } from '../utils/generate-maze.ts'
@@ -20,6 +21,7 @@ export class Player extends GameObject {
 	rotationX:	number = 0
 	camera:		PerspectiveCamera
 	isLocked	= false
+	collider:	BoxCollider
 
 	constructor(state: State, [x, z]: Pos) {
 		super(state)
@@ -47,12 +49,12 @@ export class Player extends GameObject {
 		this.camera.position.y = CAMERA_HEIGHT_OFFSET
 
 		// Add dynamic collider
-		const c: BoxCollider = {
+		this.collider = {
 			ref:	 this,
 			bbl_rel: new Vector3(-PLAYER_WIDTH/2, -PLAYER_HEIGHT/2, -PLAYER_WIDTH/2),
 			ftr_rel: new Vector3(PLAYER_WIDTH/2, PLAYER_HEIGHT/2, PLAYER_WIDTH/2)
 		}
-		state.registerCollider(c, false)
+		state.registerCollider(this.collider, true)
 
 
 		// Initialize the controls
@@ -94,24 +96,12 @@ export class Player extends GameObject {
 		state.activeCamera = this.camera
 	}
 
-	animate(deltaTime: number): void {
-		let moveX = 0
-		let	moveZ = 0
-		if (this.keys['KeyW']) {
-			moveZ -= 1
-		}
-
-		if (this.keys['KeyS']) {
-			moveZ += 1
-		}
-
-		if (this.keys['KeyA']) {
-			moveX -= 1
-		}
-
-		if (this.keys['KeyD']) {
-			moveX += 1
-		}
+	animate(deltaTime: number, state:State): void {
+		let moveX = 0, moveZ = 0
+		if (this.keys['KeyW']) { moveZ -= 1 }
+		if (this.keys['KeyS']) { moveZ += 1 }
+		if (this.keys['KeyA']) { moveX -= 1 }
+		if (this.keys['KeyD']) { moveX += 1 }
 
 		// Create movement vector
 		const moveVec = new Vector3(moveX, 0, moveZ)
@@ -139,11 +129,20 @@ export class Player extends GameObject {
 		this.camera.position.copy(this.mesh.position)
 		this.camera.position.y += CAMERA_HEIGHT_OFFSET
 
-		// TODO(Elias): resolve collision with terrain
-		// 1. take all colliders
-		// 2. resolve collisions to get displacement vectors
-		// 3. sum displacement vectors
-		// 4. update position
+		// Resolve collisions
+		const pos = this.mesh.position
+		const bbl = pos.clone().add(this.collider.bbl_rel);
+		const ftr = pos.clone().add(this.collider.ftr_rel);
+		const colliders = [
+			...octtree_get(state.staticCollisionTree, bbl, ftr),
+			...octtree_get(state.dynamicCollisionTree, bbl, ftr)
+		]
+		console.log(colliders)
+		// const displace = colliders.reduce((acc, other_collider) => (
+		// 	acc.add(getCollisionCorrection(other_collider, this.collider))
+		// ), new Vector3(0.0, 0.0, 0.0));
+
+		// this.mesh.position.add(displace);
 	}
 }
 

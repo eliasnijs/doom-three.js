@@ -12,7 +12,7 @@ Octtree Implementation
 
 Example:
 ```
-const octree = octtree_initialize(
+const octtree = octtree_initialize(
 	new Vector3(-50, -50, -50), // origin
 	100,                     // size
 	4,                       // capacity (how many objects per node before subdividing)
@@ -34,11 +34,8 @@ for (let i = 0; i < numCubes; i++) {
 		ftr: new Vector3(position.x + cubeSize/2, position.y + cubeSize/2, position.z + cubeSize/2),
 		ref: cube
 	};
-	octtree_insert(octree, element);
+	octtree_insert(octtree, element);
 }
-
-new OctreeVisualizer(state, octree)
-console.log('Octree structure:', octree)
 ```
 
 ***********************************************************************************************/
@@ -49,6 +46,7 @@ console.log('Octree structure:', octree)
 ///// Dependencies
 
 import { Vector3 } from 'three'
+import { BoxCollider } from './physics.ts'
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Data Layouts
@@ -243,10 +241,12 @@ _get(tree: OctTree, n: CTU, bbl: Vector3, ftr: Vector3, result: Set<number>): vo
 }
 
 export function
-octtree_get(tree: OctTree, bbl: Vector3, ftr: Vector3):number[] {
-	const result: Set<number> = new Set<number>();
-	_get(tree, tree.root, bbl, ftr, result);
-	return Array.from(result);
+octtree_get(tree: OctTree, bbl: Vector3, ftr: Vector3): BoxCollider[] {
+	const indexSet: Set<number> = new Set<number>();
+	_get(tree, tree.root, bbl, ftr, indexSet);
+	return Array.from(indexSet)
+		.map(index => tree.elements[index])
+		.filter((item): item is BoxCollider => item !== undefined);
 }
 
 
