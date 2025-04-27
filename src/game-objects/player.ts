@@ -139,7 +139,6 @@ export class Player extends GameObject {
 				displace.add(getCollisionCorrection(other_collider, this.collider));
 			}
 		}
-		displace.divideScalar(2);
 		this.mesh.position.add(displace);
 
 		// Update the camera position to follow the mesh
