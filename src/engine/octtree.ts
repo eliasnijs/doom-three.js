@@ -1,45 +1,8 @@
-
-// TODO(Elias): complete the documentation, add exported functions and structures, add example
-// usage and guidance on using a static and dynamic tree, also add something about the
-// distinction between elements and indices
-
-/***********************************************************************************************
+/***************************************************************************************************************
 
 Octtree Implementation
 
-
-
-
-Example:
-```
-const octtree = octtree_initialize(
-	new Vector3(-50, -50, -50), // origin
-	100,                     // size
-	4,                       // capacity (how many objects per node before subdividing)
-	5                        // max depth
-)
-
-const numCubes = 30;
-for (let i = 0; i < numCubes; i++) {
-	const position = new Vector3(
-		(Math.random() * 80) - 40, // -40 to 40
-		(Math.random() * 80) - 40, // -40 to 40
-		(Math.random() * 80) - 40  // -40 to 40
-	);
-	const cubeSize = 5;
-	const cube = new Cube(state, position, cubeSize);
-
-	const element = {
-		bbl: new Vector3(position.x - cubeSize/2, position.y - cubeSize/2, position.z - cubeSize/2),
-		ftr: new Vector3(position.x + cubeSize/2, position.y + cubeSize/2, position.z + cubeSize/2),
-		ref: cube
-	};
-	octtree_insert(octtree, element);
-}
-```
-
-***********************************************************************************************/
-
+***************************************************************************************************************/
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +14,7 @@ import { BoxCollider } from './physics.ts'
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Data Layouts
 
-export enum Octant {
+enum Octant {
 	OCTANT_BBL,
 	OCTANT_BBR,
 	OCTANT_BTL,
@@ -63,17 +26,17 @@ export enum Octant {
 	OCTANT_COUNT,
 }
 
-export const OCTANT_STRING_TABLE: string[] = [
+const OCTANT_STRING_TABLE: string[] = [
     "Back-Bottom-Left", "Back-Bottom-Right", "Back-Top-Left", "Back-Top-Right",
     "Front-Bottom-Left", "Front-Bottom-Right", "Front-Top-Left", "Front-Top-Right"
 ];
 
-export enum CTU_State {
+enum CTU_State {
 	CTU_LEAF,
 	CTU_NODE
 }
 
-export interface CTU_LeafData {
+interface CTU_LeafData {
 	n_capacity:	number
 	n_fill:		number
 	indices:	number[]
@@ -90,7 +53,7 @@ export interface CTU {
 
 /*
 NOTE(Elias): This could server as a general element of the octtree. However, since, we are only
-using the tree for collision detection, it can directly store colliders at the moment.
+using the tree for collision detection, we store colliders directly at the moment.
 export interface OctreeElement<T=any> {
 	bbl: Vector3	// most back, bottom, left point of the element
 	ftr: Vector3   // most fron, top, right point of the element
@@ -250,6 +213,7 @@ octtree_get(tree: OctTree, bbl: Vector3, ftr: Vector3): BoxCollider[] {
 }
 
 
+// NOTE(Elias): dead colliders will be removed at the next rebuild
 export function
 octtree_mark_dead(tree: OctTree, element: BoxCollider): void {
 	const index = tree.elements.findIndex(e => e === element);

@@ -125,10 +125,6 @@ export class Player extends GameObject {
 			this.mesh.rotation.y = this.rotationY
 		}
 
-		// Update the camera position to follow the mesh
-		this.camera.position.copy(this.mesh.position)
-		this.camera.position.y += CAMERA_HEIGHT_OFFSET
-
 		// Resolve collisions
 		const pos = this.mesh.position
 		const bbl = pos.clone().add(this.collider.bbl_rel);
@@ -137,16 +133,18 @@ export class Player extends GameObject {
 			...octtree_get(state.staticCollisionTree, bbl, ftr),
 			...octtree_get(state.dynamicCollisionTree, bbl, ftr)
 		]
-		// console.log(colliders)
-		const displace = colliders.reduce((acc, other_collider) => {
-			if (other_collider == this.collider) {
-				return new Vector3(0.0, 0.0, 0.0)
+		const displace = new Vector3(0.0, 0.0, 0.0);
+		for (const other_collider of colliders) {
+			if (other_collider !== this.collider) {
+				displace.add(getCollisionCorrection(other_collider, this.collider));
 			}
-			return acc.add(getCollisionCorrection(other_collider, this.collider))
-		}, new Vector3(0.0, 0.0, 0.0));
-
-		console.log(displace, colliders.length)
+		}
+		displace.divideScalar(2);
 		this.mesh.position.add(displace);
+
+		// Update the camera position to follow the mesh
+		this.camera.position.copy(this.mesh.position)
+		this.camera.position.y += CAMERA_HEIGHT_OFFSET
 	}
 }
 

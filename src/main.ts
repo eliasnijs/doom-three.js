@@ -23,7 +23,6 @@ function animate(time_ms: number, state: State, renderer: WebGLRenderer) {
 	renderer.state.reset()
 }
 
-		// ANCHOR(Elias)
 async function main(renderer: WebGLRenderer) {
 	windowInit(renderer)
 

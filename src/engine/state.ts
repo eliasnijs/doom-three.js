@@ -6,7 +6,7 @@ import {AmbientLight, DirectionalLight, Mesh, PerspectiveCamera, Scene, WebGLRen
 import { MAZE_X_CENTER, MAZE_Z_CENTER } from '../main.ts'
 import { GameObject } from './game-object.ts'
 import { BoxCollider } from './physics.ts'
-import { OctTree, octtree_rebuild, octtree_insert, octtree_initialize, octtree_mark_dead} from '../engine/octtree.ts'
+import { OctTree, octtree_rebuild, octtree_insert, octtree_initialize, octtree_mark_dead } from '../engine/octtree.ts'
 import { BoxColliderVisualizer } from '../game-objects/box-collider-visualizer.ts'
 import { OctreeVisualizer } from '../game-objects/octree-visualizer.ts'
 
@@ -32,6 +32,9 @@ export class State {
 	physicsWorld:			PhysicsWorld
 
 	gameObjects:			GameObject[]
+
+	// NOTE(Elias): management of the colliders is the responsibility of the owner of the colliders, meaning
+	// that the owner is also responsible for cleaning up it's colliders using the 'unregister' function.
 	dynamicCollisionTree:	OctTree // stores colliders that are updated each frame
 	staticCollisionTree:	OctTree // stores colliders that are updated on load
 
@@ -118,6 +121,7 @@ export class State {
 	animate(time_ms: number, renderer: WebGLRenderer) {
 		const delta = time_ms - this.last_time_ms
 		this.last_time_ms = time_ms
+		octtree_rebuild(this.dynamicCollisionTree)
 		this.gameObjects.forEach(gameObject => gameObject.animate(delta, this, renderer))
 	}
 
@@ -133,7 +137,6 @@ export class State {
 		if (index !== -1) {
 			this.gameObjects.splice(index, 1)
 		}
-		// TODO(Elias): Also unregister colliders
 	}
 
 	// Get the first game object of a given type, useful for finding singletons

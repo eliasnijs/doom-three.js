@@ -34,40 +34,32 @@ getCollisionCorrection(collider1: BoxCollider,	// collider of the static object
     const pos1 = collider1.ref.mesh.position;
     const pos2 = collider2.ref.mesh.position;
 
-
-    const dpos = new Vector3().subVectors(pos2, pos1);
-
-    // Calculate the min and max points of both colliders in world space
     const min1 = new Vector3().addVectors(pos1, collider1.bbl_rel);
     const max1 = new Vector3().addVectors(pos1, collider1.ftr_rel);
     const min2 = new Vector3().addVectors(pos2, collider2.bbl_rel);
     const max2 = new Vector3().addVectors(pos2, collider2.ftr_rel);
 
-    // Check if the boxes are overlapping
+    // check overlap
     if (min1.x > max2.x || max1.x < min2.x ||
         min1.y > max2.y || max1.y < min2.y ||
         min1.z > max2.z || max1.z < min2.z) {
-        return new Vector3(0, 0, 0); // No collision
+        return new Vector3(0, 0, 0);
     }
 
-    // Calculate overlap on each axis
     const overlapX = Math.min(max1.x, max2.x) - Math.max(min1.x, min2.x);
     const overlapY = Math.min(max1.y, max2.y) - Math.max(min1.y, min2.y);
     const overlapZ = Math.min(max1.z, max2.z) - Math.max(min1.z, min2.z);
+    const center1	= new Vector3().addVectors(min1, max1).multiplyScalar(0.5);
+    const center2	= new Vector3().addVectors(min2, max2).multiplyScalar(0.5);
+    const direction = new Vector3().subVectors(center2, center1);
 
-    // Find the minimum penetration axis
     const correction = new Vector3(0, 0, 0);
-
-    // We'll move along the axis with the smallest penetration
-    if (overlapX < overlapY && overlapX < overlapZ) {
-        // X axis has smallest overlap
-        correction.x = dpos.x > 0 ? overlapX : -overlapX;
-    } else if (overlapY < overlapZ) {
-        // Y axis has smallest overlap
-        correction.y = dpos.y > 0 ? overlapY : -overlapY;
+    if (overlapX <= overlapY && overlapX <= overlapZ) {
+        correction.x = direction.x > 0 ? overlapX : -overlapX;
+    } else if (overlapY <= overlapZ) {
+        correction.y = direction.y > 0 ? overlapY : -overlapY;
     } else {
-        // Z axis has smallest overlap
-        correction.z = dpos.z > 0 ? overlapZ : -overlapZ;
+        correction.z = direction.z > 0 ? overlapZ : -overlapZ;
     }
 
     return correction;

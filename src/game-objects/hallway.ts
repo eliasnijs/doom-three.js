@@ -7,7 +7,7 @@ import { GRID_SIZE } from '../main.ts'
 import { getRandomItem, HallwayObjects } from '../utils/hallway-utils.ts'
 
 const HALLWAY_SCALE = 1.25
-const COLLIDER_THICKNESS = 1
+const COLLIDER_THICKNESS = 0.5
 
 export class Hallway extends GameObject {
 	mesh: Object3D
