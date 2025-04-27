@@ -7,7 +7,7 @@ import { GRID_SIZE } from '../main.ts'
 import { getRandomItem, HallwayObjects } from '../utils/hallway-utils.ts'
 
 const HALLWAY_SCALE = 1.25
-const COLLIDER_THICKNESS = 0.5
+const COLLIDER_THICKNESS = 0.6
 
 export class Hallway extends GameObject {
 	mesh: Object3D
@@ -70,10 +70,10 @@ export class Hallway extends GameObject {
 
 		// Add colliders to the hallway
 		const wallPositions = [
-			{ x: 0,				 z: GRID_SIZE / 2,	xw: GRID_SIZE / 2,		zw: COLLIDER_THICKNESS, open: north },
-			{ x: -GRID_SIZE / 2, z: 0,				xw: COLLIDER_THICKNESS, zw: GRID_SIZE / 2,		open: east  },
-			{ x: 0,				 z: -GRID_SIZE / 2, xw: GRID_SIZE / 2,		zw: COLLIDER_THICKNESS, open: south },
-			{ x: GRID_SIZE / 2,	 z: 0,				xw: COLLIDER_THICKNESS, zw: GRID_SIZE / 2,		open: west  },
+			{ x: 0,				 z: GRID_SIZE / 2,	xw: GRID_SIZE/2+0.1,	zw: COLLIDER_THICKNESS, open: north },
+			{ x: -GRID_SIZE / 2, z: 0,				xw: COLLIDER_THICKNESS, zw: GRID_SIZE/2+0.1,	open: east  },
+			{ x: 0,				 z: -GRID_SIZE / 2, xw: GRID_SIZE/2+0.1,	zw: COLLIDER_THICKNESS, open: south },
+			{ x: GRID_SIZE / 2,	 z: 0,				xw: COLLIDER_THICKNESS, zw: GRID_SIZE/2+0.1,	open: west  },
 		]
 
 		for (const { x, z, xw, zw, open } of wallPositions) {
@@ -86,6 +86,7 @@ export class Hallway extends GameObject {
 				state.registerCollider(c, false)
 			}
 		}
+
 	}
 
 	addColliders(state: State, openSides: [boolean, boolean, boolean, boolean]): void {

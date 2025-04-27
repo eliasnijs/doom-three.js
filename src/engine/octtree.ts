@@ -50,7 +50,6 @@ export interface CTU {
 	leaf:		CTU_LeafData | null
 }
 
-
 /*
 NOTE(Elias): This could server as a general element of the octtree. However, since, we are only
 using the tree for collision detection, we store colliders directly at the moment.
@@ -67,7 +66,6 @@ export interface OctTree {
 	maxDepth:		number
 	n_capacity:		number
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Utility Functions
@@ -178,15 +176,12 @@ _insert(tree:OctTree, n: CTU, i_element:number , remainingDepth:number): void {
 	_insert_recurse(tree, n, i_element, remainingDepth - 1)
 }
 
-
 export function
 octtree_insert(tree: OctTree, element: BoxCollider): void {
     const i_element = tree.elements.length;
 	tree.elements.push(element);
 	_insert(tree, tree.root, i_element, tree.maxDepth)
 }
-
-
 
 function
 _get(tree: OctTree, n: CTU, bbl: Vector3, ftr: Vector3, result: Set<number>): void
@@ -234,8 +229,4 @@ octtree_rebuild(tree: OctTree): void {
 	tree.root = newTree.root;
 	tree.elements = newTree.elements;
 }
-
-
-
-
 

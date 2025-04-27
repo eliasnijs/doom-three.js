@@ -11,6 +11,7 @@ import { OctreeVisualizer } from '../game-objects/octree-visualizer.ts'
 ///// Data Layouts
 
 export interface BoxCollider {
+	// NOTE(Elias): requires mesh
 	ref:		GameObject
 	// NOTE(Elias): The center is not necessarily the object position! The center of the bouding box should be
 	// calculated as follows: `center = pos_object + (bbl_rel + ftr_rel)/2`.
