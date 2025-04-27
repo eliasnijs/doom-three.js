@@ -34,7 +34,7 @@ npm run dev
 	- [ ] At least one object should have a reflection on the floor.
 - [ ] Space partitioning with octtree
 	- [x] Partitioning
-	- [ ] collision detection
+	- [x] collision detection
 	- [ ] Benchmark
 - [ ] Ray intersection can be implemented to include shooting on objects*
 
