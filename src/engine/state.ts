@@ -5,7 +5,9 @@ import {AmbientLight, DirectionalLight, Mesh, PerspectiveCamera, Scene, WebGLRen
 
 import { MAZE_X_CENTER, MAZE_Z_CENTER } from '../main.ts'
 import { GameObject } from './game-object.ts'
+import { BoxCollider } from './physics.ts'
 import { OctTree, octtree_rebuild, octtree_insert, octtree_initialize, octtree_mark_dead} from '../engine/octtree.ts'
+import { BoxColliderVisualizer } from '../game-objects/box-collider-visualizer.ts'
 import { OctreeVisualizer } from '../game-objects/octree-visualizer.ts'
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,6 +43,7 @@ export class State {
 	debug:					boolean					= false
 	cannonDebugger?:		{ update: () => void }
 	cannonDebuggerMeshes:	Mesh[] = []
+	boxColliderVisualizer?: BoxColliderVisualizer
 
 
 	constructor(worldsize) {
@@ -83,9 +86,30 @@ export class State {
 
 	toggleDebug() {
 		this.debug = !this.debug
+
 		for (const obj of this.gameObjects) {
 			obj.setDebug(this.debug)
 		}
+
+		if (this.debug) {
+			const staticColliders = this.getAllCollidersFromTree(this.staticCollisionTree);
+			const dynamicColliders = this.getAllCollidersFromTree(this.dynamicCollisionTree);
+			const allColliders = [...staticColliders, ...dynamicColliders];
+			if (!this.boxColliderVisualizer) {
+				this.boxColliderVisualizer = new BoxColliderVisualizer(this, allColliders);
+			} else {
+				this.boxColliderVisualizer.setColliders(allColliders);
+			}
+		} else if (this.boxColliderVisualizer) {
+			// Remove visualizer when debug is disabled
+			this.boxColliderVisualizer.cleanup();
+			this.unregisterGameObject(this.boxColliderVisualizer);
+			this.boxColliderVisualizer = undefined;
+		}
+	}
+
+	private getAllCollidersFromTree(tree: OctTree): BoxCollider[] {
+		return tree.elements.filter((element): element is BoxCollider => element !== undefined);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////

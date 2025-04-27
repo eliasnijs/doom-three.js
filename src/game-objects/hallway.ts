@@ -1,13 +1,13 @@
 import { MeshStandardMaterial, Object3D, Vector3  } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
-import { BoxCollider } from '../engine/box-collider.ts'
+import { BoxCollider } from '../engine/physics.ts'
 import { State } from '../engine/state.ts'
 import { GRID_SIZE } from '../main.ts'
 import { getRandomItem, HallwayObjects } from '../utils/hallway-utils.ts'
 
 const HALLWAY_SCALE = 1.25
-const COLLIDER_THICKNESS = 0.1
+const COLLIDER_THICKNESS = 1
 
 export class Hallway extends GameObject {
 	mesh: Object3D
@@ -78,11 +78,10 @@ export class Hallway extends GameObject {
 
 		for (const { x, z, xw, zw, open } of wallPositions) {
 			if (!open) {
-				const p = new Vector3(this.grid_x * GRID_SIZE + x, GRID_SIZE / 2, this.grid_z * GRID_SIZE + z)
 				const c: BoxCollider = {
 					ref:	 this,
-					bbl_rel: p.clone().add(new Vector3(-xw, -GRID_SIZE / 2, -zw)),
-					ftr_rel: p.clone().add(new Vector3(-xw,  GRID_SIZE / 2,  zw)),
+					bbl_rel: new Vector3(x - xw, 0, z - zw),
+					ftr_rel: new Vector3(x + xw,  GRID_SIZE, z + zw),
 				}
 				state.registerCollider(c, false)
 			}
@@ -102,3 +101,4 @@ export class Hallway extends GameObject {
 		})
 	}
 }
+

@@ -10,7 +10,7 @@ import { mazeGridToWorldGrid, Pos } from '../utils/generate-maze.ts'
 const PLAYER_SPEED = 10
 const PLAYER_MOUSE_SENSITIVITY = 0.002
 const PLAYER_HEIGHT = 4
-const PLAYER_WIDTH = 1
+const PLAYER_WIDTH = 0.2
 const CAMERA_HEIGHT_OFFSET = 1.5
 
 export class Player extends GameObject {
@@ -137,12 +137,16 @@ export class Player extends GameObject {
 			...octtree_get(state.staticCollisionTree, bbl, ftr),
 			...octtree_get(state.dynamicCollisionTree, bbl, ftr)
 		]
-		console.log(colliders)
-		// const displace = colliders.reduce((acc, other_collider) => (
-		// 	acc.add(getCollisionCorrection(other_collider, this.collider))
-		// ), new Vector3(0.0, 0.0, 0.0));
+		// console.log(colliders)
+		const displace = colliders.reduce((acc, other_collider) => {
+			if (other_collider == this.collider) {
+				return new Vector3(0.0, 0.0, 0.0)
+			}
+			return acc.add(getCollisionCorrection(other_collider, this.collider))
+		}, new Vector3(0.0, 0.0, 0.0));
 
-		// this.mesh.position.add(displace);
+		console.log(displace, colliders.length)
+		this.mesh.position.add(displace);
 	}
 }
 
