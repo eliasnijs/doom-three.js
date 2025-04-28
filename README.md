@@ -31,8 +31,8 @@ npm run dev
 - [ ] Animation
 - [x] Mouse and keyboard handling
 - [ ] Usage of light and material properties
-	- [ ] Bump maps
-	- [ ] Normal maps
+	- [x] Bump maps
+	- [x] Normal maps
 	- [ ] At least one object should have a reflection on the floor.
 - [ ] Space partitioning with octtree
 	- [x] Partitioning
