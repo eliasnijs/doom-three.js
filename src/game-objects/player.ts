@@ -48,6 +48,15 @@ const GUN_WALK_BOB_FREQ = 12 // Hz
 const GUN_WALK_BOB_AMPLITUDE_X = 0.01
 const GUN_WALK_BOB_AMPLITUDE_Y = 0.04
 
+// Gun fire rate constants
+const GUN_RPM = 600 // rounds per minute
+const GUN_FIRE_INTERVAL = 60_000 / GUN_RPM // ms between shots
+
+// Bullet hole fading constants
+const BULLET_HOLE_LIMIT = 30
+const BULLET_HOLE_FADE_TIME = 6 // seconds to fade if under limit
+const BULLET_HOLE_FADE_FAST = 1.5 // seconds to fade if over limit
+
 export class Player extends GameObject {
 	mesh: Object3D
 	parent: Object3D
@@ -64,6 +73,9 @@ export class Player extends GameObject {
 	gunKickback: number = 0
 	gunKickbackTarget: number = 0
 	walkTime: number = 0
+	isFiring: boolean = false
+	lastFireTime: number = 0
+	bulletHoles: { mesh: Mesh; born: number; fade: number }[] = []
 
 	constructor(state: State, [x, z]: Pos) {
 		super(state)
@@ -129,58 +141,15 @@ export class Player extends GameObject {
 			this.bulletTexture = texture
 		})
 
+		// Mouse down/up for firing
 		document.addEventListener('mousedown', (e: MouseEvent) => {
-			if (e.button === 0 && !this.gunIsDown && this.isLocked && this.bulletTexture) {
-				const origin = this.camera.getWorldPosition(new Vector3())
-				const direction = new Vector3(0, 0, -1)
-					.applyQuaternion(this.camera.getWorldQuaternion(new Quaternion()))
-					.normalize()
-				const raycaster = new Raycaster(origin, direction, 0, 100)
-				const meshes = state.staticCollisionTree.elements
-					.map(e => e?.ref.mesh)
-					.filter(e => e !== undefined)
-				const intersects = raycaster.intersectObjects(meshes, true)
-				if (intersects.length > 0) {
-					const hit = intersects[0]
-
-					// Pick random bullet hole
-					const idx = Math.floor(Math.random() * 64)
-					const uvScale = 1 / 8
-					const bulletTexture = this.bulletTexture.clone()
-					bulletTexture.needsUpdate = true
-					bulletTexture.repeat.set(uvScale, uvScale)
-					bulletTexture.offset.set((idx % 8) * uvScale, Math.floor(idx / 8) * uvScale)
-
-					// Create bullet hole plane
-					const geometry = new PlaneGeometry(0.5, 0.5)
-					const material = new MeshBasicMaterial({
-						map: bulletTexture,
-						transparent: true,
-						depthWrite: false,
-						side: DoubleSide,
-					})
-					const plane = new Mesh(geometry, material)
-
-					// Correct world-space normal
-					const normal = new Vector3(0, 0, 1)
-					if (hit.face && hit.object) {
-						const worldNormalMatrix = new Matrix4().extractRotation(hit.object.matrixWorld)
-						normal.copy(hit.face.normal).applyMatrix4(worldNormalMatrix).normalize()
-					}
-
-					// Align and rotate
-					const alignQuat = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), normal)
-					plane.quaternion.copy(alignQuat)
-					plane.rotateZ(Math.random() * Math.PI * 2)
-
-					// Offset position
-					plane.position.copy(hit.point).add(normal.clone().multiplyScalar(0.01))
-
-					state.scene.add(plane)
-				}
-
-				// KICKBACK: add kickback on shot
-				this.gunKickbackTarget = Math.min(this.gunKickbackTarget + GUN_KICKBACK_AMOUNT, GUN_KICKBACK_MAX)
+			if (e.button === 0) {
+				this.isFiring = true
+			}
+		})
+		document.addEventListener('mouseup', (e: MouseEvent) => {
+			if (e.button === 0) {
+				this.isFiring = false
 			}
 		})
 	}
@@ -204,6 +173,51 @@ export class Player extends GameObject {
 
 	enableCamera(state: State) {
 		state.activeCamera = this.camera
+	}
+
+	fire(state: State) {
+		if (!this.gunIsDown && this.isLocked && this.bulletTexture && this.gun) {
+			const origin = this.camera.getWorldPosition(new Vector3())
+			const direction = new Vector3(0, 0, -1)
+				.applyQuaternion(this.camera.getWorldQuaternion(new Quaternion()))
+				.normalize()
+			const raycaster = new Raycaster(origin, direction, 0, 100)
+			const meshes = state.staticCollisionTree.elements.map(e => e?.ref.mesh).filter(e => e !== undefined)
+			const intersects = raycaster.intersectObjects(meshes, true)
+			if (intersects.length > 0) {
+				const hit = intersects[0]
+				const idx = Math.floor(Math.random() * 64)
+				const uvScale = 1 / 8
+				const bulletTexture = this.bulletTexture.clone()
+				bulletTexture.needsUpdate = true
+				bulletTexture.repeat.set(uvScale, uvScale)
+				bulletTexture.offset.set((idx % 8) * uvScale, Math.floor(idx / 8) * uvScale)
+				const geometry = new PlaneGeometry(0.5, 0.5)
+				const material = new MeshBasicMaterial({
+					map: bulletTexture,
+					transparent: true,
+					depthWrite: false,
+					side: DoubleSide,
+					opacity: 1,
+				})
+				const plane = new Mesh(geometry, material)
+				const normal = new Vector3(0, 0, 1)
+				if (hit.face && hit.object) {
+					const worldNormalMatrix = new Matrix4().extractRotation(hit.object.matrixWorld)
+					normal.copy(hit.face.normal).applyMatrix4(worldNormalMatrix).normalize()
+				}
+
+				const alignQuat = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), normal)
+				plane.quaternion.copy(alignQuat)
+				plane.rotateZ(Math.random() * Math.PI * 2)
+				plane.position.copy(hit.point).add(normal.clone().multiplyScalar(0.01))
+				state.scene.add(plane)
+				this.bulletHoles.push({ mesh: plane, born: performance.now(), fade: 1 })
+			}
+
+			// KICKBACK: add kickback on shot
+			this.gunKickbackTarget = Math.min(this.gunKickbackTarget + GUN_KICKBACK_AMOUNT, GUN_KICKBACK_MAX)
+		}
 	}
 
 	animate(deltaTime: number, state: State): void {
@@ -360,6 +374,34 @@ export class Player extends GameObject {
 			this.gun.position.z = GUN_OFFSET.z + this.gunKickback
 
 			setWireframe(this.gun, state.debug)
+		}
+
+		// --- Bullet hole fading ---
+		const now = performance.now()
+		const fadeCount = this.bulletHoles.length
+		for (let i = this.bulletHoles.length - 1; i >= 0; --i) {
+			const bh = this.bulletHoles[i]
+			const fadeTime = fadeCount > BULLET_HOLE_LIMIT ? BULLET_HOLE_FADE_FAST : BULLET_HOLE_FADE_TIME
+			const age = (now - bh.born) / 1000
+			bh.fade = 1 - age / fadeTime
+			if (Array.isArray(bh.mesh.material)) {
+				throw new Error('Should not be array')
+			}
+
+			bh.mesh.material.opacity = Math.max(0, bh.fade)
+			if (bh.fade <= 0) {
+				state.scene.remove(bh.mesh)
+				this.bulletHoles.splice(i, 1)
+			}
+		}
+
+		// --- Full-auto firing logic ---
+		if (this.isFiring) {
+			const now = performance.now()
+			if (now - this.lastFireTime >= GUN_FIRE_INTERVAL) {
+				this.fire(state)
+				this.lastFireTime = now
+			}
 		}
 	}
 }
