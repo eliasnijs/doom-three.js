@@ -48,7 +48,7 @@ export class Player extends GameObject {
 	isLocked = false
 	collider: BoxCollider
 	gun: Object3D | null = null
-	_debugRay: any = null
+	_debugRay: Line | null = null
 	gunIsDown: boolean = false
 	bulletTexture: Texture | null = null
 
