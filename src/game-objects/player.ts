@@ -289,7 +289,17 @@ export class Player extends GameObject {
 			const intersects = raycaster.intersectObjects(meshes, true)
 
 			if (intersects.length > 0) {
-				this.gun.rotation.x = -Math.PI * (70 / 180) // rotate down 70 deg
+				// Get distance to wall
+				const distance = intersects[0].distance
+
+				let rotatePercentage = 0
+				if (distance < 1) {
+					rotatePercentage = 1
+				} else {
+					rotatePercentage = 2 - distance
+				}
+
+				this.gun.rotation.x = -Math.PI * (70 / 180) * rotatePercentage // rotate down 70 deg
 				this.gun.position.y = GUN_OFFSET.y - 0.5
 				this.gunIsDown = true
 			} else {
