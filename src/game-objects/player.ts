@@ -1,4 +1,16 @@
-import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, Vector3 } from 'three'
+import {
+	BoxGeometry,
+	BufferGeometry,
+	Line,
+	LineBasicMaterial,
+	Mesh,
+	MeshBasicMaterial,
+	Object3D,
+	PerspectiveCamera,
+	Quaternion,
+	Raycaster,
+	Vector3,
+} from 'three'
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 import { GameObject } from '../engine/game-object.ts'
@@ -31,6 +43,7 @@ export class Player extends GameObject {
 	isLocked = false
 	collider: BoxCollider
 	gun: Object3D | null = null
+	_debugRay: any = null
 
 	constructor(state: State, [x, z]: Pos) {
 		super(state)
@@ -178,8 +191,48 @@ export class Player extends GameObject {
 
 		this.mesh.position.add(displace)
 
-		// Make gun follow mouse pitch (up/down)
+		// --- Gun wall proximity check (using Raycaster) ---
 		if (this.gun) {
+			const origin = this.mesh.getWorldPosition(new Vector3())
+			origin.setY(5)
+			const rotation = this.camera.getWorldQuaternion(new Quaternion())
+			const forward = new Vector3(0, 0, -1).applyQuaternion(rotation).normalize()
+			const rayLength = 2.0
+			const raycaster = new Raycaster(origin, forward, 0, rayLength)
+			// Only test against static world meshes (walls)
+			const worldMeshes = state.scene.children.filter(
+				obj => obj !== this.parent && obj !== this.mesh && obj.type === 'Mesh',
+			)
+
+			// Debug: visualize the raycast
+			if (state.debug) {
+				// Remove previous debug ray if any
+				if (this._debugRay) {
+					state.scene.remove(this._debugRay)
+					this._debugRay.geometry.dispose()
+					if (this._debugRay.material) {
+						this._debugRay.material.dispose()
+					}
+				}
+
+				const rayEnd = origin.clone().add(forward.clone().normalize().multiplyScalar(rayLength))
+				const geometry = new BufferGeometry().setFromPoints([origin, rayEnd])
+				const material = new LineBasicMaterial({ color: 0xff0000 })
+				const line = new Line(geometry, material)
+				state.scene.add(line)
+				this._debugRay = line
+			}
+
+			const intersects = raycaster.intersectObjects(worldMeshes, true)
+
+			if (intersects.length > 0) {
+				this.gun.rotation.x = -Math.PI * (70 / 180) // rotate down 70 deg
+				this.gun.position.y = GUN_OFFSET.y - 0.5
+			} else {
+				this.gun.rotation.x = 0
+				this.gun.position.y = GUN_OFFSET.y
+			}
+
 			setWireframe(this.gun, state.debug)
 		}
 	}
