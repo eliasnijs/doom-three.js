@@ -41,6 +41,12 @@ const GUN_INWARD_ROTATION = 0.05 // radians, negative for slight inward (left) t
 // Gun kickback constants
 const GUN_KICKBACK_AMOUNT = 0.45
 const GUN_KICKBACK_RECOVERY = 1 // units per second
+const GUN_KICKBACK_MAX = 0.6 // max total kickback distance
+
+// Gun walk animation constants
+const GUN_WALK_BOB_FREQ = 12 // Hz
+const GUN_WALK_BOB_AMPLITUDE_X = 0.01
+const GUN_WALK_BOB_AMPLITUDE_Y = 0.04
 
 export class Player extends GameObject {
 	mesh: Object3D
@@ -57,6 +63,7 @@ export class Player extends GameObject {
 	bulletTexture: Texture | null = null
 	gunKickback: number = 0
 	gunKickbackTarget: number = 0
+	walkTime: number = 0
 
 	constructor(state: State, [x, z]: Pos) {
 		super(state)
@@ -173,7 +180,7 @@ export class Player extends GameObject {
 				}
 
 				// KICKBACK: add kickback on shot
-				this.gunKickbackTarget += GUN_KICKBACK_AMOUNT
+				this.gunKickbackTarget = Math.min(this.gunKickbackTarget + GUN_KICKBACK_AMOUNT, GUN_KICKBACK_MAX)
 			}
 		})
 	}
@@ -316,6 +323,25 @@ export class Player extends GameObject {
 				this.gun.position.y = GUN_OFFSET.y
 				this.gunIsDown = false
 			}
+
+			// --- Gun walk bob animation ---
+			const isMoving = moveX !== 0 || moveZ !== 0
+			if (isMoving) {
+				this.walkTime += deltaTime / 1000
+			} else {
+				this.walkTime = 0
+			}
+
+			// Calculate bob offsets
+			const walkBobX =
+				Math.sin(this.walkTime * GUN_WALK_BOB_FREQ) * GUN_WALK_BOB_AMPLITUDE_X * (isMoving ? 1 : 0)
+			const walkBobY =
+				Math.abs(Math.sin(this.walkTime * GUN_WALK_BOB_FREQ * 0.5)) *
+				GUN_WALK_BOB_AMPLITUDE_Y *
+				(isMoving ? 1 : 0)
+			// Apply bob to gun position (in addition to offset and kickback)
+			this.gun.position.x = GUN_OFFSET.x + walkBobX
+			this.gun.position.y = (this.gunIsDown ? GUN_OFFSET.y - 0.5 : GUN_OFFSET.y) + walkBobY
 
 			// --- Gun kickback animation ---
 			// Smoothly interpolate kickback value
