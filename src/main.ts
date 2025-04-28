@@ -22,6 +22,8 @@ let renderPass: RenderPass
 function animate(time_ms: number, state: State, renderer: WebGLRenderer) {
 	renderer.setClearColor(new Color(0, 0, 0)) // Set background color to black
 
+	renderPass.camera = state.activeCamera
+
 	state.animate(time_ms, renderer)
 
 	// Use composer for rendering
@@ -30,6 +32,8 @@ function animate(time_ms: number, state: State, renderer: WebGLRenderer) {
 }
 
 async function main(renderer: WebGLRenderer) {
+	renderer.autoClear = false
+
 	windowInit(renderer)
 
 	const state = new State(450, renderer) // Pass renderer
@@ -48,11 +52,6 @@ async function main(renderer: WebGLRenderer) {
 		0.85, // threshold
 	)
 	composer.addPass(bloomPass)
-
-	// Make renderPass globally accessible for DebugPanel
-	if (typeof window !== 'undefined') {
-		;(window as any).renderPass = renderPass
-	}
 
 	// Resize composer on window resize
 	renderer.setSize(window.innerWidth, window.innerHeight)

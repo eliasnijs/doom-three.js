@@ -1,4 +1,4 @@
-import { Material, Object3D } from 'three'
+import { Mesh, MeshStandardMaterial, Object3D } from 'three'
 
 /**
  * Recursively sets the wireframe property on all mesh materials in the object.
@@ -7,17 +7,17 @@ import { Material, Object3D } from 'three'
 export function setWireframe(obj: Object3D, wireframe: boolean) {
 	obj.traverse(child => {
 		// Some objects may not have material
-		const material = (child as any).material as Material | Material[] | undefined
+		const material = (child as Mesh).material as MeshStandardMaterial | MeshStandardMaterial[] | undefined
 		if (material) {
 			if (Array.isArray(material)) {
 				material.forEach(mat => {
 					if ('wireframe' in mat) {
-						;(mat as any).wireframe = wireframe
+						;(mat as MeshStandardMaterial).wireframe = wireframe
 					}
 				})
 			} else {
 				if ('wireframe' in material) {
-					;(material as any).wireframe = wireframe
+					;(material as MeshStandardMaterial).wireframe = wireframe
 				}
 			}
 		}

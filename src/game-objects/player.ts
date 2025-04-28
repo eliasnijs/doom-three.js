@@ -18,7 +18,7 @@ const CAMERA_HEIGHT_OFFSET = 1.5
 
 // Gun model constants
 const GUN_SCALE = { x: 0.1, y: 0.1, z: 0.1 }
-const GUN_OFFSET = { x: 0.6, y: 0.85, z: -0.85 }
+const GUN_OFFSET = { x: 0.6, y: -0.55, z: -0.85 }
 const GUN_INWARD_ROTATION = 0.05 // radians, negative for slight inward (left) tilt
 
 export class Player extends GameObject {
@@ -49,13 +49,12 @@ export class Player extends GameObject {
 		// Create a parent object for both camera and gun
 		this.parent = new Object3D()
 		this.mesh.add(this.parent)
+		this.parent.position.set(0, CAMERA_HEIGHT_OFFSET, 0)
 
 		// Create a camera
 		this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-		this.camera.position.z = 0
-		this.camera.position.x = 0
-		this.camera.position.y = CAMERA_HEIGHT_OFFSET
 		this.parent.add(this.camera)
+		this.camera.position.set(0, 0, 0)
 
 		// Add dynamic collider
 		this.collider = {
