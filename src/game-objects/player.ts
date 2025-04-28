@@ -38,6 +38,10 @@ const GUN_SCALE = { x: 0.1, y: 0.1, z: 0.1 }
 const GUN_OFFSET = { x: 0.6, y: -0.55, z: -0.85 }
 const GUN_INWARD_ROTATION = 0.05 // radians, negative for slight inward (left) tilt
 
+// Gun kickback constants
+const GUN_KICKBACK_AMOUNT = 0.45
+const GUN_KICKBACK_RECOVERY = 1 // units per second
+
 export class Player extends GameObject {
 	mesh: Object3D
 	parent: Object3D
@@ -51,6 +55,8 @@ export class Player extends GameObject {
 	_debugRay: Line | null = null
 	gunIsDown: boolean = false
 	bulletTexture: Texture | null = null
+	gunKickback: number = 0
+	gunKickbackTarget: number = 0
 
 	constructor(state: State, [x, z]: Pos) {
 		super(state)
@@ -165,6 +171,9 @@ export class Player extends GameObject {
 
 					state.scene.add(plane)
 				}
+
+				// KICKBACK: add kickback on shot
+				this.gunKickbackTarget += GUN_KICKBACK_AMOUNT
 			}
 		})
 	}
@@ -307,6 +316,22 @@ export class Player extends GameObject {
 				this.gun.position.y = GUN_OFFSET.y
 				this.gunIsDown = false
 			}
+
+			// --- Gun kickback animation ---
+			// Smoothly interpolate kickback value
+			const dt = deltaTime / 1000
+			const recovery = GUN_KICKBACK_RECOVERY * dt
+			// Approach target
+			if (this.gunKickback < this.gunKickbackTarget) {
+				this.gunKickback = Math.min(this.gunKickback + recovery, this.gunKickbackTarget)
+			} else {
+				this.gunKickback = Math.max(this.gunKickback - recovery, this.gunKickbackTarget)
+			}
+
+			// Decay target
+			this.gunKickbackTarget = Math.max(0, this.gunKickbackTarget - recovery * 2)
+			// Apply kickback to gun position (z axis)
+			this.gun.position.z = GUN_OFFSET.z + this.gunKickback
 
 			setWireframe(this.gun, state.debug)
 		}
