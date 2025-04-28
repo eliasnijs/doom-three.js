@@ -1,7 +1,7 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, Vector3 } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
-import { OctTree, octtree_get } from '../engine/octtree.ts'
+import { octTreeGet } from '../engine/octtree.ts'
 import { BoxCollider, getCollisionCorrection } from '../engine/physics.ts'
 import { State } from '../engine/state.ts'
 import { GRID_SIZE } from '../main.ts'
@@ -14,14 +14,14 @@ const PLAYER_WIDTH = 0.5
 const CAMERA_HEIGHT_OFFSET = 1.5
 
 export class Player extends GameObject {
-	mesh:		Object3D
-	keys:		{ [key: string]: boolean }
-	velocity:	Vector3	= new Vector3(0.0, 0.0, 0.0)
-	rotationY:	number = 0
-	rotationX:	number = 0
-	camera:		PerspectiveCamera
-	isLocked	= false
-	collider:	BoxCollider
+	mesh: Object3D
+	keys: { [key: string]: boolean }
+	velocity: Vector3 = new Vector3(0.0, 0.0, 0.0)
+	rotationY: number = 0
+	rotationX: number = 0
+	camera: PerspectiveCamera
+	isLocked = false
+	collider: BoxCollider
 
 	constructor(state: State, [x, z]: Pos) {
 		super(state)
@@ -38,24 +38,18 @@ export class Player extends GameObject {
 		state.scene.add(this.mesh)
 
 		// Create a camera
-		this.camera = new PerspectiveCamera(
-			90,
-			window.innerWidth / window.innerHeight,
-			0.1,
-			1000,
-		)
+		this.camera = new PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000)
 		this.camera.position.z = 0
 		this.camera.position.x = 0
 		this.camera.position.y = CAMERA_HEIGHT_OFFSET
 
 		// Add dynamic collider
 		this.collider = {
-			ref:	 this,
-			bbl_rel: new Vector3(-PLAYER_WIDTH/2, -PLAYER_HEIGHT/2, -PLAYER_WIDTH/2),
-			ftr_rel: new Vector3(PLAYER_WIDTH/2, PLAYER_HEIGHT/2, PLAYER_WIDTH/2)
+			ref: this,
+			bbl_rel: new Vector3(-PLAYER_WIDTH / 2, -PLAYER_HEIGHT / 2, -PLAYER_WIDTH / 2),
+			ftr_rel: new Vector3(PLAYER_WIDTH / 2, PLAYER_HEIGHT / 2, PLAYER_WIDTH / 2),
 		}
 		state.registerCollider(this.collider, true)
-
 
 		// Initialize the controls
 		this.keys = {}
@@ -81,8 +75,7 @@ export class Player extends GameObject {
 	handleMouseMove(event: MouseEvent) {
 		if (this.isLocked) {
 			// Calculate the new rotations
-			this.rotationX -=
-				event.movementY * PLAYER_MOUSE_SENSITIVITY * (1 / this.camera.aspect)
+			this.rotationX -= event.movementY * PLAYER_MOUSE_SENSITIVITY * (1 / this.camera.aspect)
 			this.rotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotationX))
 			this.rotationY -= event.movementX * PLAYER_MOUSE_SENSITIVITY
 
@@ -96,12 +89,24 @@ export class Player extends GameObject {
 		state.activeCamera = this.camera
 	}
 
-	animate(deltaTime: number, state:State): void {
-		let moveX = 0, moveZ = 0
-		if (this.keys['KeyW']) { moveZ -= 1 }
-		if (this.keys['KeyS']) { moveZ += 1 }
-		if (this.keys['KeyA']) { moveX -= 1 }
-		if (this.keys['KeyD']) { moveX += 1 }
+	animate(deltaTime: number, state: State): void {
+		let moveX = 0,
+			moveZ = 0
+		if (this.keys['KeyW']) {
+			moveZ -= 1
+		}
+
+		if (this.keys['KeyS']) {
+			moveZ += 1
+		}
+
+		if (this.keys['KeyA']) {
+			moveX -= 1
+		}
+
+		if (this.keys['KeyD']) {
+			moveX += 1
+		}
 
 		// Create movement vector
 		const moveVec = new Vector3(moveX, 0, moveZ)
@@ -115,7 +120,7 @@ export class Player extends GameObject {
 		direction.applyAxisAngle(new Vector3(0, 1, 0), this.rotationY)
 
 		// Scale movement by speed and deltaTime
-		direction.multiplyScalar(PLAYER_SPEED * deltaTime / 1000)
+		direction.multiplyScalar((PLAYER_SPEED * deltaTime) / 1000)
 
 		// Apply movement to mesh position
 		this.mesh.position.add(direction)
@@ -130,27 +135,28 @@ export class Player extends GameObject {
 		const bbl = pos.clone().add(this.collider.bbl_rel)
 		const ftr = pos.clone().add(this.collider.ftr_rel)
 		const colliders = [
-			...octtree_get(state.staticCollisionTree, bbl, ftr),
-			...octtree_get(state.dynamicCollisionTree, bbl, ftr)
+			...octTreeGet(state.staticCollisionTree, bbl, ftr),
+			...octTreeGet(state.dynamicCollisionTree, bbl, ftr),
 		]
 		const displace = new Vector3(0.0, 0.0, 0.0)
 		let n_displace = 0
 		for (const other_collider of colliders) {
 			if (other_collider !== this.collider) {
 				const d = getCollisionCorrection(other_collider, this.collider)
-				n_displace += (d.x !== 0 || d.y !== 0 || d.z !== 0);
-				displace.add(d);
+				n_displace += d.x !== 0 || d.y !== 0 || d.z !== 0 ? 1 : 0
+				displace.add(d)
 			}
 		}
+
 		if (n_displace > 0) {
-			displace.multiplyScalar(1.1);
-			displace.divideScalar(n_displace);
+			displace.multiplyScalar(1.1)
+			displace.divideScalar(n_displace)
 		}
-		this.mesh.position.add(displace);
+
+		this.mesh.position.add(displace)
 
 		// Update the camera position to follow the mesh
 		this.camera.position.copy(this.mesh.position)
 		this.camera.position.y += CAMERA_HEIGHT_OFFSET
 	}
 }
-

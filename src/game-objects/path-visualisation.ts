@@ -12,6 +12,7 @@ export class PathVisualisation extends GameObject {
 
 		const points = path.map(([y, x]) => {
 			const [newX, newZ] = mazeGridToWorldGrid([x, y])
+
 			return new Vector3(newX * GRID_SIZE, 2.5, newZ * GRID_SIZE)
 		})
 

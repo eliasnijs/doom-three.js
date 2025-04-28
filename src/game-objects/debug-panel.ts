@@ -58,8 +58,7 @@ export class DebugPanel extends GameObject {
 
 		// Add a button to change the camera type to orbit
 		this.orbitButton = document.createElement('button')
-		this.orbitButton.onclick = () =>
-			this.changeCameraType(state, renderer, CameraType.ORBIT)
+		this.orbitButton.onclick = () => this.changeCameraType(state, renderer, CameraType.ORBIT)
 		cameraTypeContainer.appendChild(this.orbitButton)
 		this.orbitButton.innerText = '🌍'
 
@@ -71,8 +70,7 @@ export class DebugPanel extends GameObject {
 
 		// Add a button to change the camera type to first person
 		this.firstPersonButton = document.createElement('button')
-		this.firstPersonButton.onclick = () =>
-			this.changeCameraType(state, renderer, CameraType.FIRST_PERSON)
+		this.firstPersonButton.onclick = () => this.changeCameraType(state, renderer, CameraType.FIRST_PERSON)
 		cameraTypeContainer.appendChild(this.firstPersonButton)
 		this.firstPersonButton.innerText = '👤'
 

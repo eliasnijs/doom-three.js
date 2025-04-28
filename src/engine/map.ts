@@ -1,5 +1,4 @@
 import { DebugPanel } from '../game-objects/debug-panel.ts'
-import { Floor } from '../game-objects/floor.ts'
 import { Hallway } from '../game-objects/hallway.ts'
 import { PathVisualisation } from '../game-objects/path-visualisation.ts'
 import { Player } from '../game-objects/player.ts'
@@ -36,9 +35,6 @@ export async function createMap(debugPanel: DebugPanel, state: State) {
 
 	const path = pathfind(grid, start, destination)
 	new PathVisualisation(state, path)
-
-	// Add floor collider
-	new Floor(state)
 
 	// Add player
 	new Player(state, start).enableCamera(state)

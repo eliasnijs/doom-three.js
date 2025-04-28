@@ -8,7 +8,7 @@ import { DebugPanel } from './debug-panel.ts'
 const ROTATION_SPEED = 0.001
 
 export class RotatingTv extends GameObject {
-	mesh:		Group | undefined
+	mesh: Group | undefined
 	debugPanel: DebugPanel | undefined
 
 	constructor(state: State) {
@@ -28,5 +28,4 @@ export class RotatingTv extends GameObject {
 			}
 		}
 	}
-
 }

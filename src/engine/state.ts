@@ -1,14 +1,14 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Dependencies
 
-import {AmbientLight, DirectionalLight, Mesh, PerspectiveCamera, Scene, WebGLRenderer, Vector3} from 'three'
+import { AmbientLight, DirectionalLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three'
 
-import { MAZE_X_CENTER, MAZE_Z_CENTER } from '../main.ts'
-import { GameObject } from './game-object.ts'
-import { BoxCollider } from './physics.ts'
-import { OctTree, octtree_rebuild, octtree_insert, octtree_initialize, octtree_mark_dead } from '../engine/octtree.ts'
 import { BoxColliderVisualizer } from '../game-objects/box-collider-visualizer.ts'
 import { OctreeVisualizer } from '../game-objects/octree-visualizer.ts'
+import { MAZE_X_CENTER, MAZE_Z_CENTER } from '../main.ts'
+import { GameObject } from './game-object.ts'
+import { OctTree, octTreeInitialize, octTreeInsert, octTreeMarkDead, octTreeRebuild } from './octtree.ts'
+import { BoxCollider } from './physics.ts'
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Types
@@ -18,48 +18,51 @@ type Constructor<T> = { new (...args: never[]): T }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Configuration
 
-const DYNAMIC_TREE_MAX_DEPTH	= 8		// max depth of the dynamic spatial partitioning octtree
-const DYNAMIC_TREE_N_CAPACITY	= 8		// max capacity of a leaf in the dynamic spatial partitioning octtree
-const STATIC_TREE_MAX_DEPTH		= 8		// max depth of the static spatial partitioning octtree
-const STATIC_TREE_N_CAPACITY	= 8		// max capacity of a leaf in the static spatial partitioning octtree
+const DYNAMIC_TREE_MAX_DEPTH = 8 // max depth of the dynamic spatial partitioning octtree
+const DYNAMIC_TREE_N_CAPACITY = 8 // max capacity of a leaf in the dynamic spatial partitioning octtree
+const STATIC_TREE_MAX_DEPTH = 8 // max depth of the static spatial partitioning octtree
+const STATIC_TREE_N_CAPACITY = 8 // max capacity of a leaf in the static spatial partitioning octtree
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Data Layouts
 
 export class State {
-	scene:					Scene
-	last_time_ms:			number
-	physicsWorld:			PhysicsWorld
+	scene: Scene
+	last_time_ms: number
 
-	gameObjects:			GameObject[]
+	gameObjects: GameObject[]
 
 	// NOTE(Elias): management of the colliders is the responsibility of the owner of the colliders, meaning
 	// that the owner is also responsible for cleaning up it's colliders using the 'unregister' function.
-	dynamicCollisionTree:	OctTree // stores colliders that are updated each frame
-	staticCollisionTree:	OctTree // stores colliders that are updated on load
+	dynamicCollisionTree: OctTree // stores colliders that are updated each frame
+	staticCollisionTree: OctTree // stores colliders that are updated on load
 
-	activeCamera:			PerspectiveCamera
-	ambientLight:			AmbientLight
-	directionalLight:		DirectionalLight
+	activeCamera: PerspectiveCamera
+	ambientLight: AmbientLight
+	directionalLight: DirectionalLight
 
-	debugCamera:			PerspectiveCamera
-	debug:					boolean					= false
-	cannonDebugger?:		{ update: () => void }
-	cannonDebuggerMeshes:	Mesh[] = []
+	debugCamera: PerspectiveCamera
+	debug: boolean = false
 	boxColliderVisualizer?: BoxColliderVisualizer
 	octreeVisualizer?: OctreeVisualizer
 
+	constructor(worldsize: number) {
+		this.scene = new Scene()
+		this.last_time_ms = 0.0
 
-	constructor(worldsize) {
-		this.scene			= new Scene()
-		this.last_time_ms	= 0.0
-		this.physicWorld	= {gravity: new Vector3(0, -9.82, 0)}
-
-		this.gameObjects = [];
-		this.dynamicCollisionTree = octtree_initialize(new Vector3(-10.0, -10, -10), worldsize,
-													   DYNAMIC_TREE_N_CAPACITY, DYNAMIC_TREE_MAX_DEPTH);
-		this.staticCollisionTree = octtree_initialize(new Vector3(-10.0, -10, -10), worldsize,
-													  STATIC_TREE_N_CAPACITY, STATIC_TREE_MAX_DEPTH);
+		this.gameObjects = []
+		this.dynamicCollisionTree = octTreeInitialize(
+			new Vector3(-10.0, -10, -10),
+			worldsize,
+			DYNAMIC_TREE_N_CAPACITY,
+			DYNAMIC_TREE_MAX_DEPTH,
+		)
+		this.staticCollisionTree = octTreeInitialize(
+			new Vector3(-10.0, -10, -10),
+			worldsize,
+			STATIC_TREE_N_CAPACITY,
+			STATIC_TREE_MAX_DEPTH,
+		)
 
 		// Create a debug camera
 		this.debugCamera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
@@ -74,11 +77,11 @@ export class State {
 
 		this.directionalLight = new DirectionalLight(0xffffff, 5)
 		this.directionalLight.position.set(5, 5, 0)
-		this.directionalLight.castShadow			= true
-		this.directionalLight.shadow.mapSize.width	= 1024 // Higher resolution shadows
+		this.directionalLight.castShadow = true
+		this.directionalLight.shadow.mapSize.width = 1024 // Higher resolution shadows
 		this.directionalLight.shadow.mapSize.height = 2048
-		this.directionalLight.shadow.camera.near	= 0.5
-		this.directionalLight.shadow.camera.far		= 50
+		this.directionalLight.shadow.camera.near = 0.5
+		this.directionalLight.shadow.camera.far = 50
 		this.scene.add(this.directionalLight)
 	}
 
@@ -93,35 +96,38 @@ export class State {
 		}
 
 		if (this.debug) {
-			const staticColliders = this.getAllCollidersFromTree(this.staticCollisionTree);
-			const dynamicColliders = this.getAllCollidersFromTree(this.dynamicCollisionTree);
-			const allColliders = [...staticColliders, ...dynamicColliders];
+			const staticColliders = this.getAllCollidersFromTree(this.staticCollisionTree)
+			const dynamicColliders = this.getAllCollidersFromTree(this.dynamicCollisionTree)
+			const allColliders = [...staticColliders, ...dynamicColliders]
 			if (!this.boxColliderVisualizer) {
-				this.boxColliderVisualizer = new BoxColliderVisualizer(this, allColliders);
+				this.boxColliderVisualizer = new BoxColliderVisualizer(this, allColliders)
 			} else {
-				this.boxColliderVisualizer.setColliders(allColliders);
+				this.boxColliderVisualizer.setColliders(allColliders)
 			}
+
 			if (!this.octreeVisualizer) {
-				this.octreeVisualizer = new OctreeVisualizer(this, this.staticCollisionTree, 0.8, 8);
-				new OctreeVisualizer(this, this.dynamicCollisionTree, 0.2, 8);
+				this.octreeVisualizer = new OctreeVisualizer(this, this.staticCollisionTree, 40, 8)
+				new OctreeVisualizer(this, this.dynamicCollisionTree, 0.2, 8)
 			}
 		} else {
 			if (this.boxColliderVisualizer) {
-				this.boxColliderVisualizer.cleanup();
-				this.unregisterGameObject(this.boxColliderVisualizer);
-				this.boxColliderVisualizer = undefined;
+				this.boxColliderVisualizer.cleanup()
+				this.unregisterGameObject(this.boxColliderVisualizer)
+				this.boxColliderVisualizer = undefined
 			}
-			const octreeVisualizers = this.findAllGameObjectsOfType(OctreeVisualizer);
+
+			const octreeVisualizers = this.findAllGameObjectsOfType(OctreeVisualizer)
 			for (const visualizer of octreeVisualizers) {
-				visualizer.cleanup();
-				this.unregisterGameObject(visualizer);
+				visualizer.cleanup()
+				this.unregisterGameObject(visualizer)
 			}
-			this.octreeVisualizer = undefined;
+
+			this.octreeVisualizer = undefined
 		}
 	}
 
 	private getAllCollidersFromTree(tree: OctTree): BoxCollider[] {
-		return tree.elements.filter((element): element is BoxCollider => element !== undefined);
+		return tree.elements.filter((element): element is BoxCollider => element !== undefined)
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +136,7 @@ export class State {
 	animate(time_ms: number, renderer: WebGLRenderer) {
 		const delta = time_ms - this.last_time_ms
 		this.last_time_ms = time_ms
-		octtree_rebuild(this.dynamicCollisionTree)
+		octTreeRebuild(this.dynamicCollisionTree)
 		this.gameObjects.forEach(gameObject => gameObject.animate(delta, this, renderer))
 	}
 
@@ -172,18 +178,16 @@ export class State {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///// Physics
 
-	registerCollider(collider: BoxCollider, isDynamic:bool) {
+	registerCollider(collider: BoxCollider, isDynamic: boolean) {
 		if (isDynamic) {
-			octtree_insert(this.dynamicCollisionTree, collider)
+			octTreeInsert(this.dynamicCollisionTree, collider)
 		} else {
-			octtree_insert(this.staticCollisionTree, collider)
+			octTreeInsert(this.staticCollisionTree, collider)
 		}
 	}
 
 	unregisterCollider(collider: BoxCollider) {
-		octtree_mark_dead(this.dynamicCollisionTree, collider)
-		octtree_mark_dead(this.staticCollisionTree,  collider)
+		octTreeMarkDead(this.dynamicCollisionTree, collider)
+		octTreeMarkDead(this.staticCollisionTree, collider)
 	}
-
 }
-

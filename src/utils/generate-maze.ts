@@ -168,9 +168,7 @@ export function render(grid: Grid, A: Pos, B: Pos, path: Pos[]) {
 	const h = Math.floor(canvas.height / grid.nRows)
 
 	const pad = 0
-	path.forEach(C =>
-		drawSquare(canvas, w * C[1] + pad / 2, h * C[0] + pad / 2, w - pad, h - pad, '#FAA'),
-	)
+	path.forEach(C => drawSquare(canvas, w * C[1] + pad / 2, h * C[0] + pad / 2, w - pad, h - pad, '#FAA'))
 
 	drawSquare(canvas, w * A[1], h * A[0], w, h, '#f00')
 	drawSquare(canvas, w * B[1], h * B[0], w, h, '#f00')
@@ -217,11 +215,7 @@ export function idx2pos(grid: Grid, i: number): Pos {
 	return [row, col]
 }
 
-export function reconstructPath(
-	grid: Grid,
-	parents: Record<number, number>,
-	iNode: number,
-): Pos[] {
+export function reconstructPath(grid: Grid, parents: Record<number, number>, iNode: number): Pos[] {
 	const path: Pos[] = [idx2pos(grid, iNode)]
 	while (iNode in parents) {
 		iNode = parents[iNode]
