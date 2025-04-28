@@ -5,8 +5,8 @@ import { State } from './engine/state.ts'
 import { windowInit } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
 
-export const MAZE_X_SIZE = 4
-export const MAZE_Z_SIZE = 4
+export const MAZE_X_SIZE = 10
+export const MAZE_Z_SIZE = 10
 export const GRID_SIZE = 10
 export const MAZE_X_CENTER = GRID_SIZE * Math.floor(MAZE_X_SIZE / 2)
 export const MAZE_Z_CENTER = GRID_SIZE * Math.floor(MAZE_Z_SIZE / 2)
@@ -23,7 +23,7 @@ function animate(time_ms: number, state: State, renderer: WebGLRenderer) {
 async function main(renderer: WebGLRenderer) {
 	windowInit(renderer)
 
-	const state = new State(450)
+	const state = new State(450, renderer) // Pass renderer
 	const debugPanel = new DebugPanel(state, renderer)
 	await createMap(debugPanel, state)
 

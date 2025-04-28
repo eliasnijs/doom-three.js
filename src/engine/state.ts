@@ -1,7 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Dependencies
 
-import { AmbientLight, DirectionalLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three'
+import { PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three'
+import { PMREMGenerator } from 'three'
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 
 import { BoxColliderVisualizer } from '../game-objects/box-collider-visualizer.ts'
 import { OctreeVisualizer } from '../game-objects/octree-visualizer.ts'
@@ -38,15 +40,15 @@ export class State {
 	staticCollisionTree: OctTree // stores colliders that are updated on load
 
 	activeCamera: PerspectiveCamera
-	ambientLight: AmbientLight
-	directionalLight: DirectionalLight
+	// ambientLight: AmbientLight
+	// directionalLight: DirectionalLight
 
 	debugCamera: PerspectiveCamera
 	debug: boolean = false
 	boxColliderVisualizer?: BoxColliderVisualizer
 	octreeVisualizer?: OctreeVisualizer
 
-	constructor(worldsize: number) {
+	constructor(worldsize: number, renderer: WebGLRenderer) {
 		this.scene = new Scene()
 		this.last_time_ms = 0.0
 
@@ -72,17 +74,17 @@ export class State {
 		this.activeCamera = this.debugCamera
 
 		// Set lighting
-		this.ambientLight = new AmbientLight(0xffffff, 0.5)
-		this.scene.add(this.ambientLight)
-
-		this.directionalLight = new DirectionalLight(0xffffff, 5)
-		this.directionalLight.position.set(5, 5, 0)
-		this.directionalLight.castShadow = true
-		this.directionalLight.shadow.mapSize.width = 1024 // Higher resolution shadows
-		this.directionalLight.shadow.mapSize.height = 2048
-		this.directionalLight.shadow.camera.near = 0.5
-		this.directionalLight.shadow.camera.far = 50
-		this.scene.add(this.directionalLight)
+		// this.ambientLight = new AmbientLight(0xffffff, 0)
+		// this.scene.add(this.ambientLight)
+		//
+		// this.directionalLight = new DirectionalLight(0xffffff, 0)
+		// this.directionalLight.position.set(5, 5, 0)
+		// this.directionalLight.castShadow = true
+		// this.directionalLight.shadow.mapSize.width = 1024 // Higher resolution shadows
+		// this.directionalLight.shadow.mapSize.height = 2048
+		// this.directionalLight.shadow.camera.near = 0.5
+		// this.directionalLight.shadow.camera.far = 50
+		// this.scene.add(this.directionalLight)
 
 		// Listen for window resize
 		window.addEventListener('resize', () => {
@@ -94,6 +96,18 @@ export class State {
 				this.activeCamera.aspect = window.innerWidth / window.innerHeight
 				this.activeCamera.updateProjectionMatrix()
 			}
+		})
+
+		// Load office.hdr as environment map
+		const pmremGenerator = new PMREMGenerator(renderer)
+		pmremGenerator.compileEquirectangularShader()
+		new RGBELoader().setPath('src/assets/env/').load('office.hdr', texture => {
+			const envMap = pmremGenerator.fromEquirectangular(texture).texture
+			this.scene.environment = envMap
+			this.scene.background = envMap // optional: comment out if you don't want as background
+			this.scene.environmentIntensity = 0.3
+			texture.dispose()
+			pmremGenerator.dispose()
 		})
 	}
 
