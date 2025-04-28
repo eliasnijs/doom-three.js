@@ -51,7 +51,7 @@ async function main(renderer: WebGLRenderer) {
 		0.3, // radius
 		0.85, // threshold
 	)
-	composer.addPass(bloomPass)
+	// composer.addPass(bloomPass)
 
 	// Resize composer on window resize
 	renderer.setSize(window.innerWidth, window.innerHeight)
