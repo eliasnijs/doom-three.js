@@ -273,7 +273,7 @@ export class Player extends GameObject {
 				if (this._debugRay) {
 					state.scene.remove(this._debugRay)
 					this._debugRay.geometry.dispose()
-					if (this._debugRay.material) {
+					if (this._debugRay.material && !Array.isArray(this._debugRay.material)) {
 						this._debugRay.material.dispose()
 					}
 				}
