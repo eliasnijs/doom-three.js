@@ -111,6 +111,11 @@ export class DebugPanel extends GameObject {
 				console.warn('Trying to enable first person camera but no player found')
 			}
 		}
+
+		// PATCH: update RenderPass camera if present (for postprocessing)
+		if (typeof window !== 'undefined' && (window as any).renderPass) {
+			;(window as any).renderPass.camera = state.activeCamera
+		}
 	}
 
 	setDebugButtonLabel(state: State) {
