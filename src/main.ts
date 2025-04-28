@@ -55,6 +55,9 @@ async function main(renderer: WebGLRenderer) {
 	}
 
 	// Resize composer on window resize
+	renderer.setSize(window.innerWidth, window.innerHeight)
+	composer.setSize(window.innerWidth, window.innerHeight)
+
 	window.addEventListener('resize', () => {
 		renderer.setSize(window.innerWidth, window.innerHeight)
 		composer.setSize(window.innerWidth, window.innerHeight)

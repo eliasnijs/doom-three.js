@@ -1,4 +1,5 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, Vector3 } from 'three'
+import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 import { GameObject } from '../engine/game-object.ts'
 import { octTreeGet } from '../engine/octtree.ts'
@@ -6,6 +7,8 @@ import { BoxCollider, getCollisionCorrection } from '../engine/physics.ts'
 import { State } from '../engine/state.ts'
 import { GRID_SIZE } from '../main.ts'
 import { mazeGridToWorldGrid, Pos } from '../utils/generate-maze.ts'
+import { loadGLTF } from '../utils/loader-utils'
+import { setWireframe } from '../utils/three-utils'
 
 const PLAYER_SPEED = 10
 const PLAYER_MOUSE_SENSITIVITY = 0.002
@@ -13,15 +16,21 @@ const PLAYER_HEIGHT = 4
 const PLAYER_WIDTH = 0.5
 const CAMERA_HEIGHT_OFFSET = 1.5
 
+// Gun model constants
+const GUN_SCALE = { x: 0.1, y: 0.1, z: 0.1 }
+const GUN_OFFSET = { x: 0.6, y: 0.85, z: -0.85 }
+const GUN_INWARD_ROTATION = 0.05 // radians, negative for slight inward (left) tilt
+
 export class Player extends GameObject {
 	mesh: Object3D
+	parent: Object3D
 	keys: { [key: string]: boolean }
-	velocity: Vector3 = new Vector3(0.0, 0.0, 0.0)
 	rotationY: number = 0
 	rotationX: number = 0
 	camera: PerspectiveCamera
 	isLocked = false
 	collider: BoxCollider
+	gun: Object3D | null = null
 
 	constructor(state: State, [x, z]: Pos) {
 		super(state)
@@ -37,11 +46,16 @@ export class Player extends GameObject {
 		this.mesh.position.copy(position)
 		state.scene.add(this.mesh)
 
+		// Create a parent object for both camera and gun
+		this.parent = new Object3D()
+		this.mesh.add(this.parent)
+
 		// Create a camera
-		this.camera = new PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000)
+		this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 		this.camera.position.z = 0
 		this.camera.position.x = 0
 		this.camera.position.y = CAMERA_HEIGHT_OFFSET
+		this.parent.add(this.camera)
 
 		// Add dynamic collider
 		this.collider = {
@@ -66,6 +80,16 @@ export class Player extends GameObject {
 
 		// Listen for pointer lock change
 		document.addEventListener('pointerlockchange', this.onPointerLockChange)
+
+		// Load gun model and attach to parent
+		void loadGLTF('gun', 'gun.glb').then((gltf: GLTF) => {
+			console.log('loaded')
+			this.gun = gltf.scene
+			this.gun.scale.set(GUN_SCALE.x, GUN_SCALE.y, GUN_SCALE.z)
+			this.parent.add(this.gun)
+			this.gun.position.set(GUN_OFFSET.x, GUN_OFFSET.y, GUN_OFFSET.z)
+			this.gun.rotation.set(0, GUN_INWARD_ROTATION, 0)
+		})
 	}
 
 	onPointerLockChange = () => {
@@ -81,7 +105,7 @@ export class Player extends GameObject {
 
 			// Apply the rotations
 			this.mesh.rotation.y = this.rotationY
-			this.camera.rotation.set(this.rotationX, this.rotationY, 0, 'YXZ')
+			this.parent.rotation.set(this.rotationX, 0, 0)
 		}
 	}
 
@@ -155,8 +179,9 @@ export class Player extends GameObject {
 
 		this.mesh.position.add(displace)
 
-		// Update the camera position to follow the mesh
-		this.camera.position.copy(this.mesh.position)
-		this.camera.position.y += CAMERA_HEIGHT_OFFSET
+		// Make gun follow mouse pitch (up/down)
+		if (this.gun) {
+			setWireframe(this.gun, state.debug)
+		}
 	}
 }
