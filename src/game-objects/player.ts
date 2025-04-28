@@ -1,14 +1,19 @@
 import {
 	BoxGeometry,
 	BufferGeometry,
+	DoubleSide,
 	Line,
 	LineBasicMaterial,
+	Matrix4,
 	Mesh,
 	MeshBasicMaterial,
 	Object3D,
 	PerspectiveCamera,
+	PlaneGeometry,
 	Quaternion,
 	Raycaster,
+	Texture,
+	TextureLoader,
 	Vector3,
 } from 'three'
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -44,6 +49,8 @@ export class Player extends GameObject {
 	collider: BoxCollider
 	gun: Object3D | null = null
 	_debugRay: any = null
+	gunIsDown: boolean = false
+	bulletTexture: Texture | null = null
 
 	constructor(state: State, [x, z]: Pos) {
 		super(state)
@@ -101,6 +108,64 @@ export class Player extends GameObject {
 			this.parent.add(this.gun)
 			this.gun.position.set(GUN_OFFSET.x, GUN_OFFSET.y, GUN_OFFSET.z)
 			this.gun.rotation.set(0, GUN_INWARD_ROTATION, 0)
+		})
+
+		// Load bullet hole texture
+		const loader = new TextureLoader()
+		loader.load('src/assets/gun/bullets.png', texture => {
+			this.bulletTexture = texture
+		})
+
+		document.addEventListener('mousedown', (e: MouseEvent) => {
+			if (e.button === 0 && !this.gunIsDown && this.isLocked && this.bulletTexture) {
+				const origin = this.camera.getWorldPosition(new Vector3())
+				const direction = new Vector3(0, 0, -1)
+					.applyQuaternion(this.camera.getWorldQuaternion(new Quaternion()))
+					.normalize()
+				const raycaster = new Raycaster(origin, direction, 0, 100)
+				const meshes = state.staticCollisionTree.elements
+					.map(e => e?.ref.mesh)
+					.filter(e => e !== undefined)
+				const intersects = raycaster.intersectObjects(meshes, true)
+				if (intersects.length > 0) {
+					const hit = intersects[0]
+
+					// Pick random bullet hole
+					const idx = Math.floor(Math.random() * 64)
+					const uvScale = 1 / 8
+					const bulletTexture = this.bulletTexture.clone()
+					bulletTexture.needsUpdate = true
+					bulletTexture.repeat.set(uvScale, uvScale)
+					bulletTexture.offset.set((idx % 8) * uvScale, Math.floor(idx / 8) * uvScale)
+
+					// Create bullet hole plane
+					const geometry = new PlaneGeometry(0.5, 0.5)
+					const material = new MeshBasicMaterial({
+						map: bulletTexture,
+						transparent: true,
+						depthWrite: false,
+						side: DoubleSide,
+					})
+					const plane = new Mesh(geometry, material)
+
+					// Correct world-space normal
+					const normal = new Vector3(0, 0, 1)
+					if (hit.face && hit.object) {
+						const worldNormalMatrix = new Matrix4().extractRotation(hit.object.matrixWorld)
+						normal.copy(hit.face.normal).applyMatrix4(worldNormalMatrix).normalize()
+					}
+
+					// Align and rotate
+					const alignQuat = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), normal)
+					plane.quaternion.copy(alignQuat)
+					plane.rotateZ(Math.random() * Math.PI * 2)
+
+					// Offset position
+					plane.position.copy(hit.point).add(normal.clone().multiplyScalar(0.01))
+
+					state.scene.add(plane)
+				}
+			}
 		})
 	}
 
@@ -226,9 +291,11 @@ export class Player extends GameObject {
 			if (intersects.length > 0) {
 				this.gun.rotation.x = -Math.PI * (70 / 180) // rotate down 70 deg
 				this.gun.position.y = GUN_OFFSET.y - 0.5
+				this.gunIsDown = true
 			} else {
 				this.gun.rotation.x = 0
 				this.gun.position.y = GUN_OFFSET.y
+				this.gunIsDown = false
 			}
 
 			setWireframe(this.gun, state.debug)
