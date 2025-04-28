@@ -10,7 +10,7 @@ npm run dev
 
 ### Features
 
-- [ ] Window resizing
+- [x] Window resizing
 - [x] Drawing geometric primitives
 - [ ] Random maze generation
 	- [x] Maze map

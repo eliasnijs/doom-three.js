@@ -83,6 +83,18 @@ export class State {
 		this.directionalLight.shadow.camera.near = 0.5
 		this.directionalLight.shadow.camera.far = 50
 		this.scene.add(this.directionalLight)
+
+		// Listen for window resize
+		window.addEventListener('resize', () => {
+			// Update debug camera
+			this.debugCamera.aspect = window.innerWidth / window.innerHeight
+			this.debugCamera.updateProjectionMatrix()
+			// Update active camera if different
+			if (this.activeCamera && this.activeCamera !== this.debugCamera) {
+				this.activeCamera.aspect = window.innerWidth / window.innerHeight
+				this.activeCamera.updateProjectionMatrix()
+			}
+		})
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
