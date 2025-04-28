@@ -25,7 +25,7 @@ import { setWireframe } from '../utils/three-utils'
 const PLAYER_SPEED = 10
 const PLAYER_MOUSE_SENSITIVITY = 0.002
 const PLAYER_HEIGHT = 4
-const PLAYER_WIDTH = 0.5
+const PLAYER_WIDTH = 2
 const CAMERA_HEIGHT_OFFSET = 1.5
 
 // Gun model constants
@@ -200,9 +200,7 @@ export class Player extends GameObject {
 			const rayLength = 2.0
 			const raycaster = new Raycaster(origin, forward, 0, rayLength)
 			// Only test against static world meshes (walls)
-			const worldMeshes = state.scene.children.filter(
-				obj => obj !== this.parent && obj !== this.mesh && obj.type === 'Mesh',
-			)
+			const meshes = state.staticCollisionTree.elements.map(e => e?.ref.mesh).filter(e => e !== undefined)
 
 			// Debug: visualize the raycast
 			if (state.debug) {
@@ -223,7 +221,7 @@ export class Player extends GameObject {
 				this._debugRay = line
 			}
 
-			const intersects = raycaster.intersectObjects(worldMeshes, true)
+			const intersects = raycaster.intersectObjects(meshes, true)
 
 			if (intersects.length > 0) {
 				this.gun.rotation.x = -Math.PI * (70 / 180) // rotate down 70 deg
