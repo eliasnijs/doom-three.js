@@ -1,4 +1,4 @@
-import { WebGLRenderer } from 'three'
+import { Object3D, WebGLRenderer } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
@@ -117,9 +117,41 @@ export class DebugPanel extends GameObject {
 		this.debugButton.innerText = state.debug ? '🔲 Disable Debug' : '🔳 Enable Debug'
 	}
 
-	animate(deltaTime: number) {
+	animate(deltaTime: number, state: State) {
 		// Add FPS to the data
 		this.setData('FPS', (1 / (deltaTime / 1000)).toFixed(2))
+
+		// Add game stats
+		// GameObjects
+		this.setData('GameObjects', state.gameObjects?.length?.toString() ?? 'N/A')
+
+		// Meshes
+		let meshCount = 0
+		if (state.scene && state.scene.children) {
+			const countMeshes = (obj: Object3D) => {
+				if (obj.type === 'Mesh') {
+					meshCount++
+				}
+
+				if (obj.children) {
+					obj.children.forEach(countMeshes)
+				}
+			}
+
+			state.scene.children.forEach(countMeshes)
+		}
+
+		this.setData('Meshes', meshCount.toString())
+
+		// Colliders
+		const colliderCount =
+			(state.staticCollisionTree?.elements?.length || 0) +
+			(state.dynamicCollisionTree?.elements?.length || 0)
+		this.setData('Colliders', colliderCount.toString())
+
+		// Octree size (static tree)
+		const octreeSize = state.staticCollisionTree?.elements?.length || 0
+		this.setData('Octree size', octreeSize.toString())
 
 		// Add a title to the div
 		this.textContainer.innerHTML = 'DEBUG PANEL'
