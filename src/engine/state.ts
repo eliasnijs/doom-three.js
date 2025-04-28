@@ -105,7 +105,7 @@ export class State {
 			const envMap = pmremGenerator.fromEquirectangular(texture).texture
 			this.scene.environment = envMap
 			this.scene.background = envMap // optional: comment out if you don't want as background
-			this.scene.environmentIntensity = 0.3
+			this.scene.environmentIntensity = 0.1
 			texture.dispose()
 			pmremGenerator.dispose()
 		})

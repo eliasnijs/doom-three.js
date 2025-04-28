@@ -7,7 +7,7 @@ export type HallwayObjects = Record<string, Object3D>
 export async function loadHallwayObjects(): Promise<HallwayObjects> {
 	const sectionsByName: Record<string, Object3D> = {}
 
-	await loadGLTF('hallway', 'HallwayPACK_GLB.glb').then(gltf => {
+	await loadGLTF('hallway', 'scene.glb').then(gltf => {
 		for (const child of gltf.scene.children) {
 			sectionsByName[child.name] = child
 		}

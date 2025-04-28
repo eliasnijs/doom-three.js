@@ -1,22 +1,30 @@
-import { Color, WebGLRenderer } from 'three'
+import { Color, Vector2, WebGLRenderer } from 'three'
+// --- Bloom imports ---
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 
 import { createMap } from './engine/map.ts'
 import { State } from './engine/state.ts'
 import { windowInit } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
 
-export const MAZE_X_SIZE = 10
-export const MAZE_Z_SIZE = 10
+export const MAZE_X_SIZE = 4
+export const MAZE_Z_SIZE = 4
 export const GRID_SIZE = 10
 export const MAZE_X_CENTER = GRID_SIZE * Math.floor(MAZE_X_SIZE / 2)
 export const MAZE_Z_CENTER = GRID_SIZE * Math.floor(MAZE_Z_SIZE / 2)
+
+// --- Composer variable ---
+let composer: EffectComposer
 
 function animate(time_ms: number, state: State, renderer: WebGLRenderer) {
 	renderer.setClearColor(new Color(0, 0, 0)) // Set background color to black
 
 	state.animate(time_ms, renderer)
 
-	renderer.render(state.scene, state.activeCamera)
+	// Use composer for rendering
+	composer.render()
 	renderer.state.reset()
 }
 
@@ -27,8 +35,27 @@ async function main(renderer: WebGLRenderer) {
 	const debugPanel = new DebugPanel(state, renderer)
 	await createMap(debugPanel, state)
 
+	// --- Set up EffectComposer and passes ---
+	composer = new EffectComposer(renderer)
+	composer.addPass(new RenderPass(state.scene, state.activeCamera))
+
+	const bloomPass = new UnrealBloomPass(
+		new Vector2(window.innerWidth, window.innerHeight),
+		1.2, // strength
+		0.3, // radius
+		0.85, // threshold
+	)
+	composer.addPass(bloomPass)
+
+	// Resize composer on window resize
+	window.addEventListener('resize', () => {
+		renderer.setSize(window.innerWidth, window.innerHeight)
+		composer.setSize(window.innerWidth, window.innerHeight)
+	})
+
 	console.log('starting loop')
 	renderer.setAnimationLoop(time_ms => {
+		// Pass state and renderer
 		animate(time_ms, state, renderer)
 	})
 
