@@ -85,6 +85,15 @@ export class Hallway extends GameObject {
 			}
 		})
 
+		// Add normal maps to the hallway
+		const normalMap = loadTexture('hallway/textures', 'normal.png')
+		this.mesh.traverse(child => {
+			if ('material' in child && child.material instanceof MeshStandardMaterial) {
+				child.material.normalMap = normalMap
+				child.material.needsUpdate = true
+			}
+		})
+
 		// Add colliders to the hallway
 		const wallPositions = [
 			{ x: 0, z: GRID_SIZE / 2, xw: GRID_SIZE / 2 + 0.1, zw: COLLIDER_THICKNESS, open: north },
