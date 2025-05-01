@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Dependencies
 
-import { AmbientLight, DirectionalLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three'
+import { AmbientLight, Color, FogExp2, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three'
 import { PMREMGenerator } from 'three'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 
@@ -32,6 +32,7 @@ const STATIC_TREE_N_CAPACITY = 8 // max capacity of a leaf in the static spatial
 export class State {
 	scene: Scene
 	last_time_ms: number
+	fogEnabled: boolean = true
 
 	gameObjects: GameObject[]
 
@@ -42,7 +43,6 @@ export class State {
 
 	activeCamera: PerspectiveCamera
 	ambientLight: AmbientLight
-	directionalLight: DirectionalLight
 
 	debugCamera: PerspectiveCamera
 	debug: boolean = false
@@ -77,14 +77,8 @@ export class State {
 		this.activeCamera = this.debugCamera
 
 		// Set lighting
-		this.ambientLight = new AmbientLight(0xddddff, 0.02)
+		this.ambientLight = new AmbientLight(0xee00ff, 0.05)
 		this.scene.add(this.ambientLight)
-		this.directionalLight = new DirectionalLight(0x00eeff, 0.05)
-		this.directionalLight.position.set(5, 5, 0)
-		this.directionalLight.shadow.mapSize.height = 2048
-		this.directionalLight.shadow.camera.near = 0.5
-		this.directionalLight.shadow.camera.far = 50
-		this.scene.add(this.directionalLight)
 
 		// Listen for window resize
 		window.addEventListener('resize', () => {
@@ -106,6 +100,12 @@ export class State {
 			this.scene.environment = envMap
 			this.scene.background = envMap // optional: comment out if you don't want as background
 			this.scene.environmentIntensity = 0.1
+
+			// Add exponential fog to the scene - most efficient type of fog
+			// Dark purplish color to match the ambient light
+			const fogColor = new Color(0x150515)
+			this.scene.fog = new FogExp2(fogColor, 0.04) // Increased density for more visible effect
+
 			texture.dispose()
 			pmremGenerator.dispose()
 		})
@@ -113,6 +113,18 @@ export class State {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//// Configuring Functions
+
+	toggleFog() {
+		this.fogEnabled = !this.fogEnabled
+
+		// Toggle fog on/off
+		if (this.fogEnabled && !this.scene.fog) {
+			const fogColor = new Color(0x150515)
+			this.scene.fog = new FogExp2(fogColor, 0.02)
+		} else if (!this.fogEnabled && this.scene.fog) {
+			this.scene.fog = null
+		}
+	}
 
 	toggleDebug() {
 		this.debug = !this.debug

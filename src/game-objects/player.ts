@@ -1,4 +1,7 @@
 import {
+	Audio,
+	AudioListener,
+	AudioLoader,
 	BoxGeometry,
 	BufferGeometry,
 	DoubleSide,
@@ -76,6 +79,9 @@ export class Player extends GameObject {
 	isFiring: boolean = false
 	lastFireTime: number = 0
 	bulletHoles: { mesh: Mesh; born: number; fade: number }[] = []
+	audioListener: AudioListener | null = null
+	gunshotSound: Audio | null = null
+	ambientSound: Audio | null = null
 
 	constructor(state: State, [x, z]: Pos) {
 		super(state)
@@ -100,6 +106,31 @@ export class Player extends GameObject {
 		this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 		this.parent.add(this.camera)
 		this.camera.position.set(0, 0, 0)
+
+		// Create audio listener and attach to camera
+		this.audioListener = new AudioListener()
+		this.camera.add(this.audioListener)
+
+		// Load gun sound
+		const audioLoader = new AudioLoader()
+		this.gunshotSound = new Audio(this.audioListener)
+		audioLoader.load('src/assets/sound/mixkit-game-gun-shot-1662.mp3', buffer => {
+			if (this.gunshotSound) {
+				this.gunshotSound.setBuffer(buffer)
+				this.gunshotSound.setVolume(0.5)
+			}
+		})
+
+		// Load and play ambient sound in loop
+		this.ambientSound = new Audio(this.audioListener)
+		audioLoader.load('src/assets/sound/spaceship-ambience-with-effects-21420.mp3', buffer => {
+			if (this.ambientSound) {
+				this.ambientSound.setBuffer(buffer)
+				this.ambientSound.setVolume(0.2) // Lower volume for background ambience
+				this.ambientSound.setLoop(true)
+				this.ambientSound.play()
+			}
+		})
 
 		// Add dynamic collider
 		this.collider = {
@@ -177,6 +208,13 @@ export class Player extends GameObject {
 
 	fire(state: State) {
 		if (!this.gunIsDown && this.isLocked && this.bulletTexture && this.gun) {
+			// Play gunshot sound
+			if (this.gunshotSound && this.gunshotSound.buffer) {
+				// Clone the sound to allow overlapping sounds for rapid fire
+				const sound = this.gunshotSound.clone()
+				sound.play()
+			}
+
 			const origin = this.camera.getWorldPosition(new Vector3())
 			const direction = new Vector3(0, 0, -1)
 				.applyQuaternion(this.camera.getWorldQuaternion(new Quaternion()))
