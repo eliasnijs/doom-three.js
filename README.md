@@ -20,10 +20,10 @@ npm run dev
 	- [ ] Benchmark
 	- [ ] Spawnpoints*
 	- [ ] Teleport*
-- [ ] UI
-	- [ ] Display maze map
+- [x] UI
+	- [x] Display maze map
 		- [x] Display shortest path in the game
-	- [ ] Select a destination on the map
+	- [x] Select a destination on the map
 	- [x] Debug menu
 - [ ] Shortest path finding
 	- [x] Implementation
