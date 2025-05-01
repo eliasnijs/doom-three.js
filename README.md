@@ -16,7 +16,7 @@ npm run dev
 - [ ] Random maze generation
 	- [x] Maze map
 	- [x] Corridors
-	- [ ] Light sources
+	- [x] Light sources
 	- [ ] Random objects
 	- [ ] Benchmark
 	- [ ] Spawnpoints*
