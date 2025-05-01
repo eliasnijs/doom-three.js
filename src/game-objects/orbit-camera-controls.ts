@@ -8,7 +8,7 @@ import { DebugPanel } from './debug-panel.ts'
 
 export class OrbitCameraControls extends GameObject {
 	orbitControls: OrbitControls
-	debugPanel: DebugPanel | undefined
+	debugPanel: DebugPanel | null
 
 	constructor(state: State, renderer: WebGLRenderer) {
 		super(state)

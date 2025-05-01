@@ -9,7 +9,7 @@ const ROTATION_SPEED = 0.001
 
 export class RotatingTv extends GameObject {
 	mesh: Group | undefined
-	debugPanel: DebugPanel | undefined
+	debugPanel: DebugPanel | null
 
 	constructor(state: State) {
 		super(state)

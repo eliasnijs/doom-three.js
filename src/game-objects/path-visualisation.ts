@@ -22,7 +22,6 @@ import { GRID_SIZE } from '../main.ts'
 import { mazeGridToWorldGrid, pathfind, Pos } from '../utils/generate-maze.ts'
 import { loadTexture } from '../utils/loader-utils.ts'
 
-
 export class PathVisualisation extends GameObject {
 	private sprites: Sprite[] = []
 	private glowTexture: any
@@ -55,6 +54,7 @@ export class PathVisualisation extends GameObject {
 
 		const points = path.map(([y, x]) => {
 			const [newX, newZ] = mazeGridToWorldGrid([x, y])
+
 			return new Vector3(newX * GRID_SIZE, 2.5, newZ * GRID_SIZE)
 		})
 
@@ -77,25 +77,33 @@ export class PathVisualisation extends GameObject {
 		for (const sprite of this.sprites) {
 			state.scene.remove(sprite)
 		}
+
 		this.sprites = []
 	}
 
 	setDestination(state: State, destination: Pos) {
-		if (!this.startPoint) return
+		if (!this.startPoint || !state.grid) {
+			return
+		}
+
 		this.endPoint = destination
 		const path = pathfind(state.grid, this.startPoint, destination)
 		this.currentPath = [...path]
 		this.createPathVisualization(state, path)
+
 		return path
 	}
 
 	setStartPoint(state: State, start: Pos) {
-		if (!this.endPoint) return
+		if (!this.endPoint || !state.grid) {
+			return
+		}
 
 		this.startPoint = start
 		const path = pathfind(state.grid, start, this.endPoint)
 		this.currentPath = [...path]
 		this.createPathVisualization(state, path)
+
 		return path
 	}
 
@@ -111,6 +119,5 @@ export class PathVisualisation extends GameObject {
 		return this.startPoint
 	}
 
-	animate() {
-	}
+	animate() {}
 }

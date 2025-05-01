@@ -7,7 +7,7 @@ import { DebugPanel } from './debug-panel.ts'
 
 export class FlyCameraControls extends GameObject {
 	flyControls: FlyControls
-	debugPanel: DebugPanel | undefined
+	debugPanel: DebugPanel | null
 
 	constructor(state: State, renderer: WebGLRenderer) {
 		super(state)

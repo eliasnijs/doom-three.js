@@ -39,8 +39,8 @@ async function main(renderer: WebGLRenderer) {
 
 	const state = new State(450, renderer) // Pass renderer
 	const debugPanel = new DebugPanel(state, renderer)
-	const grid = await createMap(debugPanel, state)
-	const mapPanel = new MazePanel(state, renderer)
+	await createMap(debugPanel, state)
+	new MazePanel(state, renderer)
 
 	// --- Set up EffectComposer and passes ---
 	composer = new EffectComposer(renderer)
