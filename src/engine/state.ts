@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Dependencies
 
-import { PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three'
+import { AmbientLight, DirectionalLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three'
 import { PMREMGenerator } from 'three'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 
@@ -41,8 +41,8 @@ export class State {
 	staticCollisionTree: OctTree // stores colliders that are updated on load
 
 	activeCamera: PerspectiveCamera
-	// ambientLight: AmbientLight
-	// directionalLight: DirectionalLight
+	ambientLight: AmbientLight
+	directionalLight: DirectionalLight
 
 	debugCamera: PerspectiveCamera
 	debug: boolean = false
@@ -77,17 +77,14 @@ export class State {
 		this.activeCamera = this.debugCamera
 
 		// Set lighting
-		// this.ambientLight = new AmbientLight(0xffffff, 0)
-		// this.scene.add(this.ambientLight)
-
-		// this.directionalLight = new DirectionalLight(0xffffff, 0)
-		// this.directionalLight.position.set(5, 5, 0)
-		// this.directionalLight.castShadow = true
-		// this.directionalLight.shadow.mapSize.width = 1024 // Higher resolution shadows
-		// this.directionalLight.shadow.mapSize.height = 2048
-		// this.directionalLight.shadow.camera.near = 0.5
-		// this.directionalLight.shadow.camera.far = 50
-		// this.scene.add(this.directionalLight)
+		this.ambientLight = new AmbientLight(0xddddff, 0.02)
+		this.scene.add(this.ambientLight)
+		this.directionalLight = new DirectionalLight(0x00eeff, 0.05)
+		this.directionalLight.position.set(5, 5, 0)
+		this.directionalLight.shadow.mapSize.height = 2048
+		this.directionalLight.shadow.camera.near = 0.5
+		this.directionalLight.shadow.camera.far = 50
+		this.scene.add(this.directionalLight)
 
 		// Listen for window resize
 		window.addEventListener('resize', () => {

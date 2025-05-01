@@ -34,7 +34,7 @@ export class MazePanel extends GameObject {
 
 	private readonly colors = {
 		cellDefault: 'rgba(30, 30, 50, 0.3)',
-		cellPath: 'rgba(80, 210, 240, 0.3)',
+		cellPath: 'rgba(80, 240, 80, 0.3)',
 		cellDestination: 'rgba(0, 255, 0, 0.3)',
 		cellHighlight: 'rgba(100, 200, 255, 0.8)',
 		wallColor: 'white',
