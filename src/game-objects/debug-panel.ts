@@ -23,7 +23,7 @@ export class DebugPanel extends GameObject {
 	camera: OrbitCameraControls | FlyCameraControls | null = null
 	debugButton: HTMLButtonElement
 
-	constructor(state: State, renderer: WebGLRenderer) {
+	constructor(state: State, renderer: WebGLRenderer, style) {
 		super(state)
 
 		// Set the camera type to fly

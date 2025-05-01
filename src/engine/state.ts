@@ -11,6 +11,7 @@ import { MAZE_X_CENTER, MAZE_Z_CENTER } from '../main.ts'
 import { GameObject } from './game-object.ts'
 import { OctTree, octTreeInitialize, octTreeInsert, octTreeMarkDead, octTreeRebuild } from './octtree.ts'
 import { BoxCollider } from './physics.ts'
+import { Grid } from '../utils/generate-maze.ts'
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Types
@@ -48,6 +49,8 @@ export class State {
 	boxColliderVisualizer?: BoxColliderVisualizer
 	octreeVisualizer?: OctreeVisualizer
 
+	grid: Grid
+
 	constructor(worldsize: number, renderer: WebGLRenderer) {
 		this.scene = new Scene()
 		this.last_time_ms = 0.0
@@ -76,7 +79,7 @@ export class State {
 		// Set lighting
 		// this.ambientLight = new AmbientLight(0xffffff, 0)
 		// this.scene.add(this.ambientLight)
-		//
+
 		// this.directionalLight = new DirectionalLight(0xffffff, 0)
 		// this.directionalLight.position.set(5, 5, 0)
 		// this.directionalLight.castShadow = true

@@ -113,7 +113,7 @@ export function generate(nRows: number, nCols: number): Grid {
 	return grid
 }
 
-function drawLine(
+export function drawLine(
 	canvas: HTMLCanvasElement,
 	x1: number,
 	y1: number,

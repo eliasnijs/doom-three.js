@@ -11,6 +11,7 @@ export async function createMap(debugPanel: DebugPanel, state: State) {
 	const hallwayObjects = await loadHallwayObjects()
 
 	const grid = generate(MAZE_Z_SIZE, MAZE_X_SIZE)
+	state.grid = grid
 
 	for (let row = 0; row < grid.nRows; row++) {
 		for (let col = 0; col < grid.nCols; col++) {
@@ -38,4 +39,6 @@ export async function createMap(debugPanel: DebugPanel, state: State) {
 
 	// Add player
 	new Player(state, start).enableCamera(state)
+
+	return grid
 }
