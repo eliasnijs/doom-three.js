@@ -1,4 +1,5 @@
-![image](https://github.com/user-attachments/assets/c2bafbf5-de62-4ef5-be62-82750e5da656)
+![image](https://github.com/user-attachments/assets/d425c0be-ea2d-4c91-90fe-6640694e313e)
+
 
 # MiniDoom
 By Elias Nijs & René Van Der Schueren
