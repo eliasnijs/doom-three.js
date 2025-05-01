@@ -8,6 +8,7 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { BoxColliderVisualizer } from '../game-objects/box-collider-visualizer.ts'
 import { OctreeVisualizer } from '../game-objects/octree-visualizer.ts'
 import { MAZE_X_CENTER, MAZE_Z_CENTER } from '../main.ts'
+import { Grid } from '../utils/generate-maze.ts'
 import { GameObject } from './game-object.ts'
 import { OctTree, octTreeInitialize, octTreeInsert, octTreeMarkDead, octTreeRebuild } from './octtree.ts'
 import { BoxCollider } from './physics.ts'
@@ -48,6 +49,8 @@ export class State {
 	boxColliderVisualizer?: BoxColliderVisualizer
 	octreeVisualizer?: OctreeVisualizer
 
+	grid: Grid | null = null
+
 	constructor(worldsize: number, renderer: WebGLRenderer) {
 		this.scene = new Scene()
 		this.last_time_ms = 0.0
@@ -76,7 +79,7 @@ export class State {
 		// Set lighting
 		// this.ambientLight = new AmbientLight(0xffffff, 0)
 		// this.scene.add(this.ambientLight)
-		//
+
 		// this.directionalLight = new DirectionalLight(0xffffff, 0)
 		// this.directionalLight.position.set(5, 5, 0)
 		// this.directionalLight.castShadow = true
@@ -181,12 +184,14 @@ export class State {
 	}
 
 	// Get the first game object of a given type, useful for finding singletons
-	findFirstGameObjectOfType<T extends GameObject>(type: Constructor<T>): T | undefined {
+	findFirstGameObjectOfType<T extends GameObject>(type: Constructor<T>): T | null {
 		for (const gameObject of this.gameObjects) {
 			if (gameObject instanceof type) {
 				return gameObject
 			}
 		}
+
+		return null
 	}
 
 	// Get all game objects of a given type

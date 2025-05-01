@@ -8,6 +8,7 @@ import { createMap } from './engine/map.ts'
 import { State } from './engine/state.ts'
 import { windowInit } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
+import { MazePanel } from './game-objects/maze-panel.ts'
 
 export const MAZE_X_SIZE = 20
 export const MAZE_Z_SIZE = 20
@@ -39,6 +40,7 @@ async function main(renderer: WebGLRenderer) {
 	const state = new State(450, renderer) // Pass renderer
 	const debugPanel = new DebugPanel(state, renderer)
 	await createMap(debugPanel, state)
+	new MazePanel(state, renderer)
 
 	// --- Set up EffectComposer and passes ---
 	composer = new EffectComposer(renderer)
@@ -51,7 +53,7 @@ async function main(renderer: WebGLRenderer) {
 		0.3, // radius
 		0.85, // threshold
 	)
-	// composer.addPass(bloomPass)
+	composer.addPass(bloomPass)
 
 	// Resize composer on window resize
 	renderer.setSize(window.innerWidth, window.innerHeight)
