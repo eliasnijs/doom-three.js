@@ -5,7 +5,6 @@ import { BoxCollider } from '../engine/physics.ts'
 import { State } from '../engine/state.ts'
 import { GRID_SIZE } from '../main.ts'
 import { getRandomItem, HallwayObjects } from '../utils/hallway-utils.ts'
-import { loadTexture } from '../utils/loader-utils.ts'
 
 const HALLWAY_SCALE = 1.25
 const COLLIDER_THICKNESS = 0.6
@@ -73,26 +72,6 @@ export class Hallway extends GameObject {
 		this.mesh.position.set(this.grid_x * GRID_SIZE, 0, this.grid_z * GRID_SIZE)
 		this.mesh.rotation.y = (this.rotation * Math.PI) / 180
 		this.mesh.scale.set(HALLWAY_SCALE, HALLWAY_SCALE, HALLWAY_SCALE)
-
-		// Add metalness to the hallway
-		const metalnessMap = loadTexture('hallway/textures', 'metal.png')
-		this.mesh.traverse(child => {
-			if ('material' in child && child.material instanceof MeshStandardMaterial) {
-				child.material.metalness = 1
-				child.material.roughness = 0.4
-				child.material.metalnessMap = metalnessMap
-				child.material.needsUpdate = true
-			}
-		})
-
-		// Add normal maps to the hallway
-		const normalMap = loadTexture('hallway/textures', 'normal.png')
-		this.mesh.traverse(child => {
-			if ('material' in child && child.material instanceof MeshStandardMaterial) {
-				child.material.normalMap = normalMap
-				child.material.needsUpdate = true
-			}
-		})
 
 		// Add colliders to the hallway
 		const wallPositions = [
