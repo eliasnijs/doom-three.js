@@ -10,8 +10,8 @@ import { windowInit } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
 import { MazePanel } from './game-objects/maze-panel.ts'
 
-export const MAZE_X_SIZE = 50
-export const MAZE_Z_SIZE = 50
+export const MAZE_X_SIZE = 25
+export const MAZE_Z_SIZE = 25
 export const GRID_SIZE = 10
 export const MAZE_X_CENTER = GRID_SIZE * Math.floor(MAZE_X_SIZE / 2)
 export const MAZE_Z_CENTER = GRID_SIZE * Math.floor(MAZE_Z_SIZE / 2)
