@@ -271,11 +271,11 @@ export class Hallway extends GameObject {
 					const barrelWorldPos = barrel.getWorldPosition(new Vector3())
 					const hallwayWorldPos = this.mesh.getWorldPosition(new Vector3())
 					const offset = barrelWorldPos.clone().sub(hallwayWorldPos)
-					const shrink = 0.15; // Amount to shrink the collider on each side
-					const halfScale = 1.25 - shrink; // Shrink X and Z
-					const height = 2.5 - shrink * 2; // Shrink Y (top and bottom)
-					const bbl_rel = new Vector3(offset.x - halfScale, offset.y + shrink, offset.z - halfScale);
-					const ftr_rel = new Vector3(offset.x + halfScale, offset.y + height, offset.z + halfScale);
+					const shrink = 0.15 // Amount to shrink the collider on each side
+					const halfScale = 1.25 - shrink // Shrink X and Z
+					const height = 2.5 - shrink * 2 // Shrink Y (top and bottom)
+					const bbl_rel = new Vector3(offset.x - halfScale, offset.y + shrink, offset.z - halfScale)
+					const ftr_rel = new Vector3(offset.x + halfScale, offset.y + height, offset.z + halfScale)
 					const barrelCollider: BoxCollider = {
 						ref: this,
 						bbl_rel,
