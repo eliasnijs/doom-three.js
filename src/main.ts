@@ -10,8 +10,8 @@ import { windowInit } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
 import { MazePanel } from './game-objects/maze-panel.ts'
 
-export const MAZE_X_SIZE = 20
-export const MAZE_Z_SIZE = 20
+export const MAZE_X_SIZE = 5
+export const MAZE_Z_SIZE = 1
 export const GRID_SIZE = 10
 export const MAZE_X_CENTER = GRID_SIZE * Math.floor(MAZE_X_SIZE / 2)
 export const MAZE_Z_CENTER = GRID_SIZE * Math.floor(MAZE_Z_SIZE / 2)
@@ -39,7 +39,7 @@ async function main(renderer: WebGLRenderer) {
 
 	const state = new State(450, renderer) // Pass renderer
 	const debugPanel = new DebugPanel(state, renderer)
-	await createMap(debugPanel, state)
+	await createMap(debugPanel, state, renderer)
 	new MazePanel(state, renderer)
 
 	// --- Set up EffectComposer and passes ---

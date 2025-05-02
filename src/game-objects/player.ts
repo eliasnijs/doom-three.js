@@ -10,6 +10,7 @@ import {
 	Matrix4,
 	Mesh,
 	MeshBasicMaterial,
+	MeshStandardMaterial,
 	Object3D,
 	PerspectiveCamera,
 	PlaneGeometry,
@@ -29,6 +30,7 @@ import { GRID_SIZE } from '../main.ts'
 import { mazeGridToWorldGrid, Pos } from '../utils/generate-maze.ts'
 import { loadGLTF } from '../utils/loader-utils'
 import { setWireframe } from '../utils/three-utils'
+import { Hallway } from './hallway.ts'
 
 const PLAYER_SPEED = 10
 const PLAYER_MOUSE_SENSITIVITY = 0.002
@@ -164,6 +166,14 @@ export class Player extends GameObject {
 			this.parent.add(this.gun)
 			this.gun.position.set(GUN_OFFSET.x, GUN_OFFSET.y, GUN_OFFSET.z)
 			this.gun.rotation.set(0, GUN_INWARD_ROTATION, 0)
+			// Set all parts of the gun to metallicness 1 and roughness 0.1 (assuming MeshBasicMaterial)
+			this.gun.traverse(child => {
+				const mesh = child as Mesh
+				if (mesh.isMesh && mesh.material instanceof MeshStandardMaterial) {
+					mesh.material.metalness = 0.4
+					mesh.material.roughness = 0.1
+				}
+			})
 		})
 
 		// Load bullet hole texture
@@ -440,6 +450,28 @@ export class Player extends GameObject {
 				this.fire(state)
 				this.lastFireTime = now
 			}
+		}
+
+		// Update the gun's environment to the current section
+		const worldPos = this.mesh.position.clone()
+		const gridX = Math.floor((worldPos.x + GRID_SIZE / 2) / GRID_SIZE)
+		const gridZ = Math.floor((worldPos.z + GRID_SIZE / 2) / GRID_SIZE)
+
+		// Find the hallway at this grid position
+		const hallways = state.findAllGameObjectsOfType(Hallway)
+		const hallway = hallways.find(h => h.grid_x === gridX && h.grid_z === gridZ)
+		console.log(gridX, gridZ)
+
+		if (hallway && this.gun) {
+			// Apply env map to all MeshStandardMaterial parts of the gun
+			this.gun.traverse(child => {
+				const mesh = child as Mesh
+				if (mesh.isMesh && mesh.material instanceof MeshStandardMaterial && hallway.envMaterial) {
+					mesh.material.envMap = hallway.envMaterial.envMap
+					mesh.material.envMapIntensity = 10
+					mesh.material.needsUpdate = true
+				}
+			})
 		}
 	}
 }

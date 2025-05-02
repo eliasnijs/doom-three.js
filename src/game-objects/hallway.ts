@@ -17,7 +17,7 @@ export class Hallway extends GameObject {
 		type: string,
 		rotation: number,
 		renderer: WebGLRenderer,
-	): MeshStandardMaterial | undefined {
+	): MeshStandardMaterial {
 		const cacheKey = `${type}_${rotation}`
 		let cachedMaterial = Hallway._materialCache[cacheKey]
 		if (!cachedMaterial) {
@@ -55,6 +55,7 @@ export class Hallway extends GameObject {
 	grid_z: number
 	type: string
 	rotation: number
+	envMaterial: MeshStandardMaterial
 
 	constructor(
 		state: State,
@@ -114,13 +115,13 @@ export class Hallway extends GameObject {
 		this.mesh.rotation.y = (this.rotation * Math.PI) / 180
 		this.mesh.scale.set(HALLWAY_SCALE, HALLWAY_SCALE, HALLWAY_SCALE)
 
-		const envMaterial = Hallway.getEnvironmentMaterial(hallwayObjects, this.type, this.rotation, renderer)
-		if (envMaterial) {
+		this.envMaterial = Hallway.getEnvironmentMaterial(hallwayObjects, this.type, this.rotation, renderer)
+		if (this.envMaterial) {
 			this.mesh.traverse(child => {
 				const meshChild = child as Mesh
 				const material = meshChild.material as MeshStandardMaterial | undefined
 				if (material && material.name === 'M_Environment') {
-					meshChild.material = envMaterial
+					meshChild.material = this.envMaterial
 				}
 			})
 		}
