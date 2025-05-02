@@ -56,6 +56,12 @@ export class Hallway extends GameObject {
 	type: string
 	rotation: number
 	envMaterial: MeshStandardMaterial
+	doorShouldOpen: boolean = false
+	doorOpenProgress: number = 0
+	private doorLeft: Object3D | null = null
+	private doorRight: Object3D | null = null
+	private doorControls: Object3D[] = []
+	private triggeredControls = new Set<Object3D>()
 
 	constructor(
 		state: State,
@@ -80,7 +86,7 @@ export class Hallway extends GameObject {
 			this.rotation = openSides.indexOf(true) * -90
 		} else if (count === 2) {
 			if (north && south) {
-				if (Math.random() < 1 / 2) {
+				if (Math.random() < 1) {
 					this.type = 'Hall_Door_Large'
 				} else {
 					this.type = getRandomItem(['Hall_Light', 'Hall_NoLight'])
@@ -88,7 +94,7 @@ export class Hallway extends GameObject {
 
 				this.rotation = 0
 			} else if (east && west) {
-				if (Math.random() < 1 / 2) {
+				if (Math.random() < 1) {
 					this.type = 'Hall_Door_Large'
 				} else {
 					this.type = getRandomItem(['Hall_Light', 'Hall_NoLight'])
@@ -125,6 +131,22 @@ export class Hallway extends GameObject {
 		this.mesh.rotation.y = (this.rotation * Math.PI) / 180
 		this.mesh.scale.set(HALLWAY_SCALE, HALLWAY_SCALE, HALLWAY_SCALE)
 
+		if (this.type === 'Hall_Door_Large') {
+			this.mesh.traverse(child => {
+				if (child.name === 'Door_Big_L') {
+					this.doorLeft = child
+				}
+
+				if (child.name === 'Door_Big_R') {
+					this.doorRight = child
+				}
+
+				if (child.name.includes('Prop_DoorControl')) {
+					this.doorControls.push(child)
+				}
+			})
+		}
+
 		this.envMaterial = Hallway.getEnvironmentMaterial(hallwayObjects, this.type, this.rotation, renderer)
 		if (this.envMaterial) {
 			this.mesh.traverse(child => {
@@ -156,7 +178,22 @@ export class Hallway extends GameObject {
 		}
 	}
 
-	animate(): void {}
+	animate(): void {
+		if (
+			this.type === 'Hall_Door_Large' &&
+			this.doorLeft &&
+			this.doorRight &&
+			this.triggeredControls.size > 0
+		) {
+			const maxOpen = 2.5 // units to move doors apart
+			if (this.doorOpenProgress < 1) {
+				this.doorOpenProgress = Math.min(1, this.doorOpenProgress + 0.01)
+				const offset = maxOpen * this.doorOpenProgress
+				this.doorLeft.position.x = -offset
+				this.doorRight.position.x = offset
+			}
+		}
+	}
 
 	setDebug(wireframe: boolean): void {
 		this.mesh.traverse(child => {
@@ -164,5 +201,27 @@ export class Hallway extends GameObject {
 				;(child.material as MeshStandardMaterial).wireframe = wireframe
 			}
 		})
+	}
+
+	public static tryTriggerDoorFromMesh(mesh: Object3D, state: State): boolean {
+		// The Prop_DoorControl is always the grandparent of the button (cube)
+		const controlPanel = mesh.parent
+
+		console.log(controlPanel)
+
+		if (!controlPanel) {
+			return false
+		}
+
+		const hallways = state.findAllGameObjectsOfType(Hallway)
+		for (const hallway of hallways) {
+			if (hallway.type === 'Hall_Door_Large' && hallway.doorControls.includes(controlPanel)) {
+				hallway.triggeredControls.add(controlPanel)
+
+				return true
+			}
+		}
+
+		return false
 	}
 }

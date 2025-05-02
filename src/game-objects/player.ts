@@ -270,10 +270,20 @@ export class Player extends GameObject {
 				plane.position.copy(hit.point).add(normal.clone().multiplyScalar(0.01))
 				state.scene.add(plane)
 				this.bulletHoles.push({ mesh: plane, born: performance.now(), fade: 1 })
-			}
 
-			// KICKBACK: add kickback on shot
-			this.gunKickbackTarget = Math.min(this.gunKickbackTarget + GUN_KICKBACK_AMOUNT, GUN_KICKBACK_MAX)
+				console.log(hit.object.name)
+				// --- bullet hit logic for door controls ---
+				if (hit.object.name.startsWith('Cube01')) {
+					console.log('got a door hit')
+					Hallway.tryTriggerDoorFromMesh(hit.object, state)
+				}
+
+				// KICKBACK: add kickback on shot
+				this.gunKickbackTarget = Math.min(
+					this.gunKickbackTarget + GUN_KICKBACK_AMOUNT,
+					GUN_KICKBACK_MAX,
+				)
+			}
 		}
 	}
 
