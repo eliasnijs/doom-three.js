@@ -224,7 +224,6 @@ export class Hallway extends GameObject {
 			const barrelName = getRandomItem(barrelNames)
 			const barrel = propsObjects[barrelName]?.clone()
 			if (barrel) {
-				const center = new Vector3(this.grid_x * GRID_SIZE, 0, this.grid_z * GRID_SIZE)
 				const inwardAmount = 2.5 // How far inwards from the wall collider
 				const closedWalls = []
 				for (const wall of wallPositions) {
@@ -241,6 +240,8 @@ export class Hallway extends GameObject {
 						0,
 						this.grid_z * GRID_SIZE + wall.z,
 					)
+					// Re-add center definition for inward calculation
+					const center = new Vector3(this.grid_x * GRID_SIZE, 0, this.grid_z * GRID_SIZE)
 					// Move along the wall: random offset between -2 and +2
 					const along = Math.random() * 4 - 2
 					if (Math.abs(wall.x) > Math.abs(wall.z)) {
@@ -259,8 +260,11 @@ export class Hallway extends GameObject {
 					barrel.position.copy(wallPos)
 					// Set random rotation
 					barrel.rotation.y = Math.random() * Math.PI * 2
+					// Parent the barrel to the hallway mesh for correct local transforms
+					this.mesh.add(barrel)
+					barrel.position.copy(this.mesh.worldToLocal(barrel.position.clone()))
+					// Set scale after parenting (optional, but safe)
 					barrel.scale.set(2.5, 2.5, 2.5)
-					state.scene.add(barrel)
 					this.spawnedBarrels.push(barrel)
 
 					// Set env map, metallicness, and roughness for all mesh materials in the barrel
