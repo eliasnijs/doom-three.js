@@ -69,7 +69,6 @@ export class Hallway extends GameObject {
 	private doorRight: Object3D | null = null
 	private doorControls: Object3D[] = []
 	private triggeredControls = new Set<Object3D>()
-	private doorCenterCollider: BoxCollider | null = null
 	spawnedBarrels: Object3D[] = []
 	private doorLeftCollider: BoxCollider | null = null
 	private doorRightCollider: BoxCollider | null = null
@@ -297,7 +296,7 @@ export class Hallway extends GameObject {
 		}
 	}
 
-	animate(_: number, state: State): void {
+	animate(): void {
 		if (
 			this.type === 'Hall_Door_Large' &&
 			this.doorLeft &&
