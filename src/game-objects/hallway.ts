@@ -63,15 +63,14 @@ export class Hallway extends GameObject {
 	type: string
 	rotation: number
 	envMaterial: MeshStandardMaterial
-	doorShouldOpen: boolean = false
 	doorOpenProgress: number = 0
 	private doorLeft: Object3D | null = null
 	private doorRight: Object3D | null = null
 	private doorControls: Object3D[] = []
 	private triggeredControls = new Set<Object3D>()
 	spawnedBarrels: Object3D[] = []
-	private doorLeftCollider: BoxCollider | null = null
-	private doorRightCollider: BoxCollider | null = null
+	private readonly doorLeftCollider: BoxCollider | null = null
+	private readonly doorRightCollider: BoxCollider | null = null
 
 	constructor(
 		state: State,
