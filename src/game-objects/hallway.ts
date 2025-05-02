@@ -214,7 +214,7 @@ export class Hallway extends GameObject {
 			this.doorRight &&
 			this.triggeredControls.size > 0
 		) {
-			const maxOpen = 2.5 // units to move doors apart
+			const maxOpen = 3.5 // units to move doors apart
 			if (this.doorOpenProgress < 1) {
 				this.doorOpenProgress = Math.min(1, this.doorOpenProgress + 0.01)
 				const offset = maxOpen * this.doorOpenProgress
