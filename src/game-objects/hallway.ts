@@ -80,7 +80,7 @@ export class Hallway extends GameObject {
 			this.rotation = openSides.indexOf(true) * -90
 		} else if (count === 2) {
 			if (north && south) {
-				if (Math.random() < 1 / 1) {
+				if (Math.random() < 1 / 2) {
 					this.type = 'Hall_Door_Large'
 				} else {
 					this.type = getRandomItem(['Hall_Light', 'Hall_NoLight'])
@@ -88,7 +88,7 @@ export class Hallway extends GameObject {
 
 				this.rotation = 0
 			} else if (east && west) {
-				if (Math.random() < 1 / 1) {
+				if (Math.random() < 1 / 2) {
 					this.type = 'Hall_Door_Large'
 				} else {
 					this.type = getRandomItem(['Hall_Light', 'Hall_NoLight'])
