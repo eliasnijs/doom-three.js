@@ -41,7 +41,7 @@ export async function createMap(debugPanel: DebugPanel, state: State, renderer: 
 	new PathVisualisation(state, path)
 
 	// Add player
-	new Player(state, start).enableCamera(state)
+	new Player(state, start, hallwayObjects, renderer).enableCamera(state)
 
 	return grid
 }
