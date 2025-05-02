@@ -63,7 +63,8 @@ export class Hallway extends GameObject {
 	private doorRight: Object3D | null = null
 	private doorControls: Object3D[] = []
 	private triggeredControls = new Set<Object3D>()
-	private doorCenterCollider: BoxCollider | null = null
+	private doorLeftCollider: BoxCollider | null = null
+	private doorRightCollider: BoxCollider | null = null
 
 	constructor(
 		state: State,
@@ -147,25 +148,37 @@ export class Hallway extends GameObject {
 					this.doorControls.push(child)
 				}
 			})
-			// Register a single collider in the center, sized according to hallway rotation
-			let bbl, ftr
-			console.log(this.rotation === 0)
+			// Create two colliders, one for each door
 			if (this.rotation === 0) {
 				// Door faces Z axis
-				bbl = new Vector3(-3.5, 0, -0.5)
-				ftr = new Vector3(3.5, 7, 0.5)
+				this.doorLeftCollider = {
+					ref: this,
+					bbl_rel: new Vector3(-3.5, 0, -0.5),
+					ftr_rel: new Vector3(0, 7, 0.5),
+				}
+
+				this.doorRightCollider = {
+					ref: this,
+					bbl_rel: new Vector3(0, 0, -0.5),
+					ftr_rel: new Vector3(3.5, 7, 0.5),
+				}
 			} else {
 				// Door faces X axis
-				bbl = new Vector3(-0.5, 0, -3.5)
-				ftr = new Vector3(0.5, 7, 3.5)
+				this.doorLeftCollider = {
+					ref: this,
+					bbl_rel: new Vector3(-0.5, 0, -3.5),
+					ftr_rel: new Vector3(0.5, 7, 0),
+				}
+
+				this.doorRightCollider = {
+					ref: this,
+					bbl_rel: new Vector3(-0.5, 0, 0),
+					ftr_rel: new Vector3(0.5, 7, 3.5),
+				}
 			}
 
-			this.doorCenterCollider = {
-				ref: this,
-				bbl_rel: bbl,
-				ftr_rel: ftr,
-			}
-			state.registerCollider(this.doorCenterCollider, false)
+			state.registerCollider(this.doorLeftCollider, true)
+			state.registerCollider(this.doorRightCollider, true)
 		}
 
 		this.envMaterial = Hallway.getEnvironmentMaterial(hallwayObjects, this.type, this.rotation, renderer)
@@ -220,12 +233,23 @@ export class Hallway extends GameObject {
 				const offset = maxOpen * this.doorOpenProgress
 				this.doorLeft.position.x = -offset
 				this.doorRight.position.x = offset
-			}
 
-			// Remove the collider once the door is open
-			if (this.doorCenterCollider) {
-				state.unregisterCollider(this.doorCenterCollider)
-				this.doorCenterCollider = null
+				// Update collider positions to match door positions
+				if (this.doorLeftCollider && this.doorRightCollider) {
+					if (this.rotation === 0) {
+						// Z-axis doors
+						this.doorLeftCollider.bbl_rel.x = -3.5 - offset
+						this.doorLeftCollider.ftr_rel.x = -offset
+						this.doorRightCollider.bbl_rel.x = offset
+						this.doorRightCollider.ftr_rel.x = 3.5 + offset
+					} else {
+						// X-axis doors
+						this.doorLeftCollider.bbl_rel.z = -3.5 - offset
+						this.doorLeftCollider.ftr_rel.z = -offset
+						this.doorRightCollider.bbl_rel.z = offset
+						this.doorRightCollider.ftr_rel.z = 3.5 + offset
+					}
+				}
 			}
 		}
 	}
