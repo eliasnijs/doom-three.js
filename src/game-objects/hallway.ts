@@ -11,6 +11,7 @@ const COLLIDER_THICKNESS = 0.6
 
 export class Hallway extends GameObject {
 	static _materialCache: Record<string, MeshStandardMaterial> = {}
+	static _disabledButtonMaterial: MeshStandardMaterial | null = null
 
 	static getEnvironmentMaterial(
 		hallwayObjects: HallwayObjects,
@@ -176,6 +177,14 @@ export class Hallway extends GameObject {
 				state.registerCollider(c, false)
 			}
 		}
+
+		if (!Hallway._disabledButtonMaterial) {
+			Hallway._disabledButtonMaterial = new MeshStandardMaterial({
+				color: 0x0, // gray
+				metalness: 0,
+				roughness: 1,
+			})
+		}
 	}
 
 	animate(): void {
@@ -204,14 +213,24 @@ export class Hallway extends GameObject {
 	}
 
 	public static tryTriggerDoorFromMesh(mesh: Object3D, state: State): boolean {
-		// The Prop_DoorControl is always the grandparent of the button (cube)
+		// The Prop_DoorControl is always the parent of the button (cube)
 		const controlPanel = mesh.parent
-
-		console.log(controlPanel)
-
 		if (!controlPanel) {
 			return false
 		}
+
+		// Set all child meshes of the controlPanel named Cube011_1 to the disabled material
+		controlPanel.traverse(child => {
+			if (
+				child.name &&
+				child.name.startsWith('Cube011_1') &&
+				'material' in child &&
+				child.material &&
+				Hallway._disabledButtonMaterial
+			) {
+				child.material = Hallway._disabledButtonMaterial
+			}
+		})
 
 		const hallways = state.findAllGameObjectsOfType(Hallway)
 		for (const hallway of hallways) {
