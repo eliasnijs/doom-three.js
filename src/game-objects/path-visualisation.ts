@@ -12,9 +12,9 @@
   - MazePanel UI (when user clicks to select a destination)
   - Player movement (which updates the starting position)
 
-***************************************************************************************************************/
+ ***************************************************************************************************************/
 
-import { Sprite, SpriteMaterial, Vector3 } from 'three'
+import { Sprite, SpriteMaterial, Texture, Vector3 } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
@@ -24,7 +24,7 @@ import { loadTexture } from '../utils/loader-utils.ts'
 
 export class PathVisualisation extends GameObject {
 	private sprites: Sprite[] = []
-	private glowTexture: any
+	private glowTexture: Texture
 	private material: SpriteMaterial
 	private currentPath: Pos[] = []
 	private startPoint: Pos | null = null

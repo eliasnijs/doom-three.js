@@ -379,7 +379,7 @@ export class Player extends GameObject {
 				// Get distance to wall
 				const distance = intersects[0].distance
 
-				let rotatePercentage = 0
+				let rotatePercentage
 				if (distance < 1) {
 					rotatePercentage = 1
 				} else {
