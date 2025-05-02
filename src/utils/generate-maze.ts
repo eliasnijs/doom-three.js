@@ -245,13 +245,15 @@ export function render(grid: Grid, A: Pos, B: Pos, path: Pos[]) {
 }
 
 export function randomCell(grid: Grid): Pos {
-	// Only pick cells with at least one open side
+	// Only pick cells with at least one open side, and not exactly 2 open sides (to avoid doors)
+	// This prevents spawning on door locations, which typically have exactly 2 open sides.
 	const candidates: Pos[] = []
 	for (let row = 0; row < grid.nRows; row++) {
 		for (let col = 0; col < grid.nCols; col++) {
 			const idx = row * grid.nCols + col
 			const cell = grid.cells[idx]
-			if (cell.walls.some(w => !w)) {
+			const openSides = cell.walls.filter(w => !w).length
+			if (openSides > 0 && openSides !== 2) {
 				candidates.push([row, col])
 			}
 		}
