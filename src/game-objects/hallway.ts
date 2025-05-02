@@ -63,6 +63,7 @@ export class Hallway extends GameObject {
 	private doorRight: Object3D | null = null
 	private doorControls: Object3D[] = []
 	private triggeredControls = new Set<Object3D>()
+	private doorCenterCollider: BoxCollider | null = null
 
 	constructor(
 		state: State,
@@ -146,6 +147,25 @@ export class Hallway extends GameObject {
 					this.doorControls.push(child)
 				}
 			})
+			// Register a single collider in the center, sized according to hallway rotation
+			let bbl, ftr
+			console.log(this.rotation === 0)
+			if (this.rotation === 0) {
+				// Door faces Z axis
+				bbl = new Vector3(-3.5, 0, -0.5)
+				ftr = new Vector3(3.5, 7, 0.5)
+			} else {
+				// Door faces X axis
+				bbl = new Vector3(-0.5, 0, -3.5)
+				ftr = new Vector3(0.5, 7, 3.5)
+			}
+
+			this.doorCenterCollider = {
+				ref: this,
+				bbl_rel: bbl,
+				ftr_rel: ftr,
+			}
+			state.registerCollider(this.doorCenterCollider, false)
 		}
 
 		this.envMaterial = Hallway.getEnvironmentMaterial(hallwayObjects, this.type, this.rotation, renderer)
@@ -187,7 +207,7 @@ export class Hallway extends GameObject {
 		}
 	}
 
-	animate(): void {
+	animate(_: number, state: State): void {
 		if (
 			this.type === 'Hall_Door_Large' &&
 			this.doorLeft &&
@@ -200,6 +220,12 @@ export class Hallway extends GameObject {
 				const offset = maxOpen * this.doorOpenProgress
 				this.doorLeft.position.x = -offset
 				this.doorRight.position.x = offset
+			}
+
+			// Remove the collider once the door is open
+			if (this.doorCenterCollider) {
+				state.unregisterCollider(this.doorCenterCollider)
+				this.doorCenterCollider = null
 			}
 		}
 	}
