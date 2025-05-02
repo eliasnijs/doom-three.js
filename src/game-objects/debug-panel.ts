@@ -3,6 +3,7 @@ import { Object3D, WebGLRenderer } from 'three'
 import { GameObject } from '../engine/game-object.ts'
 import { State } from '../engine/state.ts'
 import { FlyCameraControls } from './fly-camera-controls.ts'
+import { Hallway } from './hallway.ts'
 import { OrbitCameraControls } from './orbit-camera-controls.ts'
 import { Player } from './player.ts'
 
@@ -117,7 +118,7 @@ export class DebugPanel extends GameObject {
 		this.debugButton.innerText = state.debug ? '🔲 Disable Debug' : '🔳 Enable Debug'
 	}
 
-	animate(deltaTime: number, state: State) {
+	async animate(deltaTime: number, state: State) {
 		// Add FPS to the data
 		this.setData('FPS', (1 / (deltaTime / 1000)).toFixed(2))
 
@@ -152,6 +153,10 @@ export class DebugPanel extends GameObject {
 		// Octree size (static tree)
 		const octreeSize = state.staticCollisionTree?.elements?.length || 0
 		this.setData('Octree size', octreeSize.toString())
+
+		// Add cache size for hallway env materials
+		const cacheSize = Hallway && Hallway._materialCache ? Object.keys(Hallway._materialCache).length : 0
+		this.setData('Hallway EnvMap Cache', cacheSize.toString())
 
 		// Add a title to the div
 		this.textContainer.innerHTML = 'DEBUG PANEL'

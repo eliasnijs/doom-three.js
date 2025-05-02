@@ -1,4 +1,12 @@
-import { Object3D } from 'three'
+import {
+	AmbientLight,
+	CubeCamera,
+	CubeTexture,
+	Object3D,
+	Scene,
+	WebGLCubeRenderTarget,
+	WebGLRenderer,
+} from 'three'
 
 import { loadGLTF } from './loader-utils.ts'
 
@@ -21,4 +29,31 @@ export async function loadHallwayObjects(): Promise<HallwayObjects> {
 
 export function getRandomItem<T>(list: T[]): T {
 	return list[Math.floor(Math.random() * list.length)]
+}
+
+/**
+ * Renders and returns a CubeTexture environment map for a given hallway type.
+ * Uses a new empty Scene with the hallway mesh and a basic ambient light.
+ */
+export function renderEnvMapForHallwayType(
+	hallwayObjects: HallwayObjects,
+	type: string,
+	renderer: WebGLRenderer,
+	cubeRes: number = 128,
+	rotationY: number = 0,
+): CubeTexture {
+	const mesh = hallwayObjects[type].clone()
+	mesh.position.set(0, 0, 0)
+	mesh.rotation.y = rotationY
+	const scene = new Scene()
+	scene.add(mesh)
+	scene.add(new AmbientLight(0xffffff, 1.0))
+	const cubeRenderTarget = new WebGLCubeRenderTarget(cubeRes)
+	const cubeCamera = new CubeCamera(0.1, 1000, cubeRenderTarget)
+	scene.add(cubeCamera)
+	cubeCamera.update(renderer, scene)
+	scene.remove(cubeCamera)
+	scene.remove(mesh)
+
+	return cubeCamera.renderTarget.texture as CubeTexture
 }

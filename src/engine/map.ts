@@ -1,3 +1,5 @@
+import { WebGLRenderer } from 'three'
+
 import { DebugPanel } from '../game-objects/debug-panel.ts'
 import { Hallway } from '../game-objects/hallway.ts'
 import { PathVisualisation } from '../game-objects/path-visualisation.ts'
@@ -7,7 +9,7 @@ import { generate, mazeGridToWorldGrid, pathfind, randomCell } from '../utils/ge
 import { loadHallwayObjects } from '../utils/hallway-utils.ts'
 import { State } from './state.ts'
 
-export async function createMap(debugPanel: DebugPanel, state: State) {
+export async function createMap(debugPanel: DebugPanel, state: State, renderer: WebGLRenderer) {
 	const hallwayObjects = await loadHallwayObjects()
 
 	const grid = generate(MAZE_Z_SIZE, MAZE_X_SIZE)
@@ -25,6 +27,7 @@ export async function createMap(debugPanel: DebugPanel, state: State) {
 				x,
 				y,
 				grid.cells[i].walls.map(w => !w) as [boolean, boolean, boolean, boolean],
+				renderer,
 			)
 		}
 	}

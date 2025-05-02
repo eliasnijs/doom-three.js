@@ -1,8 +1,16 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Dependencies
 
-import { AmbientLight, Color, FogExp2, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three'
-import { PMREMGenerator } from 'three'
+import {
+	AmbientLight,
+	Color,
+	FogExp2,
+	PerspectiveCamera,
+	PMREMGenerator,
+	Scene,
+	Vector3,
+	WebGLRenderer,
+} from 'three'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 
 import { BoxColliderVisualizer } from '../game-objects/box-collider-visualizer.ts'
@@ -77,7 +85,7 @@ export class State {
 		this.activeCamera = this.debugCamera
 
 		// Set lighting
-		this.ambientLight = new AmbientLight(0xee00ff, 0.05)
+		this.ambientLight = new AmbientLight(0xfde9ff, 0.5)
 		this.scene.add(this.ambientLight)
 
 		// Listen for window resize
@@ -92,6 +100,11 @@ export class State {
 			}
 		})
 
+		// Add exponential fog to the scene - most efficient type of fog
+		// Dark purplish color to match the ambient light
+		const fogColor = new Color(0x150515)
+		this.scene.fog = new FogExp2(fogColor, 0.04) // Increased density for more visible effect
+
 		// Load office.hdr as environment map
 		const pmremGenerator = new PMREMGenerator(renderer)
 		pmremGenerator.compileEquirectangularShader()
@@ -100,12 +113,6 @@ export class State {
 			this.scene.environment = envMap
 			this.scene.background = envMap // optional: comment out if you don't want as background
 			this.scene.environmentIntensity = 0.1
-
-			// Add exponential fog to the scene - most efficient type of fog
-			// Dark purplish color to match the ambient light
-			const fogColor = new Color(0x150515)
-			this.scene.fog = new FogExp2(fogColor, 0.04) // Increased density for more visible effect
-
 			texture.dispose()
 			pmremGenerator.dispose()
 		})

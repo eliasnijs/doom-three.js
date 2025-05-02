@@ -1,15 +1,55 @@
-import { MeshStandardMaterial, Object3D, Vector3 } from 'three'
+import { Mesh, MeshStandardMaterial, Object3D, Vector3, WebGLRenderer } from 'three'
 
 import { GameObject } from '../engine/game-object.ts'
 import { BoxCollider } from '../engine/physics.ts'
 import { State } from '../engine/state.ts'
 import { GRID_SIZE } from '../main.ts'
-import { getRandomItem, HallwayObjects } from '../utils/hallway-utils.ts'
+import { getRandomItem, HallwayObjects, renderEnvMapForHallwayType } from '../utils/hallway-utils.ts'
 
 const HALLWAY_SCALE = 1.25
 const COLLIDER_THICKNESS = 0.6
 
 export class Hallway extends GameObject {
+	static _materialCache: Record<string, MeshStandardMaterial> = {}
+
+	static getEnvironmentMaterial(
+		hallwayObjects: HallwayObjects,
+		type: string,
+		rotation: number,
+		renderer: WebGLRenderer,
+	): MeshStandardMaterial | undefined {
+		const cacheKey = `${type}_${rotation}`
+		let cachedMaterial = Hallway._materialCache[cacheKey]
+		if (!cachedMaterial) {
+			const envMap = renderEnvMapForHallwayType(
+				hallwayObjects,
+				type,
+				renderer,
+				128,
+				(rotation * Math.PI) / 180,
+			)
+			const mesh = hallwayObjects[type].clone()
+			mesh.rotation.y = (rotation * Math.PI) / 180
+			let found = false
+			mesh.traverse(child => {
+				const meshChild = child as Mesh
+				const material = meshChild.material as MeshStandardMaterial | undefined
+				if (!found && material && material.name === 'M_Environment') {
+					const newMaterial = material.clone()
+					newMaterial.envMap = envMap
+					newMaterial.envMapIntensity = 1
+					newMaterial.metalness = 0.7
+					newMaterial.roughness = 0
+					Hallway._materialCache[cacheKey] = newMaterial
+					cachedMaterial = newMaterial
+					found = true
+				}
+			})
+		}
+
+		return cachedMaterial
+	}
+
 	mesh: Object3D
 	grid_x: number
 	grid_z: number
@@ -22,6 +62,7 @@ export class Hallway extends GameObject {
 		grid_x: number,
 		grid_z: number,
 		openSides: [boolean, boolean, boolean, boolean],
+		renderer: WebGLRenderer,
 	) {
 		super(state)
 		this.grid_x = grid_x
@@ -72,6 +113,17 @@ export class Hallway extends GameObject {
 		this.mesh.position.set(this.grid_x * GRID_SIZE, 0, this.grid_z * GRID_SIZE)
 		this.mesh.rotation.y = (this.rotation * Math.PI) / 180
 		this.mesh.scale.set(HALLWAY_SCALE, HALLWAY_SCALE, HALLWAY_SCALE)
+
+		const envMaterial = Hallway.getEnvironmentMaterial(hallwayObjects, this.type, this.rotation, renderer)
+		if (envMaterial) {
+			this.mesh.traverse(child => {
+				const meshChild = child as Mesh
+				const material = meshChild.material as MeshStandardMaterial | undefined
+				if (material && material.name === 'M_Environment') {
+					meshChild.material = envMaterial
+				}
+			})
+		}
 
 		// Add colliders to the hallway
 		const wallPositions = [
