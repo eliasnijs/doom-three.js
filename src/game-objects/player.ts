@@ -19,9 +19,9 @@ import {
 	Texture,
 	TextureLoader,
 	Vector3,
+	WebGLRenderer,
 } from 'three'
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { Renderer } from 'three/src/Three.WebGPU'
 
 import { GameObject } from '../engine/game-object.ts'
 import { octTreeGet } from '../engine/octtree.ts'
@@ -87,7 +87,7 @@ export class Player extends GameObject {
 	gunshotSound: Audio | null = null
 	ambientSound: Audio | null = null
 
-	constructor(state: State, [x, z]: Pos, hallwayObjects: HallwayObjects, renderer: Renderer) {
+	constructor(state: State, [x, z]: Pos, hallwayObjects: HallwayObjects, renderer: WebGLRenderer) {
 		super(state)
 
 		// Set the position of the player
