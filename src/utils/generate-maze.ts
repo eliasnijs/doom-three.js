@@ -87,7 +87,7 @@ function removeWall(grid: Grid, p1: Pos, p2: Pos): void {
 	}
 }
 
-export function generate(nRows: number, nCols: number): Grid {
+export function generate(nRows: number, nCols: number, upscale: boolean = true): Grid {
 	const cells: Cell[] = new Array(nRows * nCols).fill(null).map(() => ({
 		walls: [true, true, true, true],
 		visited: false,
@@ -110,7 +110,51 @@ export function generate(nRows: number, nCols: number): Grid {
 		}
 	}
 
-	return grid
+	if (!upscale) {
+		return grid
+	}
+
+	// --- Second pass: upscale and insert empty space between all cells ---
+	const bigRows = nRows * 2 - 1
+	const bigCols = nCols * 2 - 1
+	const bigCells: Cell[] = new Array(bigRows * bigCols).fill(null).map(() => ({
+		walls: [true, true, true, true],
+		visited: false,
+	}))
+	// Copy original cells to even-even positions
+	for (let r = 0; r < nRows; r++) {
+		for (let c = 0; c < nCols; c++) {
+			const origIdx = r * nCols + c
+			const bigR = r * 2
+			const bigC = c * 2
+			const bigIdx = bigR * bigCols + bigC
+			bigCells[bigIdx].walls = [...grid.cells[origIdx].walls]
+			bigCells[bigIdx].visited = grid.cells[origIdx].visited
+		}
+	}
+
+	// Set buffer cells between connected originals
+	for (let r = 0; r < nRows; r++) {
+		for (let c = 0; c < nCols; c++) {
+			const origIdx = r * nCols + c
+			const bigR = r * 2
+			const bigC = c * 2
+			const here = grid.cells[origIdx]
+			// South neighbor
+			if (!here.walls[2] && r + 1 < nRows) {
+				const bufIdx = (bigR + 1) * bigCols + bigC
+				bigCells[bufIdx].walls = [false, true, false, true] // open north & south
+			}
+
+			// East neighbor
+			if (!here.walls[1] && c + 1 < nCols) {
+				const bufIdx = bigR * bigCols + (bigC + 1)
+				bigCells[bufIdx].walls = [true, false, true, false] // open east & west
+			}
+		}
+	}
+
+	return { cells: bigCells, nRows: bigRows, nCols: bigCols }
 }
 
 export function drawLine(
@@ -201,7 +245,24 @@ export function render(grid: Grid, A: Pos, B: Pos, path: Pos[]) {
 }
 
 export function randomCell(grid: Grid): Pos {
-	return [Math.floor(Math.random() * grid.nRows), Math.floor(Math.random() * grid.nCols)]
+	// Only pick cells with at least one open side
+	const candidates: Pos[] = []
+	for (let row = 0; row < grid.nRows; row++) {
+		for (let col = 0; col < grid.nCols; col++) {
+			const idx = row * grid.nCols + col
+			const cell = grid.cells[idx]
+			if (cell.walls.some(w => !w)) {
+				candidates.push([row, col])
+			}
+		}
+	}
+
+	if (candidates.length === 0) {
+		// fallback: just pick any cell
+		return [0, 0]
+	}
+
+	return candidates[Math.floor(Math.random() * candidates.length)]
 }
 
 export function distManhattan(a: Pos, b: Pos): number {

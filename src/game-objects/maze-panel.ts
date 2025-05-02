@@ -58,7 +58,7 @@ export class MazePanel extends GameObject {
 			zIndex: '100',
 			top: '20px',
 			right: '20px',
-			backgroundColor: 'rgba(20, 20, 80, 0.3)',
+			backgroundColor: 'rgba(20, 20, 80, 0.05)',
 			border: '1px solid white',
 			color: 'white',
 			fontFamily: 'monospace',
@@ -164,6 +164,11 @@ export class MazePanel extends GameObject {
 				const cell = grid.cells[idx]
 				const x = col * cellWidth
 				const y = row * cellHeight
+
+				// If all walls are closed, skip rendering this cell (transparent)
+				if (cell.walls.every(w => w)) {
+					continue
+				}
 
 				let cellBg = this.colors.cellDefault
 				if (pathCells.some(p => p[0] === row && p[1] === col)) {

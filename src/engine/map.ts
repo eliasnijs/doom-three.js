@@ -21,14 +21,19 @@ export async function createMap(debugPanel: DebugPanel, state: State, renderer: 
 
 			const [x, y] = mazeGridToWorldGrid([col, row])
 
-			new Hallway(
-				state,
-				hallwayObjects,
-				x,
-				y,
-				grid.cells[i].walls.map(w => !w) as [boolean, boolean, boolean, boolean],
-				renderer,
-			)
+			const openSides = grid.cells[i].walls.map(w => !w) as [boolean, boolean, boolean, boolean]
+			const count = openSides.filter(Boolean).length
+
+			if (count > 0) {
+				new Hallway(
+					state,
+					hallwayObjects,
+					x,
+					y,
+					grid.cells[i].walls.map(w => !w) as [boolean, boolean, boolean, boolean],
+					renderer,
+				)
+			}
 		}
 	}
 
