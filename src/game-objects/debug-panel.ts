@@ -158,6 +158,23 @@ export class DebugPanel extends GameObject {
 		const cacheSize = Hallway && Hallway._materialCache ? Object.keys(Hallway._materialCache).length : 0
 		this.setData('Hallway EnvMap Cache', cacheSize.toString())
 
+		// Add cache size for barrel materials
+		const barrelMatCacheSize =
+			Hallway && Hallway._barrelMaterialCache ? Object.keys(Hallway._barrelMaterialCache).length : 0
+		this.setData('Barrel Material Cache', barrelMatCacheSize.toString())
+
+		// Add number of spawned barrel props
+		let barrelCount = 0
+		if (state.gameObjects) {
+			for (const obj of state.gameObjects) {
+				if (obj instanceof Hallway && obj.spawnedBarrels) {
+					barrelCount += obj.spawnedBarrels.length
+				}
+			}
+		}
+
+		this.setData('Spawned Barrels', barrelCount.toString())
+
 		// Add a title to the div
 		this.textContainer.innerHTML = 'DEBUG PANEL'
 

@@ -4,7 +4,12 @@ import { GameObject } from '../engine/game-object.ts'
 import { BoxCollider } from '../engine/physics.ts'
 import { State } from '../engine/state.ts'
 import { GRID_SIZE } from '../main.ts'
-import { getRandomItem, HallwayObjects, renderEnvMapForHallwayType } from '../utils/hallway-utils.ts'
+import {
+	getRandomItem,
+	HallwayObjects,
+	PropsObjects,
+	renderEnvMapForHallwayType,
+} from '../utils/hallway-utils.ts'
 
 const HALLWAY_SCALE = 1.25
 const COLLIDER_THICKNESS = 0.6
@@ -12,6 +17,7 @@ const COLLIDER_THICKNESS = 0.6
 export class Hallway extends GameObject {
 	static _materialCache: Record<string, MeshStandardMaterial> = {}
 	static _disabledButtonMaterial: MeshStandardMaterial | null = null
+	static _barrelMaterialCache: Record<string, MeshStandardMaterial> = {}
 
 	static getEnvironmentMaterial(
 		hallwayObjects: HallwayObjects,
@@ -64,10 +70,12 @@ export class Hallway extends GameObject {
 	private doorControls: Object3D[] = []
 	private triggeredControls = new Set<Object3D>()
 	private doorCenterCollider: BoxCollider | null = null
+	spawnedBarrels: Object3D[] = []
 
 	constructor(
 		state: State,
 		hallwayObjects: HallwayObjects,
+		propsObjects: PropsObjects,
 		grid_x: number,
 		grid_z: number,
 		openSides: [boolean, boolean, boolean, boolean],
@@ -149,7 +157,6 @@ export class Hallway extends GameObject {
 			})
 			// Register a single collider in the center, sized according to hallway rotation
 			let bbl, ftr
-			console.log(this.rotation === 0)
 			if (this.rotation === 0) {
 				// Door faces Z axis
 				bbl = new Vector3(-3.5, 0, -0.5)
@@ -198,6 +205,74 @@ export class Hallway extends GameObject {
 			}
 		}
 
+		// Only spawn a barrel in 1/2 of hallways, not in door hallways
+		if (this.type !== 'Hall_Door_Large' && Math.random() < 0.3) {
+			const barrelNames = ['barrel-_low_poly', 'barrel_2-_low_poly']
+			const barrelName = getRandomItem(barrelNames)
+			const barrel = propsObjects[barrelName]?.clone()
+			if (barrel) {
+				const center = new Vector3(this.grid_x * GRID_SIZE, 0, this.grid_z * GRID_SIZE)
+				const inwardAmount = 2.5 // How far inwards from the wall collider
+				const closedWalls = []
+				for (const wall of wallPositions) {
+					if (!wall.open) {
+						closedWalls.push(wall)
+					}
+				}
+
+				if (closedWalls.length > 0) {
+					const wall = getRandomItem(closedWalls)
+					// Wall collider center
+					const wallPos = new Vector3(
+						this.grid_x * GRID_SIZE + wall.x,
+						0,
+						this.grid_z * GRID_SIZE + wall.z,
+					)
+					// Move along the wall: random offset between -2 and +2
+					const along = Math.random() * 4 - 2
+					if (Math.abs(wall.x) > Math.abs(wall.z)) {
+						// Wall is along Z axis (east/west), move along Z
+						wallPos.z += along
+					} else {
+						// Wall is along X axis (north/south), move along X
+						wallPos.x += along
+					}
+
+					// Direction from wall to center
+					const inward = center.clone().sub(wallPos).normalize().multiplyScalar(inwardAmount)
+					wallPos.add(inward)
+					// Move slightly upwards
+					wallPos.y += 0.25
+					barrel.position.copy(wallPos)
+					// Set random rotation
+					barrel.rotation.y = Math.random() * Math.PI * 2
+					barrel.scale.set(2.5, 2.5, 2.5)
+					state.scene.add(barrel)
+					this.spawnedBarrels.push(barrel)
+
+					// Set env map, metallicness, and roughness for all mesh materials in the barrel
+					barrel.traverse(child => {
+						if ('material' in child && child.material) {
+							const origMat = child.material as MeshStandardMaterial
+							const envMapUUID = this.envMaterial.envMap?.uuid || 'none'
+							const cacheKey = `${envMapUUID}_${origMat.uuid}`
+							let mat = Hallway._barrelMaterialCache[cacheKey]
+							if (!mat) {
+								mat = origMat.clone()
+								mat.envMap = this.envMaterial.envMap
+								mat.metalness = 0
+								mat.roughness = 0.1
+								mat.needsUpdate = true
+								Hallway._barrelMaterialCache[cacheKey] = mat
+							}
+
+							child.material = mat
+						}
+					})
+				}
+			}
+		}
+
 		if (!Hallway._disabledButtonMaterial) {
 			Hallway._disabledButtonMaterial = new MeshStandardMaterial({
 				color: 0x0, // gray
@@ -236,6 +311,16 @@ export class Hallway extends GameObject {
 				;(child.material as MeshStandardMaterial).wireframe = wireframe
 			}
 		})
+		// Also set wireframe for spawned barrels
+		if (this.spawnedBarrels) {
+			for (const barrel of this.spawnedBarrels) {
+				barrel.traverse(child => {
+					if ('material' in child) {
+						;(child.material as MeshStandardMaterial).wireframe = wireframe
+					}
+				})
+			}
+		}
 	}
 
 	public static tryTriggerDoorFromMesh(mesh: Object3D, state: State): boolean {

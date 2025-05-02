@@ -272,10 +272,8 @@ export class Player extends GameObject {
 				hit.object.attach(plane)
 				this.bulletHoles.push({ mesh: plane, born: performance.now(), fade: 1 })
 
-				console.log(hit.object.name)
 				// --- bullet hit logic for door controls ---
 				if (hit.object.name.startsWith('Cube01')) {
-					console.log('got a door hit')
 					Hallway.tryTriggerDoorFromMesh(hit.object, state)
 				}
 

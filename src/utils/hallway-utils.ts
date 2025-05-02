@@ -11,6 +11,7 @@ import {
 import { loadGLTF } from './loader-utils.ts'
 
 export type HallwayObjects = Record<string, Object3D>
+export type PropsObjects = Record<string, Object3D>
 
 export async function loadHallwayObjects(): Promise<HallwayObjects> {
 	const sectionsByName: Record<string, Object3D> = {}
@@ -25,6 +26,23 @@ export async function loadHallwayObjects(): Promise<HallwayObjects> {
 	})
 
 	return sectionsByName
+}
+
+export async function loadPropsObjects(): Promise<PropsObjects> {
+	const propsByName: Record<string, Object3D> = {}
+
+	await loadGLTF('props', 'props.glb').then(gltf => {
+		for (const child of gltf.scene.children) {
+			if (child.name && child.type === 'Object3D') {
+				propsByName[child.name] = child
+			}
+		}
+
+		// Log all found props names
+		console.log(Object.keys(propsByName))
+	})
+
+	return propsByName
 }
 
 export function getRandomItem<T>(list: T[]): T {
