@@ -269,6 +269,7 @@ export class Player extends GameObject {
 				plane.rotateZ(Math.random() * Math.PI * 2)
 				plane.position.copy(hit.point).add(normal.clone().multiplyScalar(0.01))
 				state.scene.add(plane)
+				hit.object.attach(plane)
 				this.bulletHoles.push({ mesh: plane, born: performance.now(), fade: 1 })
 
 				console.log(hit.object.name)
