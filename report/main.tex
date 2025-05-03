@@ -12,7 +12,7 @@
 \usepackage{pgfplots} % For creating plots
 \pgfplotsset{compat=1.18} % Set compatibility level
 
-\title{Simple Doom Game Clone in Three.js}
+\title{MiniDOOM}
 \author{Elias Nijs \& René Van Der Schueren}
 \date{May 2025}
 
@@ -29,7 +29,7 @@
     \vspace*{1cm}
     
     \Huge
-    \textbf{Simple Doom Game Clone in Three.js}\\
+    \textbf{DWARF-DOOM}\\
     \vspace{1.5cm}
     
     \Large
@@ -235,7 +235,10 @@ The octree provides significant performance advantages over naive collision dete
     \item \textbf{Memory}: The octree's space complexity is $O(n)$ in the average case, but can approach $O(n^2)$ in the worst case when many colliders span multiple octants, requiring multiple references in the tree.
 \end{itemize}
 
-In practice, our implementation maintains near-logarithmic performance for most game scenes, with degradation only occurring in extremely dense environments where many objects overlap significantly. The practical benefits of our octree implementation are quantified in the benchmarks presented in Section \ref{sec:benchmarking}, where we demonstrate how this spatial partitioning approach enables consistent frame rates even with increasing scene complexity.
+In practice, our implementation maintains near-logarithmic performance as
+objects are evenly distributed in the grid. The practical benefits of our
+octree implementation are quantified in the benchmarks presented in Section
+\ref{sec:benchmarking}.
 
 \subsection{Engine Integration}
 Our game engine maintains two separate octrees: one for static objects (walls,
@@ -256,7 +259,14 @@ octree structure with color coding based on depth. Deeper nodes are displayed
 in blue while shallower nodes are displayed in red, with varying opacity to
 enhance visibility. This visualization has been invaluable for debugging
 spatial partitioning issues and understanding collision behavior in complex
-scenes.
+scenes. This is visualised in Figure~\ref{fig:octree}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{diagrams/octree.png}
+    \caption{Screenshot of our debugging view showing the octtree.}
+    \label{fig:octree}
+\end{figure}
 
 \subsection{Collision Resolution}
 Since our game world is organized on a grid, we use axis-aligned bounding boxes
@@ -362,7 +372,125 @@ As evident from the data, our implementation maintains an optimal frame rate of 
 
 At the extreme end, the 160×160 maze (containing 25,600 tiles and over 187,000 meshes) pushes the hardware to its limits, resulting in only 5 FPS. While not playable, this test demonstrates the upper bounds of our implementation on consumer hardware and provides valuable insights for future optimization efforts.
 
-\subsection{Octree}
+\subsection{Octree Performance Analysis}
+To evaluate the efficiency of our octree-based spatial partitioning system, we conducted a series of benchmarks to measure different aspects of the octree's performance: initialization time, insertion time, query performance, rebuild operations, and direct comparison with linear search. Our benchmark methodology involved several controlled tests with elements distributed uniformly throughout a cubic world space of 1000 units per side. Colliders of varying sizes (between 1 and 5 units) were randomly positioned within this space, ensuring a realistic distribution of objects similar to what might be encountered in a game environment. Each experiment was performed multiple times with different octree configurations (varying node capacities and maximum depths) to determine optimal settings.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \begin{tikzpicture}
+        \begin{axis}[
+            width=\textwidth,
+            height=7cm,
+            xlabel={Number of Elements},
+            ylabel={Time (ms)},
+            xmode=log,
+            ymode=log,
+            log basis x=10,
+            log basis y=10,
+            grid=both,
+            legend style={font=\footnotesize},
+            legend pos=north west,
+            xmin=5, xmax=20000,
+            ymin=0.1, ymax=100,
+            xtick={10,100,1000,10000},
+            xticklabels={10,100,1000,10000},
+            title={Query Performance}
+        ]
+        
+        % Octree performance data - using the actual benchmark results
+        \addplot[color=blue,mark=*,thick] coordinates {
+            (10, 0.25027399999999034)
+            (100, 0.18848500000001422)
+            (1000, 0.28497500000000286)
+            (10000, 0.5123340000000098)
+        };
+        
+        % Linear search performance data - using the actual benchmark results
+        \addplot[color=red,mark=square,thick] coordinates {
+            (10, 0.4036879999999883)
+            (100, 1.584793999999988)
+            (1000, 6.508582000000018)
+            (10000, 40.54182000000003)
+        };
+        
+        % Theoretical O(log n) scaling for reference
+        \addplot[color=black,dashed,domain=10:10000,samples=100] {0.05*ln(x)/ln(10)};
+        
+        % Theoretical O(n) scaling for reference
+        \addplot[color=gray,dashed,domain=10:10000,samples=100] {0.025*x};
+        
+        \legend{Octree Query, Linear Search, O(log n), O(n)}
+        \end{axis}
+        \end{tikzpicture}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \begin{tikzpicture}
+        \begin{axis}[
+            width=\textwidth,
+            height=7cm,
+            xlabel={Number of Elements},
+            ylabel={Speedup Factor},
+            xmode=log,
+            ymode=log,
+            log basis x=10,
+            grid=both,
+            legend style={font=\footnotesize},
+            legend pos=north west,
+            xmin=5, xmax=20000,
+            ymin=1, ymax=100,
+            xtick={10,100,1000,10000},
+            xticklabels={10,100,1000,10000},
+            title={Performance Speedup}
+        ]
+        
+        % Speedup data - using the actual benchmark results
+        \addplot[color=green,mark=triangle,thick] coordinates {
+            (10, 1.6129841693504074)
+            (100, 8.408064302198415)
+            (1000, 22.839133257303107)
+            (10000, 79.13162116900158)
+        };
+        
+        % Theoretical O(n/log n) scaling for reference
+        \addplot[color=black,dashed,domain=10:10000,samples=100] {x/ln(x)*0.2};
+        
+        \legend{Measured Speedup, O(n/log n)}
+        \end{axis}
+        \end{tikzpicture}
+    \end{minipage}
+    \caption{Octree performance comparison. Left: Log-log plot of query time for octree vs. linear search, showing how octree performance follows logarithmic scaling while linear search scales linearly. Right: Speedup factor of octree-based queries compared to linear search, demonstrating efficiency gains that grow with scene complexity.}
+    \label{fig:octree-performance}
+\end{figure}
+
+Our benchmarks reveal that the octree provides significant performance
+advantages for collision detection in large scenes. As shown in Figure
+\ref{fig:octree-performance}, octree query time scales approximately
+logarithmically with the number of elements, while linear search exhibits the
+expected linear scaling. For collision queries, we generated 100 random query regions with varying sizes (between 20 and 50 units) and measured how long it took to find all colliding objects using both octree and linear search approaches. With 10,000 elements, octree queries are approximately
+79 times faster than linear search.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        \textbf{Elements} & \textbf{Octree Query (ms)} & \textbf{Linear Search (ms)} & \textbf{Speedup Factor} \\ \hline
+        10 & 0.250 & 0.404 & 1.61× \\ \hline
+        100 & 0.188 & 1.585 & 8.41× \\ \hline
+        1,000 & 0.285 & 6.509 & 22.84× \\ \hline
+        10,000 & 0.512 & 40.542 & 79.13× \\ \hline
+    \end{tabular}
+    \caption{Performance comparison between octree-based queries and linear search across different numbers of elements. Each test performed 100 queries, and times represent the average execution time in milliseconds.}
+    \label{tab:octree-performance}
+\end{table}
+
+These performance characteristics enable our game to maintain interactive frame
+rates even in complex environments with numerous dynamic objects, confirming
+that the octree implementation successfully addresses the computational
+challenges of collision detection at scale.
 
 \pagebreak
 \section{Art Credits}
