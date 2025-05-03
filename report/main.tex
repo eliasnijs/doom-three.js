@@ -178,10 +178,7 @@ The implementation includes an optional upscaling feature that doubles the effec
 \end{figure}
 
 \subsubsection{Pathfinding}
-The implementation features an efficient A* pathfinding algorithm that calculates optimal routes between any two points in the maze. This algorithm employs a Manhattan distance heuristic—particularly suitable for grid-based movement—and accounts for walls when evaluating potential paths. The pathfinding system serves dual purposes: it generates navigation routes for potential enemy AI and provides visual guidance for players through path markers that highlight the shortest route to objectives. The algorithm maintains separate data structures for tracking both the cost of the path so far (g-score) and the estimated total cost to the destination (f-score), ensuring optimal path discovery even in complex maze configurations.
-
-\subsubsection{Random Cell Selection}
-A utility function is provided to select random cells with specific properties (e.g., cells with at least one open side). This function is specifically used to choose the start and destination points within the maze, ensuring that these critical locations are appropriately positioned in accessible areas of the maze.
+The implementation features an efficient A* pathfinding algorithm that calculates optimal routes between any two points in the maze. This algorithm employs a Manhattan distance heuristic—particularly suitable for grid-based movement—and accounts for walls when evaluating potential paths. The pathfinding system provides visual guidance for players through path markers that highlight the shortest route to objectives. The algorithm maintains separate data structures for tracking both the cost of the path so far (g-score) and the estimated total cost to the destination (f-score), ensuring optimal path discovery even in complex maze configurations.
 
 \subsection{Benchmark}
 
