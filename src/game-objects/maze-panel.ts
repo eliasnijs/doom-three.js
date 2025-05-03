@@ -33,13 +33,17 @@ export class MazePanel extends GameObject {
 	hoveredCell: Pos | null = null
 
 	private readonly colors = {
-		cellDefault: 'rgba(30, 30, 50, 0.3)',
-		cellPath: 'rgba(80, 240, 80, 0.3)',
-		cellDestination: 'rgba(0, 255, 0, 0.3)',
-		cellHighlight: 'rgba(100, 200, 255, 0.8)',
-		wallColor: 'white',
-		playerColor: 'red',
-		destinationMarkerColor: 'lime',
+		cellDefault: 'rgba(30, 30, 50, 0.3)',        // Default cell background
+		cellHallway: 'rgba(80, 80, 80, 0.8)',        // Hallway cells - cyberpunk blue
+		cellNonHallway: 'rgba(0, 0, 0, 0.5)',    // Non-hallway cells - tech purple
+		cellPath: 'rgba(180, 120, 40, 0.5)',         // Subdued amber for the path
+		cellDestination: 'rgba(0, 150, 80, 0.4)',    // Muted teal
+		cellHighlight: 'rgba(120, 180, 210, 0.5)',   // Softer highlight
+		wallColor: 'rgba(220, 220, 255, 0.8)',       // Slightly blue-tinted walls
+		playerColor: '#FF3333',                      // Brighter red player marker
+		destinationMarkerColor: '#33FFAA',           // Sci-fi teal marker
+		portalColor: 'rgba(200, 50, 200, 0.6)',      // Softer magenta
+		portalLineColor: 'rgba(180, 30, 180, 0.5)',  // More muted portal line
 	}
 	private readonly lineWidth = 2
 	private readonly playerMarkerScale = 4 // divides cell size
@@ -170,7 +174,13 @@ export class MazePanel extends GameObject {
 					continue
 				}
 
-				let cellBg = this.colors.cellDefault
+				// Determine if this is a hallway cell (exactly 2 openings)
+				const openCount = cell.walls.filter(w => !w).length
+				let cellBg = openCount === 2
+					? this.colors.cellHallway
+					: this.colors.cellNonHallway
+
+				// Path cells get their own color
 				if (pathCells.some(p => p[0] === row && p[1] === col)) {
 					cellBg = this.colors.cellPath
 				}
@@ -252,6 +262,55 @@ export class MazePanel extends GameObject {
 				ctx.lineTo(x - size / 2, y + size / 2)
 				ctx.stroke()
 			}
+		}
+
+		// Draw portal connections
+		if (grid.extraEdges && grid.extraEdges.length > 0) {
+			ctx.globalAlpha = 0.8
+
+			for (const [pos1, pos2] of grid.extraEdges) {
+				const [row1, col1] = pos1
+				const [row2, col2] = pos2
+
+				// Calculate center positions
+				const x1 = col1 * cellWidth + cellWidth / 2
+				const y1 = row1 * cellHeight + cellHeight / 2
+				const x2 = col2 * cellWidth + cellWidth / 2
+				const y2 = row2 * cellHeight + cellHeight / 2
+
+				// Draw portal markers
+				const portalRadius = Math.min(cellWidth, cellHeight) * 0.35
+
+				// Portal outline style
+				ctx.lineWidth = 2
+				ctx.strokeStyle = 'white'
+
+				// First portal
+				ctx.beginPath()
+				ctx.arc(x1, y1, portalRadius, 0, 2 * Math.PI)
+				ctx.fillStyle = this.colors.portalColor
+				ctx.fill()
+				ctx.stroke()
+
+				// Second portal
+				ctx.beginPath()
+				ctx.arc(x2, y2, portalRadius, 0, 2 * Math.PI)
+				ctx.fillStyle = this.colors.portalColor
+				ctx.fill()
+				ctx.stroke()
+
+				// Draw connecting line between portals
+				ctx.beginPath()
+				ctx.moveTo(x1, y1)
+				ctx.lineTo(x2, y2)
+				ctx.strokeStyle = this.colors.portalLineColor
+				ctx.lineWidth = 3
+				ctx.setLineDash([5, 3])
+				ctx.stroke()
+				ctx.setLineDash([])
+			}
+
+			ctx.globalAlpha = 1.0
 		}
 	}
 
