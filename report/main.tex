@@ -70,11 +70,7 @@
 
 \section{Introduction}\label{sec:introduction}
 \subsection{Tech Choices}
-Our project leverages Three.js, a lightweight, cross-browser JavaScript library that abstracts WebGL, making 3D graphics programming significantly more accessible. It provides a comprehensive set of features for creating and displaying animated 3D computer graphics in web browsers without requiring users to install additional plugins. Three.js was the best option for its robust ecosystem, extensive documentation, and optimized performance for web-based 3D rendering.
-
-Our development workflow is built around Vite, a modern frontend build tool that provides an extremely fast development server through native ES modules.
-
-We implemented the entire codebase in TypeScript rather than vanilla JavaScript to enhance our development process. TypeScript's static typing helps catch errors during development rather than at runtime, significantly improving code reliability. The explicit type definitions serve as built-in documentation, making it easier for team members to understand each other's code and collaborate effectively.
+Our project uses Three.js, a lightweight JavaScript library that abstracts WebGL for accessible 3D graphics programming in browsers. We chose it for its robust ecosystem, documentation, and optimized web rendering performance. Development is powered by Vite for fast server capabilities, and we implemented the codebase in TypeScript to benefit from static typing, which improves code reliability and facilitates better team collaboration.
 
 \subsection{Gameplay Overview}
 Our game is a first-person shooter inspired by the classic Doom, implemented using Three.js. Players navigate through procedurally generated mazes, interact with doors, follow path markers, and encounter various props while trying to reach their destination. Players can also shoot their gun to open doors, adding a combat element to the navigation mechanics.
@@ -92,7 +88,7 @@ Figure \ref{fig:gameplay-overview} illustrates the main gameplay elements:
     \item \textbf{B:} A door that was previously opened, allowing passage through the maze.
     \item \textbf{C:} Door control panel that can be activated by shooting it with the player's weapon.
     \item \textbf{D:} Path markers showing the optimal route to the destination, guiding the player through an open door.
-    \item \textbf{E:} Mini-map displaying the player's current position and the path to the destination.
+    \item \textbf{E:} Mini-map displaying the player's current position in red,  and the path to the destination, marked in green.
     \item \textbf{F:} Barrel that was procedurally spawned as a random prop in the environment.
     \item \textbf{G:} The player's weapon in gun mode.
 \end{itemize}
@@ -112,24 +108,12 @@ Our game engine follows a component-based design pattern, with a central state m
     \item \texttt{Physics}: A collision detection and resolution system that uses axis-aligned bounding boxes (AABBs) to represent object boundaries. The physics system calculates collision corrections and applies them to maintain proper object separation. For efficient collision detection, we implemented an octree-based spatial partitioning system (explained in detail in the Space Partitioning section), which significantly reduces the number of collision checks by organizing objects hierarchically based on their spatial location.
 \end{itemize}
 
-\subsection{Rendering Pipeline}
-The rendering system leverages Three.js capabilities while adding custom functionality:
-
-\begin{itemize}
-    \item Scene with visual features such as ambient lighting, exponential fog for atmosphere, and HDR environment mapping for realistic reflections.
-    
-    \item A dual-camera system that allows switching between a first-person player view and a freely moveable camera.
-    
-    \item Debug visualization tools that can render collision boundaries and octree structure when enabled.
-\end{itemize}
-
 \subsection{Game Loop}
 The engine implements a standard game loop that:
 
 \begin{enumerate}
+    \item Calls the \texttt{animate} method on the state, which in turn calls the \texttt{animate} method on all registered game objects.
     \item Updates the physics system and rebuilds the dynamic octree.
-    \item Calls the \texttt{animate} method on all registered game objects.
-    \item Handles user input and camera updates.
     \item Renders the scene.
 \end{enumerate}
 
@@ -187,10 +171,30 @@ The implementation features an efficient A* pathfinding algorithm that calculate
 
 
 \section{3D World Organization}
-TODO
+Our 3D world uses a modular approach with standardized hallway units as building blocks, optimizing both performance and visual quality.
+
+The world is built on a grid of uniform hallway segments, each occupying one grid cell with consistent dimensions. Hallways have identical outer dimensions with internal variations (straight, corner, junction) and are positioned using precise grid coordinates. While hallway elements are hierarchically organized in the Three.js scene, our GameObject system maintains a flat structure for efficient game logic.
+
+Our system loads all hallway variants from a single GLB file and clones meshes rather than creating new geometry for each instance. Materials and environment maps are cached to prevent redundant creation. This approach significantly reduces memory usage and draw calls, enabling efficient rendering of large mazes.
+
+The player exists as a separate entity from the environment structure, comprising a first-person camera at eye level, a weapon model in the lower view portion, collision geometry for physical interaction, and independent movement and interaction logic. The player navigates through the hallway grid using keyboard and mouse controls, with collision detection preventing movement through walls and other obstacles. The camera's position and orientation update in real-time based on player input, creating a smooth first-person experience.
+
+Our world features several dynamic elements: sliding doors that update collision geometry in real-time; interactive door control panels; sprite-based path markers; procedurally distributed props; and temporary bullet impact markers that fade over time to maintain performance while providing visual feedback (see Figure~\ref{fig:bullet-markers}). All these elements—doors, control panels, props, and other interactive objects—are implemented as children of their respective hallway parts in the scene hierarchy, maintaining a clean organizational structure while preserving the flat GameObject system for game logic.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{diagrams/bullets.png}
+    \caption{Bullet impact markers on walls that gradually fade over time and are eventually deleted to conserve resources, providing visual feedback of weapon impacts while maintaining performance.}
+    \label{fig:bullet-markers}
+\end{figure}
+
 
 \section{User Controls and Movement}
-TODO
+Our Doom clone implements a classic first-person shooter control scheme. Player movement is controlled using the WASD keys, with W and S for forward and backward movement, and A and D for strafing left and right. Mouse input controls the camera rotation, allowing players to look around the environment with configurable sensitivity parameters.
+
+The movement system applies the player's directional input to a normalized vector, which is then rotated according to the player's current view direction. This creates the expected behavior where pressing W always moves the player forward relative to their view. Movement velocity is controlled by adjustable speed parameters and is framerate-independent thanks to delta time scaling.Collision detection prevents the player from moving through walls, this is explained later.
+
+The game also features immersive visual feedback during movement, with a weapon bob animation that simulates the natural motion of carrying a weapon while walking. This is achieved by applying sinusoidal oscillations to the weapon position based on the player's movement state. Additionally, the weapon model automatically lowers when the player approaches a wall, providing a realistic response to close-proximity obstacles and preventing clipping issues.
 
 \section{Lighting, Materials and Texture Mapping}
 TODO
