@@ -93,6 +93,43 @@ Figure \ref{fig:gameplay-overview} illustrates the main gameplay elements:
 \end{itemize}
 
 
+\section{Game Engine}
+Before diving into specific features, we'll provide an overview of our custom game engine architecture that powers the entire application.
+
+\subsection{Core Architecture}
+Our game engine follows a component-based design pattern, with a central state management system that coordinates all game elements. The engine is structured around these key components:
+
+\begin{itemize}
+    \item \texttt{GameObject}: An abstract base class that serves as the foundation for all entities in the game world. Each game object automatically registers itself with the state management system upon creation and implements lifecycle methods such as \texttt{animate} (called every frame), \texttt{cleanup}, and \texttt{destroy}.
+    
+    \item \texttt{State}: The central management class that maintains references to all active game objects, handles scene configuration, manages the camera system, and coordinates the physics simulation. It provides methods for registering and unregistering game objects, finding objects by type, toggling debug visualization, ...
+    
+    \item \texttt{Physics}: A collision detection and resolution system that uses axis-aligned bounding boxes (AABBs) to represent object boundaries. The physics system calculates collision corrections and applies them to maintain proper object separation. For efficient collision detection, we implemented an octree-based spatial partitioning system (explained in detail in the Space Partitioning section), which significantly reduces the number of collision checks by organizing objects hierarchically based on their spatial location.
+\end{itemize}
+
+\subsection{Rendering Pipeline}
+The rendering system leverages Three.js capabilities while adding custom functionality:
+
+\begin{itemize}
+    \item Scene with visual features such as ambient lighting, exponential fog for atmosphere, and HDR environment mapping for realistic reflections.
+    
+    \item A dual-camera system that allows switching between a first-person player view and a freely moveable camera.
+    
+    \item Debug visualization tools that can render collision boundaries and octree structure when enabled.
+\end{itemize}
+
+\subsection{Game Loop}
+The engine implements a standard game loop that:
+
+\begin{enumerate}
+    \item Updates the physics system and rebuilds the dynamic octree.
+    \item Calls the \texttt{animate} method on all registered game objects.
+    \item Handles user input and camera updates.
+    \item Renders the scene.
+\end{enumerate}
+
+This architecture provides a solid foundation for implementing the game-specific features described in the following sections.
+
 \section{Maze Generation}
 First, we will start by explaining our maze generation algorithm, which forms the foundation of our game's level design.
 
@@ -155,39 +192,19 @@ TODO
 \section{User Controls and Movement}
 TODO
 
-\section{Shortest Path Finding}
+\section{Lighting, Materials and Texture Mapping}
 TODO
 
-\section{Lighting and Materials}
+\section{Collision Detection Using Octree}
 TODO
 
-\section{Texture Mapping}
-TODO
+\subsection{Benchmarking}
 
-\section{Space Partitioning: Octree}
-TODO
+\subsection{Comparison with other space partitioning algorithms}
 
-\section{Collision Detection}
-TODO
-
-\section{Ray Intersection}
-TODO
-
-\section{Comparison with Other Space Partitioning Algorithms}
-TODO
-
-\section{Implementation Challenges}
-TODO
-
-\section{Evaluation and Results}
-TODO
-
-\section{Conclusion}
-TODO
-
-\pagebreak
-\nocite{*}
-\bibliographystyle{apacite}
-\bibliography{references}
+% \pagebreak
+% \nocite{*}
+% \bibliographystyle{apacite}
+% \bibliography{references}
 
 \end{document}
