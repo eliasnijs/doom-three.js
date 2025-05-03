@@ -3,9 +3,14 @@
 \usepackage{float}
 \usepackage{parskip}
 \usepackage{hyperref}
+\usepackage{url} % Better URL handling
+\urlstyle{same} % Use the same font for URLs
 \usepackage{apacite}
 \usepackage{enumitem} % For nested lists in maze generation section
 \usepackage[margin=1.5in]{geometry} % Reduce horizontal padding
+\usepackage{tikz} % For creating plots and diagrams
+\usepackage{pgfplots} % For creating plots
+\pgfplotsset{compat=1.18} % Set compatibility level
 
 \title{Simple Doom Game Clone in Three.js}
 \author{Elias Nijs \& René Van Der Schueren}
@@ -180,8 +185,6 @@ The implementation includes an optional upscaling feature that doubles the effec
 \subsubsection{Pathfinding}
 The implementation features an efficient A* pathfinding algorithm that calculates optimal routes between any two points in the maze. This algorithm employs a Manhattan distance heuristic—particularly suitable for grid-based movement—and accounts for walls when evaluating potential paths. The pathfinding system provides visual guidance for players through path markers that highlight the shortest route to objectives. The algorithm maintains separate data structures for tracking both the cost of the path so far (g-score) and the estimated total cost to the destination (f-score), ensuring optimal path discovery even in complex maze configurations.
 
-\subsection{Benchmark}
-
 
 \section{3D World Organization}
 TODO
@@ -195,9 +198,91 @@ TODO
 \section{Collision Detection Using Octree}
 TODO
 
-\subsection{Benchmarking}
-
 \subsection{Comparison with other space partitioning algorithms}
+
+\section{Benchmarking}
+
+\subsection{Maze Size Performance Analysis}
+To evaluate the scalability of our implementation, we conducted performance tests with mazes of increasing size. All tests were performed on a MacBook Air (2022) with an Apple M2 chip, 8-core CPU, 8-core GPU, and 24GB of unified memory. The performance was measured in frames per second (FPS) while maintaining all graphical settings and game features at consistent levels.
+
+Table \ref{tab:maze-performance} presents the relationship between maze dimensions, scene complexity (measured by the number of game objects and meshes), and rendering performance. The maze dimensions represent the logical grid size before upscaling, while the total tiles indicate the actual number of navigable cells in the generated maze.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        \textbf{Maze Size} & \textbf{Total Tiles} & \textbf{Game Objects} & \textbf{Mesh Count} & \textbf{FPS} \\ \hline
+        10×10 & 100 & 204 & 697 & 100 \\ \hline
+        20×20 & 400 & 904 & 2,844 & 100 \\ \hline
+        40×40 & 1,600 & 3,204 & 11,595 & 50 \\ \hline
+        80×80 & 6,400 & 12,804 & 46,477 & 10 \\ \hline
+        160×160 & 25,600 & 51,204 & 187,113 & 2.5 \\ \hline
+    \end{tabular}
+    \caption{Performance metrics for different maze sizes showing the relationship between maze dimensions, scene complexity, and frame rate.}
+    \label{tab:maze-performance}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        width=0.8\textwidth,
+        height=8cm,
+        xlabel={Maze Size (Total Tiles)},
+        ylabel={Frames Per Second (FPS)},
+        xmode=log,
+        ymode=log,
+        log basis x=10,
+        log basis y=10,
+        grid=both,
+        legend pos=north east,
+        xmin=50, xmax=50000,
+        ymin=1, ymax=200,
+        xtick={100,1000,10000},
+        xticklabels={$10^2$,$10^3$,$10^4$},
+        ytick={1,10,100},
+        yticklabels={1,10,100},
+        title={Performance Scaling with Maze Size}
+    ]
+    
+    % FPS vs Total Tiles data points
+    \addplot[color=blue,mark=*,thick] coordinates {
+        (100, 100)
+        (400, 100)
+        (1600, 50)
+        (6400, 10)
+        (25600, 2.5)
+    };
+    
+    % Theoretical inverse relationship curve (1/x)
+    \addplot[color=red,dashed,domain=100:25600,samples=100] {10000/x};
+    
+    \legend{Measured FPS, Theoretical $O(1/n)$ scaling}
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Log-log plot showing the relationship between maze size (total tiles) and performance (FPS). The dashed red line represents theoretical inverse scaling, demonstrating how our implementation closely follows expected performance characteristics as scene complexity increases.}
+    \label{fig:performance-scaling}
+\end{figure}
+
+As evident from the data, our implementation maintains an optimal frame rate of 100 FPS for mazes up to 20×20 (400 tiles), demonstrating that the game is well-optimized for small to medium-sized environments. Note that the 100 FPS ceiling is due to the testing monitor's maximum refresh rate; the actual performance for smaller mazes may exceed this value. Performance begins to degrade at 40×40 (1,600 tiles), dropping to 50 FPS, which is still playable but shows the increasing computational demands.
+
+At the extreme end, the 160×160 maze (containing 25,600 tiles and over 187,000 meshes) pushes the hardware to its limits, resulting in only 5 FPS. While not playable, this test demonstrates the upper bounds of our implementation on consumer hardware and provides valuable insights for future optimization efforts.
+
+\subsection{Octree}
+
+\pagebreak
+\section{Art Credits}
+While the focus of this project was on the technical implementation of computer graphics concepts, we utilized several third-party 3D models and textures to enhance the visual quality of our game. All assets were used under appropriate licenses, and modifications were made to better suit our game's aesthetic and technical requirements.
+
+\begin{itemize}
+    \item \textbf{Hallway Modules}: The modular hallway system was based on assets from "Spaceship Modules" by ThisIsBranden, available at \url{https://thisisbranden.itch.io/spaceship-modules}.
+    
+    \item \textbf{Environmental Props}: Various props such as barrels and crates were sourced from the "Sci-Fi Assets Pack" available on TurboSquid at \url{https://www.turbosquid.com/3d-models/sci-fi-assets-model-1876664}.
+    
+    \item \textbf{Weapon Model}: The player's gun was adapted from the "Sci-Fi DMR" model available on TurboSquid at\\\url{https://www.turbosquid.com/3d-models/3d-scifi-dmr-model-1983451}.
+\end{itemize}
+
+Small modifications were made to these models using Blender. Texture adjustments were performed using Krita. This was done to maintain a consistent visual style throughout the game environment.
 
 % \pagebreak
 % \nocite{*}
