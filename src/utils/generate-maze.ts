@@ -1,6 +1,7 @@
-/* constants */
+// Import maze size constants
 import { MAZE_X_SIZE, MAZE_Z_SIZE } from '../main.ts'
 
+// Directions for neighbor cells (N, E, S, W)
 const NEIGHBOR_DIRECTIONS: [number, number][] = [
 	[-1, 0],
 	[0, 1],
@@ -8,35 +9,38 @@ const NEIGHBOR_DIRECTIONS: [number, number][] = [
 	[0, -1],
 ]
 
-/* types */
+// Cell type definition
 export type Cell = {
-	walls: [boolean, boolean, boolean, boolean]
-	visited: boolean
+	walls: [boolean, boolean, boolean, boolean] // North, East, South, West
+	visited: boolean // Has the cell been visited
 }
 
+// Grid type definition
 export type Grid = {
-	cells: Cell[]
-	nRows: number
-	nCols: number
+	cells: Cell[] // All cells in the grid
+	nRows: number // Number of rows
+	nCols: number // Number of columns
 }
 
+// Position as [row, col]
 export type Pos = [number, number]
 
-/* functions */
+// Get index in 1D array from 2D position
 function idx(grid: Grid, pos: Pos): number | undefined {
 	if (pos[0] < 0 || pos[0] >= grid.nRows) {
-		return undefined
+		return undefined // Out of bounds row
 	}
 
 	if (pos[1] < 0 || pos[1] >= grid.nCols) {
-		return undefined
+		return undefined // Out of bounds column
 	}
 
-	return pos[0] * grid.nCols + pos[1]
+	return pos[0] * grid.nCols + pos[1] // Compute flat index
 }
 
+// Pick a random unvisited neighbor
 function next(grid: Grid, pos: Pos): Pos | undefined {
-	const neighbors: Pos[] = []
+	const neighbors: Pos[] = [] // Store valid neighbors
 	for (const dp of NEIGHBOR_DIRECTIONS) {
 		const pos_: Pos = [pos[0] + dp[0], pos[1] + dp[1]]
 		const i = idx(grid, pos_)
@@ -46,80 +50,82 @@ function next(grid: Grid, pos: Pos): Pos | undefined {
 	}
 
 	if (neighbors.length <= 0) {
-		return undefined
+		return undefined // No unvisited neighbors
 	}
 
-	const selectedIdx = Math.floor(Math.random() * neighbors.length)
+	const selectedIdx = Math.floor(Math.random() * neighbors.length) // Pick random neighbor
 
 	return neighbors[selectedIdx]
 }
 
+// Remove wall between two adjacent cells
 function removeWall(grid: Grid, p1: Pos, p2: Pos): void {
 	const i1 = idx(grid, p1)
 	const i2 = idx(grid, p2)
 	if (i1 === undefined || i2 === undefined) {
-		return
+		return // Invalid positions
 	}
 
 	const c1 = grid.cells[i1]
 	const c2 = grid.cells[i2]
-	const di = p2[0] - p1[0]
-	const dj = p2[1] - p1[1]
+	const di = p2[0] - p1[0] // Row difference
+	const dj = p2[1] - p1[1] // Col difference
 
 	if (di === -1) {
-		c1.walls[0] = false
-		c2.walls[2] = false
+		c1.walls[0] = false // Remove north wall
+		c2.walls[2] = false // Remove south wall
 	}
 
 	if (di === 1) {
-		c1.walls[2] = false
-		c2.walls[0] = false
+		c1.walls[2] = false // Remove south wall
+		c2.walls[0] = false // Remove north wall
 	}
 
 	if (dj === -1) {
-		c1.walls[3] = false
-		c2.walls[1] = false
+		c1.walls[3] = false // Remove west wall
+		c2.walls[1] = false // Remove east wall
 	}
 
 	if (dj === 1) {
-		c1.walls[1] = false
-		c2.walls[3] = false
+		c1.walls[1] = false // Remove east wall
+		c2.walls[3] = false // Remove west wall
 	}
 }
 
+// Generate a random maze using DFS and optionally upscale
 export function generate(nRows: number, nCols: number, upscale: boolean = true): Grid {
 	const cells: Cell[] = new Array(nRows * nCols).fill(null).map(() => ({
-		walls: [true, true, true, true],
-		visited: false,
+		walls: [true, true, true, true], // All walls present
+		visited: false, // Not visited
 	}))
 	const grid: Grid = { cells, nRows: nRows, nCols: nCols }
 
-	const stack: Pos[] = []
-	let pos: Pos = [0, 0]
-	grid.cells[idx(grid, pos)!].visited = true
+	const stack: Pos[] = [] // Stack for DFS
+	let pos: Pos = [0, 0] // Start at (0,0)
+	grid.cells[idx(grid, pos)!].visited = true // Mark start visited
 	stack.push(pos)
 	while (stack.length > 0) {
-		pos = stack[stack.length - 1]
-		const nextPos = next(grid, pos)
+		pos = stack[stack.length - 1] // Current cell
+		const nextPos = next(grid, pos) // Pick next neighbor
 		if (nextPos) {
-			grid.cells[idx(grid, nextPos)!].visited = true
-			removeWall(grid, pos, nextPos)
-			stack.push(nextPos)
+			grid.cells[idx(grid, nextPos)!].visited = true // Mark neighbor visited
+			removeWall(grid, pos, nextPos) // Remove wall between
+			stack.push(nextPos) // Push neighbor to stack
 		} else {
-			stack.pop()
+			stack.pop() // Backtrack
 		}
 	}
 
 	if (!upscale) {
-		return grid
+		return grid // Return base grid
 	}
 
-	// --- Second pass: upscale and insert empty space between all cells ---
+	// Upscale: insert empty cells between all maze cells
 	const bigRows = nRows * 2 - 1
 	const bigCols = nCols * 2 - 1
 	const bigCells: Cell[] = new Array(bigRows * bigCols).fill(null).map(() => ({
-		walls: [true, true, true, true],
-		visited: false,
+		walls: [true, true, true, true], // All walls
+		visited: false, // Not visited
 	}))
 	// Copy original cells to even-even positions
 	for (let r = 0; r < nRows; r++) {
@@ -128,8 +134,8 @@ export function generate(nRows: number, nCols: number, upscale: boolean = true):
 			const bigR = r * 2
 			const bigC = c * 2
 			const bigIdx = bigR * bigCols + bigC
-			bigCells[bigIdx].walls = [...grid.cells[origIdx].walls]
-			bigCells[bigIdx].visited = grid.cells[origIdx].visited
+			bigCells[bigIdx].walls = [...grid.cells[origIdx].walls] // Copy walls
+			bigCells[bigIdx].visited = grid.cells[origIdx].visited // Copy visited
 		}
 	}
 
@@ -143,20 +149,21 @@ export function generate(nRows: number, nCols: number, upscale: boolean = true):
 			// South neighbor
 			if (!here.walls[2] && r + 1 < nRows) {
 				const bufIdx = (bigR + 1) * bigCols + bigC
-				bigCells[bufIdx].walls = [false, true, false, true] // open north & south
+				bigCells[bufIdx].walls = [false, true, false, true] // Open north & south
 			}
 
 			// East neighbor
 			if (!here.walls[1] && c + 1 < nCols) {
 				const bufIdx = bigR * bigCols + (bigC + 1)
-				bigCells[bufIdx].walls = [true, false, true, false] // open east & west
+				bigCells[bufIdx].walls = [true, false, true, false] // Open east & west
 			}
 		}
 	}
 
-	return { cells: bigCells, nRows: bigRows, nCols: bigCols }
+	return { cells: bigCells, nRows: bigRows, nCols: bigCols } // Return upscaled grid
 }
 
+// Draw a line on the canvas
 export function drawLine(
 	canvas: HTMLCanvasElement,
 	x1: number,
@@ -168,7 +175,7 @@ export function drawLine(
 ): void {
 	const ctx = canvas.getContext('2d')
 	if (!ctx) {
-		return
+		return // No context
 	}
 
 	ctx.beginPath()
@@ -179,6 +186,7 @@ export function drawLine(
 	ctx.stroke()
 }
 
+// Draw a filled square on the canvas
 export function drawSquare(
 	canvas: HTMLCanvasElement,
 	x: number,
@@ -189,13 +197,14 @@ export function drawSquare(
 ): void {
 	const ctx = canvas.getContext('2d')
 	if (!ctx) {
-		return
+		return // No context
 	}
 
 	ctx.fillStyle = color
 	ctx.fillRect(x, y, w, h)
 }
 
+// Render the maze and path on the canvas
 export function render(grid: Grid, A: Pos, B: Pos, path: Pos[]) {
 	const canvas = document.getElementById('canvas')
 	if (!(canvas instanceof HTMLCanvasElement)) {
@@ -207,15 +216,15 @@ export function render(grid: Grid, A: Pos, B: Pos, path: Pos[]) {
 		throw new Error('2D context not found')
 	}
 
-	ctx.clearRect(0, 0, canvas.width, canvas.height)
-	const w = Math.floor(canvas.width / grid.nCols)
-	const h = Math.floor(canvas.height / grid.nRows)
+	ctx.clearRect(0, 0, canvas.width, canvas.height) // Clear canvas
+	const w = Math.floor(canvas.width / grid.nCols) // Cell width
+	const h = Math.floor(canvas.height / grid.nRows) // Cell height
 
-	const pad = 0
-	path.forEach(C => drawSquare(canvas, w * C[1] + pad / 2, h * C[0] + pad / 2, w - pad, h - pad, '#FAA'))
+	const pad = 0 // Padding for drawing
+	path.forEach(C => drawSquare(canvas, w * C[1] + pad / 2, h * C[0] + pad / 2, w - pad, h - pad, '#FAA')) // Draw path
 
-	drawSquare(canvas, w * A[1], h * A[0], w, h, '#f00')
-	drawSquare(canvas, w * B[1], h * B[0], w, h, '#f00')
+	drawSquare(canvas, w * A[1], h * A[0], w, h, '#f00') // Draw start
+	drawSquare(canvas, w * B[1], h * B[0], w, h, '#f00') // Draw end
 
 	for (let rowIdx = 0; rowIdx < grid.nRows; ++rowIdx) {
 		for (let colIdx = 0; colIdx < grid.nCols; ++colIdx) {
@@ -223,54 +232,53 @@ export function render(grid: Grid, A: Pos, B: Pos, path: Pos[]) {
 			const x = colIdx * w
 			const y = rowIdx * h
 
-			// if (visited) draw_square(canvas, x, y, w, h, 'rgba(224, 49, 49, 0.2)');
-
+			// Draw walls if present
 			if (walls[0]) {
-				drawLine(canvas, x, y, x + w, y, 1, '#000')
-			} // North
+				drawLine(canvas, x, y, x + w, y, 1, '#000') // North wall
+			}
 
 			if (walls[1]) {
-				drawLine(canvas, x + w, y, x + w, y + h, 1, '#000')
-			} // East
+				drawLine(canvas, x + w, y, x + w, y + h, 1, '#000') // East wall
+			}
 
 			if (walls[2]) {
-				drawLine(canvas, x, y + h, x + w, y + h, 1, '#000')
-			} // South
+				drawLine(canvas, x, y + h, x + w, y + h, 1, '#000') // South wall
+			}
 
 			if (walls[3]) {
-				drawLine(canvas, x, y, x, y + h, 1, '#000')
-			} // West
+				drawLine(canvas, x, y, x, y + h, 1, '#000') // West wall
+			}
 		}
 	}
 }
 
+// Pick a random cell with at least one open side (not a door)
 export function randomCell(grid: Grid): Pos {
-	// Only pick cells with at least one open side, and not exactly 2 open sides (to avoid doors)
-	// This prevents spawning on door locations, which typically have exactly 2 open sides.
-	const candidates: Pos[] = []
+	const candidates: Pos[] = [] // Store valid cells
 	for (let row = 0; row < grid.nRows; row++) {
 		for (let col = 0; col < grid.nCols; col++) {
 			const idx = row * grid.nCols + col
 			const cell = grid.cells[idx]
 			const openSides = cell.walls.filter(w => !w).length
 			if (openSides > 0 && openSides !== 2) {
-				candidates.push([row, col])
+				candidates.push([row, col]) // Valid spawn cell
 			}
 		}
 	}
 
 	if (candidates.length === 0) {
-		// fallback: just pick any cell
-		return [0, 0]
+		return [0, 0] // Fallback
 	}
 
-	return candidates[Math.floor(Math.random() * candidates.length)]
+	return candidates[Math.floor(Math.random() * candidates.length)] // Pick random
 }
 
+// Manhattan distance between two positions
 export function distManhattan(a: Pos, b: Pos): number {
 	return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1])
 }
 
+// Convert flat index to [row, col]
 export function idx2pos(grid: Grid, i: number): Pos {
 	const row = Math.floor(i / grid.nCols)
 	const col = i % grid.nCols
@@ -278,6 +286,7 @@ export function idx2pos(grid: Grid, i: number): Pos {
 	return [row, col]
 }
 
+// Reconstruct path from parent map
 export function reconstructPath(grid: Grid, parents: Record<number, number>, iNode: number): Pos[] {
 	const path: Pos[] = [idx2pos(grid, iNode)]
 	while (iNode in parents) {
@@ -288,25 +297,26 @@ export function reconstructPath(grid: Grid, parents: Record<number, number>, iNo
 	return path
 }
 
+// A* pathfinding on the maze grid
 export function pathfind(grid: Grid, A: Pos, B: Pos): Pos[] {
 	const iA = idx(grid, A)
 	const iB = idx(grid, B)
 
 	// Handle invalid positions
 	if (iA === undefined || iB === undefined) {
-		return []
+		return [] // Invalid start/end
 	}
 
-	const gScore: number[] = new Array(grid.nRows * grid.nCols).fill(Infinity)
-	const fScore: number[] = new Array(grid.nRows * grid.nCols).fill(Infinity)
-	const parents: Record<number, number> = {}
-	const open: number[] = [iA]
+	const gScore: number[] = new Array(grid.nRows * grid.nCols).fill(Infinity) // Cost so far
+	const fScore: number[] = new Array(grid.nRows * grid.nCols).fill(Infinity) // Estimated total cost
+	const parents: Record<number, number> = {} // Parent map
+	const open: number[] = [iA] // Open set
 
-	gScore[iA] = 0
-	fScore[iA] = distManhattan(A, B)
+	gScore[iA] = 0 // Start cost
+	fScore[iA] = distManhattan(A, B) // Heuristic
 
 	while (open.length > 0) {
-		let iCurrent = open[0]
+		let iCurrent = open[0] // Node with lowest f
 		let f = fScore[iCurrent]
 
 		// Find node with lowest f-score
@@ -333,26 +343,23 @@ export function pathfind(grid: Grid, A: Pos, B: Pos): Pos[] {
 			const iNeighbor = idx(grid, neighborPos)
 
 			if (iNeighbor === undefined) {
-				continue
+				continue // Out of bounds
 			}
 
 			// Check if there's a wall in this direction
 			let wallExists = false
 			if (dir[0] === -1) {
-				wallExists = grid.cells[iCurrent].walls[0]
-			} // North
-			else if (dir[0] === 1) {
-				wallExists = grid.cells[iCurrent].walls[2]
-			} // South
-			else if (dir[1] === -1) {
-				wallExists = grid.cells[iCurrent].walls[3]
-			} // West
-			else if (dir[1] === 1) {
-				wallExists = grid.cells[iCurrent].walls[1]
-			} // East
+				wallExists = grid.cells[iCurrent].walls[0] // North
+			} else if (dir[0] === 1) {
+				wallExists = grid.cells[iCurrent].walls[2] // South
+			} else if (dir[1] === -1) {
+				wallExists = grid.cells[iCurrent].walls[3] // West
+			} else if (dir[1] === 1) {
+				wallExists = grid.cells[iCurrent].walls[1] // East
+			}
 
 			if (wallExists) {
-				continue
+				continue // Can't move through wall
 			}
 
 			// Calculate new g-score
@@ -376,6 +383,7 @@ export function pathfind(grid: Grid, A: Pos, B: Pos): Pos[] {
 	return []
 }
 
+// Convert maze grid coordinates to world grid coordinates
 export function mazeGridToWorldGrid([x, y]: Pos): Pos {
 	return [MAZE_X_SIZE - 1 - x, MAZE_Z_SIZE - 1 - y]
 }

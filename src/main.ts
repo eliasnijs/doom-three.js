@@ -1,7 +1,8 @@
-import { Color, WebGLRenderer } from 'three'
+import { Color, Vector2, WebGLRenderer } from 'three'
 // --- Bloom imports ---
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass'
 
 import { createMap } from './engine/map.ts'
 import { State } from './engine/state.ts'
@@ -9,8 +10,8 @@ import { windowInit } from './engine/window.ts'
 import { DebugPanel } from './game-objects/debug-panel.ts'
 import { MazePanel } from './game-objects/maze-panel.ts'
 
-export const MAZE_X_SIZE = 15
-export const MAZE_Z_SIZE = 15
+export const MAZE_X_SIZE = 10
+export const MAZE_Z_SIZE = 10
 export const GRID_SIZE = 10
 export const MAZE_X_CENTER = GRID_SIZE * Math.floor(MAZE_X_SIZE / 2)
 export const MAZE_Z_CENTER = GRID_SIZE * Math.floor(MAZE_Z_SIZE / 2)
@@ -48,7 +49,7 @@ async function main(renderer: WebGLRenderer) {
 
 	// const bloomPass = new UnrealBloomPass(
 	// 	new Vector2(window.innerWidth, window.innerHeight),
-	// 	1.2, // strength
+	// 	0.5, // strength
 	// 	0.3, // radius
 	// 	0.85, // threshold
 	// )

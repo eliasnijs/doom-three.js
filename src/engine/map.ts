@@ -13,7 +13,7 @@ export async function createMap(debugPanel: DebugPanel, state: State, renderer: 
 	const hallwayObjects = await loadHallwayObjects()
 	const propsObjects = await loadPropsObjects()
 
-	const grid = generate(MAZE_Z_SIZE, MAZE_X_SIZE)
+	const grid = generate(MAZE_Z_SIZE, MAZE_X_SIZE, true)
 	state.grid = grid
 
 	for (let row = 0; row < grid.nRows; row++) {
