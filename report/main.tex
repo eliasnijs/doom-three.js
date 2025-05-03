@@ -112,7 +112,7 @@ Our game engine follows a component-based design pattern, with a central state m
 The engine implements a standard game loop that:
 
 \begin{enumerate}
-    \item Calls the \texttt{animate} method on the state, which in turn calls the \texttt{animate} method on all registered game objects.
+    \item Calls the \texttt{animate} method on the state, which in turn calls all registered game objects.
     \item Updates the physics system and rebuilds the dynamic octree.
     \item Renders the scene.
 \end{enumerate}
