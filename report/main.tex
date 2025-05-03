@@ -215,7 +215,7 @@ When inserting a collider into the octree, its indices are spread over all
 partitions that overlap with the bounding box of the element, ensuring that
 queries will find colliders that span multiple octants. For efficient octant
 determination, we use bit patterns to index the octree, leveraging the
-isomorphism between 3 bits and the 8 octants of the tree. This binary
+1-1 mapping between 3 bits and 8 octants. This binary
 representation allows for quick computation of which octant a point belongs to.
 
 To prevent excessive subdivision in dense areas, our implementation enforces a maximum depth limit for the octree. This constraint ensures that the tree doesn't become too deep in areas with many colliders, which would otherwise lead to diminishing returns in performance and increased memory usage. The maximum depth was determined experimentally to balance the tradeoff between query performance and memory consumption, with a value that provides optimal performance for our game's typical scenes.
