@@ -200,7 +200,82 @@ The game also features immersive visual feedback during movement, with a weapon 
 TODO
 
 \section{Collision Detection Using Octree}
-TODO
+
+For efficient collision detection in our 3D game environment, we implemented an octree-based spatial partitioning system that significantly reduces the computational complexity of detecting object interactions.
+
+\subsection{Octree Implementation}
+Our implementation uses a standard octree data structure with several
+optimizations for performance and memory efficiency. The octree stores
+colliders directly in a list, with the nodes of the octree itself storing
+indices into this list rather than the actual collider objects. This approach
+allows multiple octree nodes to reference the same collider without
+duplication.
+
+When inserting a collider into the octree, its indices are spread over all
+partitions that overlap with the bounding box of the element, ensuring that
+queries will find colliders that span multiple octants. For efficient octant
+determination, we use bit patterns to index the octree, leveraging the
+isomorphism between 3 bits and the 8 octants of the tree. This binary
+representation allows for quick computation of which octant a point belongs to.
+
+For memory management, we optimize removal operations by marking elements as
+dead in the backing list rather than physically removing them. This approach
+avoids costly array operations and simplifies the tree maintenance logic.
+
+\subsection{Engine Integration}
+Our game engine maintains two separate octrees: one for static objects (walls,
+floors, stationary props) and another for dynamic objects (player, moving
+doors, projectiles). This separation optimizes performance since the static
+tree never changes after level initialization and thus never needs to be
+rebuilt, while the dynamic tree is rebuilt each frame to account for moving
+objects.
+
+Game objects are responsible for managing their own colliders and must register
+or unregister them with the state management system. The registration process
+includes a flag to specify whether the collider should be added to the static
+or dynamic tree, giving developers fine-grained control over collision
+behavior.
+
+For debugging purposes, we implemented a visualization system that renders the
+octree structure with color coding based on depth. Deeper nodes are displayed
+in blue while shallower nodes are displayed in red, with varying opacity to
+enhance visibility. This visualization has been invaluable for debugging
+spatial partitioning issues and understanding collision behavior in complex
+scenes.
+
+\subsection{Collision Resolution}
+Since our game world is organized on a grid, we use axis-aligned bounding boxes
+(AABBs) as colliders for all game objects. When checking for collisions, we
+query both the static and dynamic octrees to retrieve all colliders that share
+the same spatial partition as the object being tested.
+
+Our collision resolution algorithm implements several sophisticated techniques:
+
+First, we determine the amount of overlap between colliding objects in the
+direction of movement. The system then implements minimum penetration axis
+selection by comparing overlaps in the X, Y, and Z directions and only applying
+correction along the axis with the smallest overlap. This approach, based on
+the separating axis theorem, ensures that objects are pushed apart along the
+most efficient path.
+
+The algorithm employs direction-aware displacement, determining the sign of the
+correction based on the relative position of collider centers. This ensures
+that objects are always pushed in the correct direction to separate them,
+regardless of their relative positions or movement directions.
+
+For handling multiple simultaneous collisions, we accumulate displacement
+vectors from all collisions and track how many meaningful collisions occurred
+(ignoring zero-displacement cases). The accumulated vector is then scaled by a
+factor of 1.1 to add a small push-out buffer that prevents objects from getting
+stuck at the exact collision boundary. Finally, the displacement is averaged by
+dividing by the number of collisions, creating a balanced response that
+prevents erratic movement when multiple collisions occur.
+
+Our system calculates displacement vectors using the centers of bounding boxes
+rather than object positions directly. This center-based direction calculation
+provides more reliable and consistent collision responses, especially for
+objects with offset centers or irregular shapes represented by AABBs.
+
 
 \subsection{Comparison with other space partitioning algorithms}
 
