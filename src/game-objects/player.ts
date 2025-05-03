@@ -363,17 +363,17 @@ export class Player extends GameObject {
 			// Only test against static world meshes (walls)
 			const meshes = state.staticCollisionTree.elements.map(e => e?.ref.mesh).filter(e => e !== undefined)
 
-			// Debug: visualize the raycast
-			if (state.debug) {
-				// Remove previous debug ray if any
-				if (this._debugRay) {
-					state.scene.remove(this._debugRay)
-					this._debugRay.geometry.dispose()
-					if (this._debugRay.material && !Array.isArray(this._debugRay.material)) {
-						this._debugRay.material.dispose()
-					}
+			// Remove previous debug ray if any
+			if (this._debugRay) {
+				state.scene.remove(this._debugRay)
+				this._debugRay.geometry.dispose()
+				if (this._debugRay.material && !Array.isArray(this._debugRay.material)) {
+					this._debugRay.material.dispose()
 				}
+			}
 
+			// Add new debug ray
+			if (state.debug) {
 				const rayEnd = origin.clone().add(forward.clone().normalize().multiplyScalar(rayLength))
 				const geometry = new BufferGeometry().setFromPoints([origin, rayEnd])
 				const material = new LineBasicMaterial({ color: 0xff0000 })
