@@ -12,7 +12,7 @@
 \usepackage{pgfplots} % For creating plots
 \pgfplotsset{compat=1.18} % Set compatibility level
 
-\title{MiniDOOM}
+\title{MINI-DOOM}
 \author{Elias Nijs \& René Van Der Schueren}
 \date{May 2025}
 
@@ -27,32 +27,32 @@
 \begin{titlepage}
     \centering
     \vspace*{1cm}
-    
+
     \Huge
-    \textbf{DWARF-DOOM}\\
+    \textbf{MINI-DOOM}\\
     \vspace{1.5cm}
-    
+
     \Large
     \textbf{\courseinfo}\\
     \vspace{0.5cm}
-    
+
     \large
     \university\\
     \vspace{0.5cm}
-    
+
     \vspace{1.5cm}
-    
+
     \Large
     Elias Nijs \& René Van Der Schueren\\
     \vspace{0.5cm}
-    
+
     \large
     \academicyear\\
     \vspace{0.5cm}
-    
+
     \large
     May 2025\\
-    
+
 \end{titlepage}
 
 \pagebreak
@@ -102,9 +102,9 @@ Our game engine follows a component-based design pattern, with a central state m
 
 \begin{itemize}
     \item \texttt{GameObject}: An abstract base class that serves as the foundation for all entities in the game world. Each game object automatically registers itself with the state management system upon creation and implements lifecycle methods such as \texttt{animate} (called every frame), \texttt{cleanup}, and \texttt{destroy}.
-    
+
     \item \texttt{State}: The central management class that maintains references to all active game objects, handles scene configuration, manages the camera system, and coordinates the physics simulation. It provides methods for registering and unregistering game objects, finding objects by type, toggling debug visualization, ...
-    
+
     \item \texttt{Physics}: A collision detection and resolution system that uses axis-aligned bounding boxes (AABBs) to represent object boundaries. The physics system calculates collision corrections and applies them to maintain proper object separation. For efficient collision detection, we implemented an octree-based spatial partitioning system (explained in detail in the Space Partitioning section), which significantly reduces the number of collision checks by organizing objects hierarchically based on their spatial location.
 \end{itemize}
 
@@ -229,9 +229,9 @@ The octree provides significant performance advantages over naive collision dete
 
 \begin{itemize}
     \item \textbf{Construction}: Building the octree has a complexity of $O(n \log n)$ in the average case, where $n$ is the number of colliders. Each insertion operation takes $O(\log n)$ time as it traverses down the tree to place the collider in the appropriate nodes.
-    
+
     \item \textbf{Query}: Collision queries achieve an average-case complexity of $O(\log n + k)$, where $k$ is the number of colliders in the vicinity of the query. This is substantially better than the $O(n)$ complexity of brute-force approaches that check against every collider in the scene.
-    
+
     \item \textbf{Memory}: The octree's space complexity is $O(n)$ in the average case, but can approach $O(n^2)$ in the worst case when many colliders span multiple octants, requiring multiple references in the tree.
 \end{itemize}
 
@@ -294,14 +294,10 @@ vectors from all collisions and track how many meaningful collisions occurred
 factor of 1.1 to add a small push-out buffer that prevents objects from getting
 stuck at the exact collision boundary. Finally, the displacement is averaged by
 dividing by the number of collisions, creating a balanced response that
-prevents erratic movement when multiple collisions occur.
-
-Our system calculates the direction of the displacement vectors using the
-centers of bounding boxes rather than object positions directly. This
-center-based direction calculation provides more reliable and consistent
-collision responses, especially for objects with offset centers or irregular
-shapes represented by AABBs.
-
+prevents erratic movement when multiple collisions occur. A different way this
+could also be approached is by taking maximum displacement along each
+component. However, this would take a lot of comparisons, which is why
+we opted for a simple normalized sum instead.
 
 \section{Benchmarking}\label{sec:benchmarking}
 To assess the performance and efficiency of our implementation, we conducted a series of controlled tests focusing on key areas that affect gameplay and user experience. These benchmarks provide quantitative data on how our design choices impact performance as scale increases, helping to identify optimization opportunities and hardware requirements.
@@ -348,7 +344,7 @@ Table \ref{tab:maze-performance} presents the relationship between maze dimensio
         yticklabels={1,10,100},
         title={Performance Scaling with Maze Size}
     ]
-    
+
     % FPS vs Total Tiles data points
     \addplot[color=blue,mark=*,thick] coordinates {
         (100, 100)
@@ -357,10 +353,10 @@ Table \ref{tab:maze-performance} presents the relationship between maze dimensio
         (6400, 10)
         (25600, 2.5)
     };
-    
+
     % Theoretical inverse relationship curve (1/x)
     \addplot[color=red,dashed,domain=100:25600,samples=100] {10000/x};
-    
+
     \legend{Measured FPS, Theoretical $O(1/n)$ scaling}
     \end{axis}
     \end{tikzpicture}
@@ -398,7 +394,7 @@ To evaluate the efficiency of our octree-based spatial partitioning system, we c
             xticklabels={10,100,1000,10000},
             title={Query Performance}
         ]
-        
+
         % Octree performance data - using the actual benchmark results
         \addplot[color=blue,mark=*,thick] coordinates {
             (10, 0.25027399999999034)
@@ -406,7 +402,7 @@ To evaluate the efficiency of our octree-based spatial partitioning system, we c
             (1000, 0.28497500000000286)
             (10000, 0.5123340000000098)
         };
-        
+
         % Linear search performance data - using the actual benchmark results
         \addplot[color=red,mark=square,thick] coordinates {
             (10, 0.4036879999999883)
@@ -414,13 +410,13 @@ To evaluate the efficiency of our octree-based spatial partitioning system, we c
             (1000, 6.508582000000018)
             (10000, 40.54182000000003)
         };
-        
+
         % Theoretical O(log n) scaling for reference
         \addplot[color=black,dashed,domain=10:10000,samples=100] {0.05*ln(x)/ln(10)};
-        
+
         % Theoretical O(n) scaling for reference
         \addplot[color=gray,dashed,domain=10:10000,samples=100] {0.025*x};
-        
+
         \legend{Octree Query, Linear Search, O(log n), O(n)}
         \end{axis}
         \end{tikzpicture}
@@ -446,7 +442,7 @@ To evaluate the efficiency of our octree-based spatial partitioning system, we c
             xticklabels={10,100,1000,10000},
             title={Performance Speedup}
         ]
-        
+
         % Speedup data - using the actual benchmark results
         \addplot[color=green,mark=triangle,thick] coordinates {
             (10, 1.6129841693504074)
@@ -454,10 +450,10 @@ To evaluate the efficiency of our octree-based spatial partitioning system, we c
             (1000, 22.839133257303107)
             (10000, 79.13162116900158)
         };
-        
+
         % Theoretical O(n/log n) scaling for reference
         \addplot[color=black,dashed,domain=10:10000,samples=100] {x/ln(x)*0.2};
-        
+
         \legend{Measured Speedup, O(n/log n)}
         \end{axis}
         \end{tikzpicture}
@@ -492,19 +488,47 @@ rates even in complex environments with numerous dynamic objects, confirming
 that the octree implementation successfully addresses the computational
 challenges of collision detection at scale.
 
+\section{Conclusion}
+In this project, we successfully developed a Doom-inspired game using Three.js
+that implements a wide range of computer graphics techniques. Our maze
+generation system creates complex, playable environments with optimal
+pathfinding capabilities, while our octree-based spatial partitioning system
+efficiently handles collision detection even in large scenes. Performance
+benchmarks demonstrate that our implementation achieves interactive frame rates
+for reasonably sized mazes, with the octree providing up to 79× speedup
+compared to naive collision detection approaches.
+
+The modular design of our game engine allows for easy extension and
+modification, with a clear separation between game logic and rendering
+components. By implementing advanced features such as dynamic lighting,
+material properties, and physics-based interactions, we've created an immersive
+first-person experience that captures the essence of classic FPS games while
+showcasing modern web-based rendering capabilities.
+
+Throughout development, we faced and overcame several challenges, particularly
+in optimizing performance for larger environments and ensuring consistent
+physics behavior. Future work could focus on further optimizing the rendering
+pipeline, implementing more advanced lighting techniques, and expanding
+gameplay elements with additional enemy types and weapons.
+
+
 \pagebreak
 \section{Art Credits}
 While the focus of this project was on the technical implementation of computer graphics concepts, we utilized several third-party 3D models and textures to enhance the visual quality of our game. All assets were used under appropriate licenses, and modifications were made to better suit our game's aesthetic and technical requirements.
 
 \begin{itemize}
     \item \textbf{Hallway Modules}: The modular hallway system was based on assets from "Spaceship Modules" by ThisIsBranden, available at \url{https://thisisbranden.itch.io/spaceship-modules}.
-    
+
     \item \textbf{Environmental Props}: Various props such as barrels and crates were sourced from the "Sci-Fi Assets Pack" available on TurboSquid at \url{https://www.turbosquid.com/3d-models/sci-fi-assets-model-1876664}.
-    
+
     \item \textbf{Weapon Model}: The player's gun was adapted from the "Sci-Fi DMR" model available on TurboSquid at\\\url{https://www.turbosquid.com/3d-models/3d-scifi-dmr-model-1983451}.
 \end{itemize}
 
 Small modifications were made to these models using Blender. Texture adjustments were performed using Krita. This was done to maintain a consistent visual style throughout the game environment.
+
+\section{Acknowledgment}
+During this project we made use of AI tools to help us write the report and more
+specifically to help us formulate our arguments in proper academic English.
 
 % \pagebreak
 % \nocite{*}
