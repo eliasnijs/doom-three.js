@@ -12,15 +12,20 @@
 \contentsline {subsubsection}{\numberline {3.1.4}Pathfinding}{6}{subsubsection.3.1.4}%
 \contentsline {section}{\numberline {4}3D World Organization}{6}{section.4}%
 \contentsline {section}{\numberline {5}User Controls and Movement}{7}{section.5}%
-\contentsline {section}{\numberline {6}Lighting, Materials and Texture Mapping}{8}{section.6}%
-\contentsline {section}{\numberline {7}Collision Detection Using Octree}{8}{section.7}%
-\contentsline {subsection}{\numberline {7.1}Octree Implementation}{8}{subsection.7.1}%
-\contentsline {subsubsection}{\numberline {7.1.1}Computational Complexity}{8}{subsubsection.7.1.1}%
-\contentsline {subsection}{\numberline {7.2}Engine Integration}{9}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Collision Resolution}{10}{subsection.7.3}%
-\contentsline {section}{\numberline {8}Benchmarking}{10}{section.8}%
-\contentsline {subsection}{\numberline {8.1}Maze Size Performance Analysis}{10}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}Octree Performance Analysis}{12}{subsection.8.2}%
-\contentsline {section}{\numberline {9}Conclusion}{13}{section.9}%
-\contentsline {section}{\numberline {10}Art Credits}{14}{section.10}%
-\contentsline {section}{\numberline {11}Acknowledgment}{14}{section.11}%
+\contentsline {section}{\numberline {6}Rendering Components}{8}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Lighting}{8}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Fog}{8}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Hallways}{8}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Props}{9}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}Reflections}{9}{subsection.6.5}%
+\contentsline {section}{\numberline {7}Collision Detection Using Octree}{9}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Octree Implementation}{10}{subsection.7.1}%
+\contentsline {subsubsection}{\numberline {7.1.1}Computational Complexity}{10}{subsubsection.7.1.1}%
+\contentsline {subsection}{\numberline {7.2}Engine Integration}{11}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Collision Resolution}{12}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Benchmarking}{13}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Maze Size Performance Analysis}{13}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Octree Performance Analysis}{14}{subsection.8.2}%
+\contentsline {section}{\numberline {9}Conclusion}{16}{section.9}%
+\contentsline {section}{\numberline {10}Art Credits}{17}{section.10}%
+\contentsline {section}{\numberline {11}Acknowledgment}{17}{section.11}%

@@ -196,8 +196,51 @@ The movement system applies the player's directional input to a normalized vecto
 
 The game also features immersive visual feedback during movement, with a weapon bob animation that simulates the natural motion of carrying a weapon while walking. This is achieved by applying sinusoidal oscillations to the weapon position based on the player's movement state. Additionally, the weapon model automatically lowers when the player approaches a wall, providing a realistic response to close-proximity obstacles and preventing clipping issues.
 
-\section{Lighting, Materials and Texture Mapping}
-TODO
+\section{Rendering Components}
+
+\subsection{Lighting}
+The game uses a global ambient light for base illumination. Hallway light fixtures use diffuse materials to emit a soft glow, providing localized illumination without requiring expensive dynamic lighting calculations. Figure \ref{fig:lights} shows an example of these light fixtures in the game.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{diagrams/lights.png}
+\caption{Light fixtures in hallways providing illumination.}
+\label{fig:lights}
+\end{figure}
+
+\subsection{Fog}
+A simple exponential fog is used to create an atmosphere in the game. Figure \ref{fig:fog} shows an example of fog in the game.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{diagrams/fog.png}
+\caption{Example of fog in the game. The end of this hallway can hardly be seen.}
+\label{fig:fog}
+\end{figure}
+
+\subsection{Hallways}
+Hallway segments use standard materials with multiple texture maps and levels: diffuse maps for base color, normal maps for surface detail, metalness maps for reflective properties, roughness value, and environment maps for reflections.
+
+Environment maps are generated for each hallway type and orientation using a cube camera at launch. A material cache system prevents redundant material creation, reducing memory usage and improving performance. So hallways with the same type and orientation share the same material and thus the same environment map.
+
+\subsection{Props}
+Props use simpler material configurations than hallways: basic texture maps for diffuse color, global metalness and roughness values, and shared environment maps from their parent hallway.
+
+Barrel props use the same environment map as their containing hallway with fixed material properties. A dedicated material cache prevents duplicate materials, reducing draw calls.
+
+\subsection{Reflections}
+Reflections are achieved through environment mapping. The lights from hallway fixtures are reflected on walls and props as shown in Figure \ref{fig:reflections}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{diagrams/reflection.png}
+\caption{Reflections of the lights shown in Figure \ref{fig:lights}, on walls and props using environment maps. Seen in this image as horizontal white lines in the reflections.}
+\label{fig:reflections}
+\end{figure}
+
+This pre-generated environment map approach provides convincing reflections at a fraction of the computational cost of real-time reflections. Material properties determine reflection characteristics, with metallic surfaces showing sharper reflections.
+
+This component-based approach, combined with extensive caching of materials and environment maps, allows our game to maintain visual quality while ensuring smooth performance even on less powerful hardware.
 
 \section{Collision Detection Using Octree}
 
@@ -528,7 +571,8 @@ Small modifications were made to these models using Blender. Texture adjustments
 
 \section{Acknowledgment}
 During this project we made use of AI tools to help us write the report and more
-specifically to help us formulate our arguments in proper academic English.
+specifically to help us formulate our report in proper academic English. We also
+utilized AI assistance during code development to speed up certain aspects of development.
 
 % \pagebreak
 % \nocite{*}
