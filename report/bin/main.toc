@@ -16,11 +16,11 @@
 \contentsline {section}{\numberline {7}Collision Detection Using Octree}{8}{section.7}%
 \contentsline {subsection}{\numberline {7.1}Octree Implementation}{8}{subsection.7.1}%
 \contentsline {subsubsection}{\numberline {7.1.1}Computational Complexity}{8}{subsubsection.7.1.1}%
-\contentsline {subsection}{\numberline {7.2}Engine Integration}{9}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Collision Resolution}{10}{subsection.7.3}%
-\contentsline {section}{\numberline {8}Benchmarking}{10}{section.8}%
+\contentsline {subsection}{\numberline {7.2}Engine Integration}{8}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Collision Resolution}{9}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Benchmarking}{9}{section.8}%
 \contentsline {subsection}{\numberline {8.1}Maze Size Performance Analysis}{10}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}Octree Performance Analysis}{12}{subsection.8.2}%
-\contentsline {section}{\numberline {9}Conclusion}{13}{section.9}%
-\contentsline {section}{\numberline {10}Art Credits}{14}{section.10}%
-\contentsline {section}{\numberline {11}Acknowledgment}{14}{section.11}%
+\contentsline {subsection}{\numberline {8.2}Octree Performance Analysis}{11}{subsection.8.2}%
+\contentsline {section}{\numberline {9}Conclusion}{12}{section.9}%
+\contentsline {section}{\numberline {10}Art Credits}{13}{section.10}%
+\contentsline {section}{\numberline {11}Acknowledgment}{13}{section.11}%
