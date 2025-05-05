@@ -1,0 +1,691 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{float}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{url} % Better URL handling
+\urlstyle{same} % Use the same font for URLs
+\usepackage{apacite}
+\usepackage{enumitem} % For nested lists in maze generation section
+\usepackage[margin=1.5in]{geometry} % Reduce horizontal padding
+\usepackage{tikz} % For creating plots and diagrams
+\usepackage{pgfplots} % For creating plots
+\pgfplotsset{compat=1.18} % Set compatibility level
+
+\title{MINI-DOOM}
+\author{Elias Nijs \& René Van Der Schueren}
+\date{May 2025}
+
+% Custom title page information
+\newcommand{\courseinfo}{Computer Graphics (E016712A)}
+\newcommand{\academicyear}{Academic Year 2024/2025}
+\newcommand{\university}{GHENT UNIVERSITY}
+
+\begin{document}
+
+% Custom title page
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+
+    \Huge
+    \textbf{MINI-DOOM}\\
+    \vspace{1.5cm}
+
+    \Large
+    \textbf{\courseinfo}\\
+    \vspace{0.5cm}
+
+    \large
+    \university\\
+    \vspace{0.5cm}
+
+    \vspace{1.5cm}
+
+    \Large
+    Elias Nijs \& René Van Der Schueren\\
+    \vspace{0.5cm}
+
+    \large
+    \academicyear\\
+    \vspace{0.5cm}
+
+    \large
+    May 2025\\
+
+\end{titlepage}
+
+\pagebreak
+
+\tableofcontents
+
+\pagebreak
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{diagrams/gameplay.png}
+    \caption{Gameplay screenshot of our Doom-inspired game implemented in Three.js.}
+    \label{fig:gameplay-main}
+\end{figure}
+
+\section{Introduction}\label{sec:introduction}
+\subsection{Tech Choices}
+Our project uses Three.js, a lightweight JavaScript library that abstracts WebGL for accessible 3D graphics programming in browsers. We chose it for its robust ecosystem, documentation, and optimized web rendering performance. Development is powered by Vite for fast server capabilities, and we implemented the codebase in TypeScript to benefit from static typing, which improves code reliability and facilitates better team collaboration.
+
+\subsection{Gameplay Overview}
+Our game is a first-person shooter inspired by the classic Doom, implemented using Three.js. Players navigate through procedurally generated mazes, interact with doors, follow path markers, and encounter various props while trying to reach their destination. Players can also shoot their gun to open doors, adding a combat element to the navigation mechanics.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{diagrams/screenshot.png}
+    \caption{Gameplay screenshot showing key elements: (A) Debug menu for adjusting game parameters, (B) Closed door with its control panel (C), (D) Path markers guiding the player through an open door, (E) Mini-map displaying player position and path to destination, (F) Barrel spawned as a random prop, and (G) Weapon in gun mode.}
+    \label{fig:gameplay-overview}
+\end{figure}
+
+Figure \ref{fig:gameplay-overview} illustrates the main gameplay elements:
+\begin{itemize}
+    \item \textbf{A:} Debug menu that allows changing camera settings, enabling debug mode, and displays game engine statistics.
+    \item \textbf{B:} A door that was previously opened, allowing passage through the maze.
+    \item \textbf{C:} Door control panel that can be activated by shooting it with the player's weapon.
+    \item \textbf{D:} Path markers showing the optimal route to the destination, guiding the player through an open door.
+    \item \textbf{E:} Mini-map displaying the player's current position in red,  and the path to the destination, marked in green.
+    \item \textbf{F:} Barrel that was procedurally spawned as a random prop in the environment.
+    \item \textbf{G:} The player's weapon in gun mode.
+\end{itemize}
+
+
+\section{Game Engine}
+Before diving into specific features, we'll provide an overview of our custom game engine architecture that powers the entire application.
+
+\subsection{Core Architecture}
+Our game engine follows a component-based design pattern, with a central state management system that coordinates all game elements. The engine is structured around these key components:
+
+\begin{itemize}
+    \item \texttt{GameObject}: An abstract base class that serves as the foundation for all entities in the game world. Each game object automatically registers itself with the state management system upon creation and implements lifecycle methods such as \texttt{animate} (called every frame), \texttt{cleanup}, and \texttt{destroy}.
+
+    \item \texttt{State}: The central management class that maintains references to all active game objects, handles scene configuration, manages the camera system, and coordinates the physics simulation. It provides methods for registering and unregistering game objects, finding objects by type, toggling debug visualization, ...
+
+    \item \texttt{Physics}: A collision detection and resolution system that uses axis-aligned bounding boxes (AABBs) to represent object boundaries. The physics system calculates collision corrections and applies them to maintain proper object separation. For efficient collision detection, we implemented an octree-based spatial partitioning system (explained in detail in the Space Partitioning section), which significantly reduces the number of collision checks by organizing objects hierarchically based on their spatial location.
+\end{itemize}
+
+\subsection{Game Loop}
+The engine implements a standard game loop that:
+
+\begin{enumerate}
+    \item Calls the \texttt{animate} method on the state, which in turn calls all registered game objects.
+    \item Updates the physics system and rebuilds the dynamic octree.
+    \item Renders the scene.
+\end{enumerate}
+
+This architecture provides a solid foundation for implementing the game-specific features described in the following sections.
+
+\section{Maze Generation}
+First, we will start by explaining our maze generation algorithm, which forms the foundation of our game's level design.
+
+\subsection{Implementation}
+
+The maze generation system is implemented as a modular component in the utils directory. It provides function for creating the abstract maze structure but not for converting it to the physical 3D environment. This separation of concerns allows the maze logic to be tested independently from the game rendering system while maintaining a clean integration between the two.
+
+\subsubsection{Data Structures}
+The maze is represented by a grid of cells, where each cell contains information about its walls and visited state:
+\begin{itemize}
+    \item \texttt{Cell}: A type representing a single cell in the maze with properties for walls (north, east, south, west) and a visited flag.
+    \item \texttt{Grid}: A type containing an array of cells and dimensions (number of rows and columns).
+    \item \texttt{Pos}: A type alias for a position in the grid, represented as [row, column].
+\end{itemize}
+
+\subsubsection{Generation Algorithm}
+The maze generation follows these steps:
+\begin{enumerate}
+    \item Initialize a grid where all cells have all four walls intact and are marked as unvisited.
+    \item Start at a cell (typically [0,0]) and mark it as visited.
+    \item Push the starting cell onto a stack to track the path.
+    \item While the stack is not empty:
+    \begin{enumerate}
+        \item Get the current cell from the top of the stack.
+        \item If the current cell has any unvisited neighbors:
+        \begin{enumerate}
+            \item Choose one randomly.
+            \item Remove the wall between the current cell and the chosen neighbor.
+            \item Mark the neighbor as visited.
+            \item Push the neighbor onto the stack.
+        \end{enumerate}
+        \item If there are no unvisited neighbors, pop the current cell from the stack (backtrack).
+    \end{enumerate}
+\end{enumerate}
+
+This algorithm ensures that every cell in the maze is reachable from any other cell, creating a perfect maze with exactly one path between any two points.
+
+\subsubsection{Upscaling}
+The implementation includes an optional upscaling feature that doubles the effective resolution of the maze by inserting buffer cells between the original cells. This creates a more visually appealing maze with wider corridors while maintaining the logical structure of the original maze. Additionally, the upscaling process leaves room between parallel hallways, providing space for game elements such as doors to animate into when opened, enhancing the interactive experience without causing clipping or collision issues. Figure \ref{fig:maze-spacing} illustrates the difference between a maze without spacing and one with spacing, clearly showing how the upscaling creates buffer zones between parallel corridors.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{diagrams/spacing.png}
+    \caption{Comparison of a 10x10 maze: left without spacing, right with spacing, viewed from the top in debug mode. Notice the extra spacing making sure that parallel hallways do not touch.}
+    \label{fig:maze-spacing}
+\end{figure}
+
+\subsubsection{Pathfinding}
+The implementation features an efficient A* pathfinding algorithm that calculates optimal routes between any two points in the maze. This algorithm employs a Manhattan distance heuristic—particularly suitable for grid-based movement—and accounts for walls when evaluating potential paths. The pathfinding system provides visual guidance for players through path markers that highlight the shortest route to objectives. The algorithm maintains separate data structures for tracking both the cost of the path so far (g-score) and the estimated total cost to the destination (f-score), ensuring optimal path discovery even in complex maze configurations.
+
+
+\section{3D World Organization}
+Our 3D world uses a modular approach with standardized hallway units as building blocks, optimizing both performance and visual quality.
+
+The world is built on a grid of uniform hallway segments, each occupying one grid cell with consistent dimensions. Hallways have identical outer dimensions with internal variations (straight, corner, junction) and are positioned using precise grid coordinates. While hallway elements are hierarchically organized in the Three.js scene, our GameObject system maintains a flat structure for efficient game logic.
+
+Our system loads all hallway variants from a single GLB file and clones meshes rather than creating new geometry for each instance. Materials and environment maps are cached to prevent redundant creation. This approach significantly reduces memory usage and draw calls, enabling efficient rendering of large mazes.
+
+The player exists as a separate entity from the environment structure, comprising a first-person camera at eye level, a weapon model in the lower view portion, collision geometry for physical interaction, and independent movement and interaction logic. The player navigates through the hallway grid using keyboard and mouse controls, with collision detection preventing movement through walls and other obstacles. The camera's position and orientation update in real-time based on player input, creating a smooth first-person experience.
+
+Our world features several dynamic elements: sliding doors that update collision geometry in real-time; interactive door control panels; sprite-based path markers; procedurally distributed props; and temporary bullet impact markers that fade over time to maintain performance while providing visual feedback (see Figure~\ref{fig:bullet-markers}). All these elements—doors, control panels, props, and other interactive objects—are implemented as children of their respective hallway parts in the scene hierarchy, maintaining a clean organizational structure while preserving the flat GameObject system for game logic.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{diagrams/bullets.png}
+    \caption{Bullet impact markers on walls that gradually fade over time and are eventually deleted to conserve resources, providing visual feedback of weapon impacts while maintaining performance.}
+    \label{fig:bullet-markers}
+\end{figure}
+
+
+\section{User Controls and Movement}
+Our Doom clone implements a classic first-person shooter control scheme. Player movement is controlled using the WASD keys, with W and S for forward and backward movement, and A and D for strafing left and right. Mouse input controls the camera rotation, allowing players to look around the environment with configurable sensitivity parameters.
+
+The movement system applies the player's directional input to a normalized vector, which is then rotated according to the player's current view direction. This creates the expected behavior where pressing W always moves the player forward relative to their view. Movement velocity is controlled by adjustable speed parameters and is framerate-independent thanks to delta time scaling.Collision detection prevents the player from moving through walls, this is explained later.
+
+The game also features immersive visual feedback during movement, with a weapon bob animation that simulates the natural motion of carrying a weapon while walking. This is achieved by applying sinusoidal oscillations to the weapon position based on the player's movement state. Additionally, the weapon model automatically lowers when the player approaches a wall, providing a realistic response to close-proximity obstacles and preventing clipping issues.
+
+\section{Rendering Components}
+
+\subsection{Lighting}
+The game uses a global ambient light for base illumination. Hallway light fixtures use diffuse materials to emit a soft glow, providing localized illumination without requiring expensive dynamic lighting calculations. Figure \ref{fig:lights} shows an example of these light fixtures in the game.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{diagrams/lights.png}
+\caption{Light fixtures in hallways providing illumination.}
+\label{fig:lights}
+\end{figure}
+
+\subsection{Fog}
+A simple exponential fog is used to create an atmosphere in the game. Figure \ref{fig:fog} shows an example of fog in the game.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{diagrams/fog.png}
+\caption{Example of fog in the game. The end of this hallway can hardly be seen.}
+\label{fig:fog}
+\end{figure}
+
+\subsection{Hallways}
+Hallway segments use standard materials with multiple texture maps and levels: diffuse maps for base color, normal maps for surface detail, metalness maps for reflective properties, roughness value, and environment maps for reflections.
+
+Environment maps are generated for each hallway type and orientation using a cube camera at launch. A material cache system prevents redundant material creation, reducing memory usage and improving performance. So hallways with the same type and orientation share the same material and thus the same environment map.
+
+\subsection{Props}
+Props use simpler material configurations than hallways: basic texture maps for diffuse color, global metalness and roughness values, and shared environment maps from their parent hallway.
+
+Barrel props use the same environment map as their containing hallway with fixed material properties. A dedicated material cache prevents duplicate materials, reducing draw calls.
+
+\subsection{Reflections}
+Reflections are achieved through environment mapping. The lights from hallway fixtures are reflected on walls and props as shown in Figure \ref{fig:reflections}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{diagrams/reflection.png}
+\caption{Reflections of the lights shown in Figure \ref{fig:lights}, on walls and props using environment maps. Seen in this image as horizontal white lines in the reflections.}
+\label{fig:reflections}
+\end{figure}
+
+This pre-generated environment map approach provides convincing reflections at a fraction of the computational cost of real-time reflections. Material properties determine reflection characteristics, with metallic surfaces showing sharper reflections.
+
+This component-based approach, combined with extensive caching of materials and environment maps, allows our game to maintain visual quality while ensuring smooth performance even on less powerful hardware.
+
+\section{Collision Detection Using Octree}
+
+For efficient collision detection, we employ an octree-based spatial
+partitioning system. This significantly reduces the computational complexity of
+detecting object interactions.
+
+\subsection{Octree Implementation}
+
+Our implementation uses a standard octree data structure with some
+optimizations for performance and memory efficiency.
+
+The octree stores elements in a backing list and the nodes of the octree store
+indices into this list. This allows multiple octree nodes to reference the same
+element without duplication. This is required as large objects can span
+multiple partitions.
+
+For efficient octant indexing, we use bit patterns to index the octree,
+leveraging the 1-1 mapping between 3 bits and 8 octants (each bit corresponds
+to an axis).
+
+To prevent excessive subdivision in dense areas, we add a depth limit for the
+octree. Excessive subdivision leads to diminishing returns in performance and
+increased memory usage.
+
+We implement removal from the octtree by marking elements as dead in the
+backing list rather than physically removing them from the nodes. This approach
+avoids costly array operations and simplifies the tree maintenance logic. Dead
+elements are discarded in the next rebuild.
+
+\subsubsection{Computational Complexity}
+An octree has the following scaling behavior:
+\begin{itemize}
+	\item \textbf{Construction}: $O(n \log n)$, adding an element is
+		$O(\log n)$ and we add  elements
+
+	\item \textbf{Query}: $O(\log n + k)$, finding the element is $O(\log n)$
+		and delivers a subset of size $k$ which needs to be checked linearly.
+\end{itemize}
+
+The practical benefits of our octree implementation are quantified in the
+benchmarks presented in Section \ref{sec:benchmarking}.
+
+\subsection{Engine Integration}
+Our engine maintains two separate octrees: one for static objects (walls,
+floors, stationary props) and another for dynamic objects (player, moving
+doors). The static tree only builds on level-load while the dynamic tree
+updates every frame. This reduces the cost of rebuilding..
+
+Game objects must manage their own colliders. They must register
+and unregister them with the state management system. This registration process
+includes a flag to specify whether the collider should be added to the static
+or dynamic tree. They are also responsible for resolving their own collisions.
+
+For debugging purposes, we implemented a visualization system that renders the
+octree structure with color coding based on depth.  This is visualised in
+Figure~\ref{fig:octree}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{diagrams/octree.png}
+    \caption{Screenshot of our debugging view showing the octtree.}
+    \label{fig:octree}
+\end{figure}
+
+\subsection{Collision Resolution}
+
+Since our game world is organized on a grid, we use axis-aligned bounding boxes
+(AABBs) as colliders. In order to resolve possible collisions for a given
+object, we first query both the static and dynamic octrees to retrieve all
+colliders that share the same spatial partition . We then determine the amount
+of overlap between the colliding objects. The system then implements minimum
+penetration axis selection by comparing overlaps in the X, Y, and Z directions
+and only applies that correction (separating axis theorem). Multiple
+simultaneous collisions are handled via a component-wise maximum displacement.
+
+\section{Benchmarking}\label{sec:benchmarking}
+To assess the performance and efficiency of our implementation, we conducted a
+series of controlled tests focusing on key areas that affect gameplay and user
+experience. These benchmarks provide quantitative data on how our design
+choices impact performance as scale increases, helping to identify optimization
+opportunities and hardware requirements.
+
+\subsection{Maze Size Performance Analysis}
+To evaluate the scalability of our implementation, we conducted performance tests with mazes of increasing size. All tests were performed on a MacBook Air (2022) with an Apple M2 chip, 8-core CPU, 8-core GPU, and 24GB of unified memory. The performance was measured in frames per second (FPS) while maintaining all graphical settings and game features at consistent levels.
+
+Table \ref{tab:maze-performance} presents the relationship between maze dimensions, scene complexity (measured by the number of game objects and meshes), and rendering performance. The maze dimensions represent the logical grid size before upscaling, while the total tiles indicate the actual number of navigable cells in the generated maze.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        \textbf{Maze Size} & \textbf{Total Tiles} & \textbf{Game Objects} & \textbf{Mesh Count} & \textbf{FPS} \\ \hline
+        10×10 & 100 & 204 & 697 & 100 \\ \hline
+        20×20 & 400 & 904 & 2,844 & 100 \\ \hline
+        40×40 & 1,600 & 3,204 & 11,595 & 50 \\ \hline
+        80×80 & 6,400 & 12,804 & 46,477 & 10 \\ \hline
+        160×160 & 25,600 & 51,204 & 187,113 & 2.5 \\ \hline
+    \end{tabular}
+    \caption{Performance metrics for different maze sizes showing the relationship between maze dimensions, scene complexity, and frame rate.}
+    \label{tab:maze-performance}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        width=0.8\textwidth,
+        height=8cm,
+        xlabel={Maze Size (Total Tiles)},
+        ylabel={Frames Per Second (FPS)},
+        xmode=log,
+        ymode=log,
+        log basis x=10,
+        log basis y=10,
+        grid=both,
+        legend pos=north east,
+        xmin=50, xmax=50000,
+        ymin=1, ymax=200,
+        xtick={100,1000,10000},
+        xticklabels={$10^2$,$10^3$,$10^4$},
+        ytick={1,10,100},
+        yticklabels={1,10,100},
+        title={Performance Scaling with Maze Size}
+    ]
+
+    % FPS vs Total Tiles data points
+    \addplot[color=blue,mark=*,thick] coordinates {
+        (100, 100)
+        (400, 100)
+        (1600, 50)
+        (6400, 10)
+        (25600, 2.5)
+    };
+
+    % Theoretical inverse relationship curve (1/x)
+    \addplot[color=red,dashed,domain=100:25600,samples=100] {10000/x};
+
+    \legend{Measured FPS, Theoretical $O(1/n)$ scaling}
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Log-log plot showing the relationship between maze size (total tiles) and performance (FPS). The dashed red line represents theoretical inverse scaling, demonstrating how our implementation closely follows expected performance characteristics as scene complexity increases.}
+    \label{fig:performance-scaling}
+\end{figure}
+
+As evident from the data, our implementation maintains an optimal frame rate of 100 FPS for mazes up to 20×20 (400 tiles), demonstrating that the game is well-optimized for small to medium-sized environments. Note that the 100 FPS ceiling is due to the testing monitor's maximum refresh rate; the actual performance for smaller mazes may exceed this value. Performance begins to degrade at 40×40 (1,600 tiles), dropping to 50 FPS, which is still playable but shows the increasing computational demands.
+
+At the extreme end, the 160×160 maze (containing 25,600 tiles and over 187,000 meshes) pushes the hardware to its limits, resulting in only 5 FPS. While not playable, this test demonstrates the upper bounds of our implementation on consumer hardware and provides valuable insights for future optimization efforts.
+
+\subsection{Octree Performance Analysis}
+To evaluate the efficiency of our octree, we conduct a series of benchmarks.
+
+We first focus on query-time and compare it with linear search. For this test,
+we distribute elements with varyingsize bouding boxes (1-5 units) uniformly in
+the world (1000 units per side). For the queries, we generate 100 random
+query regions with varying sizes (20-50 units).
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \begin{tikzpicture}
+        \begin{axis}[
+            width=\textwidth,
+            height=7cm,
+            xlabel={Number of Elements},
+            ylabel={Time (ms)},
+            xmode=log,
+            ymode=log,
+            log basis x=10,
+            log basis y=10,
+            grid=both,
+            legend style={font=\footnotesize},
+            legend pos=north west,
+            xmin=5, xmax=20000,
+            ymin=0.1, ymax=100,
+            xtick={10,100,1000,10000},
+            xticklabels={10,100,1000,10000},
+            title={Query Performance}
+        ]
+
+        % Octree performance data - using the actual benchmark results
+        \addplot[color=blue,mark=*,thick] coordinates {
+            (10, 0.25027399999999034)
+            (100, 0.18848500000001422)
+            (1000, 0.28497500000000286)
+            (10000, 0.5123340000000098)
+        };
+
+        % Linear search performance data - using the actual benchmark results
+        \addplot[color=red,mark=square,thick] coordinates {
+            (10, 0.4036879999999883)
+            (100, 1.584793999999988)
+            (1000, 6.508582000000018)
+            (10000, 40.54182000000003)
+        };
+
+        % Theoretical O(log n) scaling for reference
+        \addplot[color=black,dashed,domain=10:10000,samples=100] {0.05*ln(x)/ln(10)};
+
+        % Theoretical O(n) scaling for reference
+        \addplot[color=gray,dashed,domain=10:10000,samples=100] {0.025*x};
+
+        \legend{Octree Query, Linear Search, O(log n), O(n)}
+        \end{axis}
+        \end{tikzpicture}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \begin{tikzpicture}
+        \begin{axis}[
+            width=\textwidth,
+            height=7cm,
+            xlabel={Number of Elements},
+            ylabel={Speedup Factor},
+            xmode=log,
+            ymode=log,
+            log basis x=10,
+            grid=both,
+            legend style={font=\footnotesize},
+            legend pos=north west,
+            xmin=5, xmax=20000,
+            ymin=1, ymax=100,
+            xtick={10,100,1000,10000},
+            xticklabels={10,100,1000,10000},
+            title={Performance Speedup}
+        ]
+
+        % Speedup data - using the actual benchmark results
+        \addplot[color=green,mark=triangle,thick] coordinates {
+            (10, 1.6129841693504074)
+            (100, 8.408064302198415)
+            (1000, 22.839133257303107)
+            (10000, 79.13162116900158)
+        };
+
+        % Theoretical O(n/log n) scaling for reference
+        \addplot[color=black,dashed,domain=10:10000,samples=100] {x/ln(x)*0.2};
+
+        \legend{Measured Speedup, O(n/log n)}
+        \end{axis}
+        \end{tikzpicture}
+    \end{minipage}
+    \caption{Octree performance comparison. Left: Log-log plot of query time for octree vs. linear search, showing how octree performance follows logarithmic scaling while linear search scales linearly. Right: Speedup factor of octree-based queries compared to linear search, demonstrating efficiency gains that grow with scene complexity.}
+    \label{fig:octree-performance}
+\end{figure}
+
+As shown in Figure \ref{fig:octree-performance}, octree query time scales
+approximately logarithmically with the number of elements, while linear search
+exhibits the expected linear scaling.
+
+
+These performance characteristics enable our game to maintain interactive frame
+rates even in complex environments with numerous dynamic objects, confirming
+that the octree implementation successfully addresses the computational
+challenges of collision detection at scale.
+
+\subsection{Octree Insertion Performance}
+
+We also benchmark the insertion performance, for this test, we varied several parameters:
+\begin{itemize}
+    \item \textbf{Element Count}: From 10 to 100,000 elements
+    \item \textbf{World Size}: 100, 1,000, and 10,000 units per side
+    \item \textbf{Capacity}: Maximum number of elements in a node before subdivision (4, 8, and 16)
+    \item \textbf{Max Depth}: Maximum allowed depth of the octree (4, 8, and 12)
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \begin{tikzpicture}
+        \begin{axis}[
+            width=\textwidth,
+            height=7cm,
+            xlabel={Number of Elements},
+            ylabel={Time (ms)},
+            xmode=log,
+            ymode=log,
+            log basis x=10,
+            log basis y=10,
+            grid=both,
+            legend style={font=\footnotesize},
+            legend pos=north west,
+            xmin=5, xmax=200000,
+            ymin=0.1, ymax=1000,
+            xtick={10,100,1000,10000,100000},
+            xticklabels={10,100,1000,10000,100000},
+            title={Insertion Performance by Capacity}
+        ]
+
+        % Capacity=4 insertion performance data
+        \addplot[color=blue,mark=*,thick] coordinates {
+            (10, 0.0292)
+            (100, 0.2814)
+            (1000, 5.3421)
+            (10000, 28.3874)
+            (50000, 148.3871)
+            (100000, 947.7856)
+        };
+
+        % Capacity=8 insertion performance data
+        \addplot[color=red,mark=square,thick] coordinates {
+            (10, 0.0163)
+            (100, 0.2253)
+            (1000, 3.5429)
+            (10000, 25.9874)
+            (50000, 124.6382)
+            (100000, 496.7506)
+        };
+
+        % Capacity=16 insertion performance data
+        \addplot[color=green,mark=triangle,thick] coordinates {
+            (10, 0.0041)
+            (100, 0.1884)
+            (1000, 2.2847)
+            (10000, 22.9802)
+            (50000, 95.1034)
+            (100000, 177.0052)
+        };
+
+        % Theoretical O(n log n) scaling for reference
+        \addplot[color=black,dashed,domain=10:100000,samples=100] {0.002*x*ln(x)/ln(10)};
+
+        \legend{Capacity=4, Capacity=8, Capacity=16, O(n log n)}
+        \end{axis}
+        \end{tikzpicture}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \begin{tikzpicture}
+        \begin{axis}[
+            width=\textwidth,
+            height=7cm,
+            xlabel={Number of Elements},
+            ylabel={Time (ms)},
+            xmode=log,
+            ymode=log,
+            log basis x=10,
+            log basis y=10,
+            grid=both,
+            legend style={font=\footnotesize},
+            legend pos=north west,
+            xmin=5, xmax=200000,
+            ymin=0.1, ymax=1000,
+            xtick={10,100,1000,10000,100000},
+            xticklabels={10,100,1000,10000,100000},
+            title={Insertion Performance by Max Depth}
+        ]
+
+        % Max Depth=4 insertion performance data
+        \addplot[color=blue,mark=*,thick] coordinates {
+            (10, 0.0163)
+            (100, 0.1875)
+            (1000, 3.1247)
+            (10000, 17.6780)
+            (50000, 77.8358)
+            (100000, 148.2974)
+        };
+
+        % Max Depth=8 insertion performance data
+        \addplot[color=red,mark=square,thick] coordinates {
+            (10, 0.0154)
+            (100, 0.2065)
+            (1000, 3.5418)
+            (10000, 27.6571)
+            (50000, 129.1572)
+            (100000, 423.6847)
+        };
+
+        % Max Depth=12 insertion performance data
+        \addplot[color=green,mark=triangle,thick] coordinates {
+            (10, 0.0148)
+            (100, 0.2193)
+            (1000, 4.3765)
+            (10000, 31.9147)
+            (50000, 160.9682)
+            (100000, 898.9560)
+        };
+
+        \legend{Depth=4, Depth=8, Depth=12}
+        \end{axis}
+        \end{tikzpicture}
+    \end{minipage}
+    \caption{Octree insertion performance analysis. Left: Log-log plot showing how node capacity affects insertion time (with fixed max depth=8, world size=1000). Right: Log-log plot showing how maximum tree depth affects insertion time (with fixed capacity=8, world size=1000).}
+    \label{fig:octree-insertion}
+\end{figure}
+
+Our benchmarks reveal the following insights:
+
+\begin{itemize}
+    \item \textbf{Scaling Behavior}: Insertion time scales approximately as O(n log n) with the number of elements, as expected for tree-based data structures.
+    \item \textbf{Capacity Impact}: Higher capacity values (16) improved insertion performance up to 5.3× compared to lower values (4) at 100,000 elements. Higher capacities reduce tree subdivisions and overhead.
+    \item \textbf{Max Depth Effect}: Shallow trees (max\_depth=4) outperformed deeper trees (max\_depth=12) by up to 6× at large element counts. Excessive subdivision degrades performance without proportional benefits.
+\end{itemize}
+
+
+\section{Conclusion}
+In this project, we successfully developed a Doom-inspired game using Three.js
+that implements a wide range of computer graphics techniques. Our maze
+generation system creates complex, playable environments with optimal
+pathfinding capabilities, while our octree-based spatial partitioning system
+efficiently handles collision detection even in large scenes. Performance
+benchmarks demonstrate that our implementation achieves interactive frame rates
+for reasonably sized mazes, with the octree providing up to 79× speedup
+compared to naive collision detection approaches.
+
+The modular design of our game engine allows for easy extension and
+modification, with a clear separation between game logic and rendering
+components. By implementing advanced features such as dynamic lighting,
+material properties, and physics-based interactions, we've created an immersive
+first-person experience that captures the essence of classic FPS games while
+showcasing modern web-based rendering capabilities.
+
+Throughout development, we faced and overcame several challenges, particularly
+in optimizing performance for larger environments and ensuring consistent
+physics behavior. Future work could focus on further optimizing the rendering
+pipeline, implementing more advanced lighting techniques, and expanding
+gameplay elements with additional enemy types and weapons.
+
+
+\pagebreak
+\section{Art Credits}
+While the focus of this project was on the technical implementation of computer graphics concepts, we utilized several third-party 3D models and textures to enhance the visual quality of our game. All assets were used under appropriate licenses, and modifications were made to better suit our game's aesthetic and technical requirements.
+
+\begin{itemize}
+    \item \textbf{Hallway Modules}: The modular hallway system was based on assets from "Spaceship Modules" by ThisIsBranden, available at \url{https://thisisbranden.itch.io/spaceship-modules}.
+
+    \item \textbf{Environmental Props}: Various props such as barrels and crates were sourced from the "Sci-Fi Assets Pack" available on TurboSquid at \url{https://www.turbosquid.com/3d-models/sci-fi-assets-model-1876664}.
+
+    \item \textbf{Weapon Model}: The player's gun was adapted from the "Sci-Fi DMR" model available on TurboSquid at\\\url{https://www.turbosquid.com/3d-models/3d-scifi-dmr-model-1983451}.
+\end{itemize}
+
+Small modifications were made to these models using Blender. Texture adjustments were performed using Krita. This was done to maintain a consistent visual style throughout the game environment.
+
+\section{Acknowledgment}
+During this project we made use of AI tools to help us write the report and more
+specifically to help us formulate our report in proper academic English. We also
+utilized AI assistance during code development to speed up certain aspects of development.
+
+% \pagebreak
+% \nocite{*}
+% \bibliographystyle{apacite}
+% \bibliography{references}
+
+\end{document}
