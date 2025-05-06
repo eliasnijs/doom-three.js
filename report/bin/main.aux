@@ -1,16 +1,5 @@
 \relax 
 \providecommand\hyper@newdestlabel[2]{}
-\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
-\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
-\global\let\oldnewlabel\newlabel
-\gdef\newlabel#1#2{\newlabelxx{#1}#2}
-\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
-\AtEndDocument{\ifx\hyper@anchor\@undefined
-\let\newlabel\oldnewlabel
-\fi}
-\fi}
-\global\let\hyper@last\relax 
-\gdef\HyperFirstAtBeginDocument#1{#1}
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Gameplay screenshot of our Doom-inspired game implemented in Three.js.}}{2}{figure.1}\protected@file@percent }
@@ -19,8 +8,8 @@
 \newlabel{sec:introduction}{{1}{2}{Introduction}{section.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Tech Choices}{2}{subsection.1.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Gameplay Overview}{2}{subsection.1.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Gameplay screenshot showing key elements: (A) Debug menu for adjusting game parameters, (B) Closed door with its control panel (C), (D) Path markers guiding the player through an open door, (E) Mini-map displaying player position and path to destination, (F) Barrel spawned as a random prop, and (G) Weapon in gun mode.}}{3}{figure.2}\protected@file@percent }
-\newlabel{fig:gameplay-overview}{{2}{3}{Gameplay screenshot showing key elements: (A) Debug menu for adjusting game parameters, (B) Closed door with its control panel (C), (D) Path markers guiding the player through an open door, (E) Mini-map displaying player position and path to destination, (F) Barrel spawned as a random prop, and (G) Weapon in gun mode}{figure.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Gameplay screenshot showing key elements: (A) Debug menu for adjusting game parameters, (B) Closed door with its control panel (C), (D) Path markers guiding the player through an open door, (E) Mini-map displaying player position and path to destination, (F) Barrel spawned as a random prop, and (G) The player's weapon.}}{3}{figure.2}\protected@file@percent }
+\newlabel{fig:gameplay-overview}{{2}{3}{Gameplay screenshot showing key elements: (A) Debug menu for adjusting game parameters, (B) Closed door with its control panel (C), (D) Path markers guiding the player through an open door, (E) Mini-map displaying player position and path to destination, (F) Barrel spawned as a random prop, and (G) The player's weapon}{figure.2}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {2}Game Engine}{4}{section.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Core Architecture}{4}{subsection.2.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Game Loop}{4}{subsection.2.2}\protected@file@percent }
@@ -41,22 +30,22 @@
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Light fixtures in hallways providing illumination.}}{8}{figure.5}\protected@file@percent }
 \newlabel{fig:lights}{{5}{8}{Light fixtures in hallways providing illumination}{figure.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Fog}{8}{subsection.6.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Hallways}{8}{subsection.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Hallway Materials and Reflections}{8}{subsection.6.3}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Example of fog in the game. The end of this hallway can hardly be seen.}}{9}{figure.6}\protected@file@percent }
 \newlabel{fig:fog}{{6}{9}{Example of fog in the game. The end of this hallway can hardly be seen}{figure.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Props}{9}{subsection.6.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Reflections}{9}{subsection.6.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7}Collision Detection Using Octree}{9}{section.7}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Reflections of the lights shown in Figure \ref {fig:lights}, on walls and props using environment maps. Seen in this image as horizontal white lines in the reflections.}}{10}{figure.7}\protected@file@percent }
-\newlabel{fig:reflections}{{7}{10}{Reflections of the lights shown in Figure \ref {fig:lights}, on walls and props using environment maps. Seen in this image as horizontal white lines in the reflections}{figure.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Prop Materials and Inheritance}{9}{subsection.6.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Reflection Rendering Strategy}{9}{subsection.6.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Reflections of the lights shown in Figure~\ref {fig:lights} on walls and props using environment maps. The horizontal white lines indicate reflected light.}}{10}{figure.7}\protected@file@percent }
+\newlabel{fig:reflections}{{7}{10}{Reflections of the lights shown in Figure~\ref {fig:lights} on walls and props using environment maps. The horizontal white lines indicate reflected light}{figure.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Collision Detection Using Octree}{10}{section.7}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Octree Implementation}{10}{subsection.7.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {7.1.1}Computational Complexity}{10}{subsubsection.7.1.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Engine Integration}{11}{subsection.7.2}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Screenshot of our debugging view showing the octtree.}}{11}{figure.8}\protected@file@percent }
 \newlabel{fig:octree}{{8}{11}{Screenshot of our debugging view showing the octtree}{figure.8}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Collision Resolution}{11}{subsection.7.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {8}Benchmarking}{11}{section.8}\protected@file@percent }
-\newlabel{sec:benchmarking}{{8}{11}{Benchmarking}{section.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Benchmarking}{12}{section.8}\protected@file@percent }
+\newlabel{sec:benchmarking}{{8}{12}{Benchmarking}{section.8}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Maze Size Performance Analysis}{12}{subsection.8.1}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Performance metrics for different maze sizes showing the relationship between maze dimensions, scene complexity, and frame rate.}}{12}{table.1}\protected@file@percent }
 \newlabel{tab:maze-performance}{{1}{12}{Performance metrics for different maze sizes showing the relationship between maze dimensions, scene complexity, and frame rate}{table.1}{}}

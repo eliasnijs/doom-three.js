@@ -70,15 +70,15 @@
 
 \section{Introduction}\label{sec:introduction}
 \subsection{Tech Choices}
-Our project uses Three.js, a lightweight JavaScript library that abstracts WebGL for accessible 3D graphics programming in browsers. We chose it for its robust ecosystem, documentation, and optimized web rendering performance. Development is powered by Vite for fast server capabilities, and we implemented the codebase in TypeScript to benefit from static typing, which improves code reliability and facilitates better team collaboration.
+Our project uses Three.js, a lightweight JavaScript library that abstracts WebGL for accessible 3D graphics programming in browsers. It was a good choice for its robust ecosystem, documentation, and optimized web rendering performance. Development is powered by Vite for fast server capabilities, and we implemented the codebase in TypeScript to benefit from static typing, which improves code reliability and facilitates better team collaboration.
 
 \subsection{Gameplay Overview}
-Our game is a first-person shooter inspired by the classic Doom, implemented using Three.js. Players navigate through procedurally generated mazes, interact with doors, follow path markers, and encounter various props while trying to reach their destination. Players can also shoot their gun to open doors, adding a combat element to the navigation mechanics.
+Our game is a first-person shooter inspired by the classic Doom. Players navigate through procedurally generated mazes, interact with doors, follow path markers, and encounter various props while trying to reach their destination. Players can also shoot their gun to open doors, adding an interactive element to the navigation mechanics.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{diagrams/screenshot.png}
-    \caption{Gameplay screenshot showing key elements: (A) Debug menu for adjusting game parameters, (B) Closed door with its control panel (C), (D) Path markers guiding the player through an open door, (E) Mini-map displaying player position and path to destination, (F) Barrel spawned as a random prop, and (G) Weapon in gun mode.}
+    \caption{Gameplay screenshot showing key elements: (A) Debug menu for adjusting game parameters, (B) Closed door with its control panel (C), (D) Path markers guiding the player through an open door, (E) Mini-map displaying player position and path to destination, (F) Barrel spawned as a random prop, and (G) The player's weapon.}
     \label{fig:gameplay-overview}
 \end{figure}
 
@@ -90,7 +90,7 @@ Figure \ref{fig:gameplay-overview} illustrates the main gameplay elements:
     \item \textbf{D:} Path markers showing the optimal route to the destination, guiding the player through an open door.
     \item \textbf{E:} Mini-map displaying the player's current position in red,  and the path to the destination, marked in green.
     \item \textbf{F:} Barrel that was procedurally spawned as a random prop in the environment.
-    \item \textbf{G:} The player's weapon in gun mode.
+    \item \textbf{G:} The player's gun.
 \end{itemize}
 
 
@@ -112,7 +112,7 @@ Our game engine follows a component-based design pattern, with a central state m
 The engine implements a standard game loop that:
 
 \begin{enumerate}
-    \item Calls the \texttt{animate} method on the state, which in turn calls all registered game objects.
+    \item Calls the \texttt{animate} method on the state, which in turn calls all it on all registered game objects.
     \item Updates the physics system and rebuilds the dynamic octree.
     \item Renders the scene.
 \end{enumerate}
@@ -218,29 +218,30 @@ A simple exponential fog is used to create an atmosphere in the game. Figure \re
 \label{fig:fog}
 \end{figure}
 
-\subsection{Hallways}
-Hallway segments use standard materials with multiple texture maps and levels: diffuse maps for base color, normal maps for surface detail, metalness maps for reflective properties, roughness value, and environment maps for reflections.
+\subsection{Hallway Materials and Reflections}
 
-Environment maps are generated for each hallway type and orientation using a cube camera at launch. A material cache system prevents redundant material creation, reducing memory usage and improving performance. So hallways with the same type and orientation share the same material and thus the same environment map.
+Each hallway segment uses a standardized material system composed of multiple texture maps: diffuse maps for base color, normal maps for surface detail, metalness maps to define reflective characteristics, roughness values to control reflection blurriness, and environment maps to simulate reflections from the surrounding scene.
 
-\subsection{Props}
-Props use simpler material configurations than hallways: basic texture maps for diffuse color, global metalness and roughness values, and shared environment maps from their parent hallway.
+At launch, we generate a unique environment map for every hallway type and orientation using a cube camera. These maps provide dynamic yet efficient reflections by precomputing the surrounding lighting environment. A material cache ensures that hallway segments with the same type and orientation reuse the same material and environment map. This significantly reduces memory overhead and improves rendering performance.
 
-Barrel props use the same environment map as their containing hallway with fixed material properties. A dedicated material cache prevents duplicate materials, reducing draw calls.
+\subsection{Prop Materials and Inheritance}
 
-\subsection{Reflections}
-Reflections are achieved through environment mapping. The lights from hallway fixtures are reflected on walls and props as shown in Figure \ref{fig:reflections}.
+Props embedded within hallways use a simplified material configuration. They rely on basic diffuse texture maps for color, global metalness and roughness values shared across all props, and the inherited environment map from their parent hallway segment.
+
+This approach eliminates the need for generating unique environment maps for each prop. Instead, props reflect their environment based on the surrounding hallway’s precomputed reflections. As with hallways, a dedicated material cache prevents duplication and reduces draw calls, contributing to performance gains.
+
+\subsection{Reflection Rendering Strategy}
+
+Reflections in the scene are implemented via the pre-generated environment maps. These maps accurately reflect light sources—such as hallway fixtures—on nearby surfaces. Figure~\ref{fig:reflections} demonstrates how these reflections appear on both walls and props, visible as horizontal highlights from light sources.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.8\textwidth]{diagrams/reflection.png}
-\caption{Reflections of the lights shown in Figure \ref{fig:lights}, on walls and props using environment maps. Seen in this image as horizontal white lines in the reflections.}
+\caption{Reflections of the lights shown in Figure~\ref{fig:lights} on walls and props using environment maps. The horizontal white lines indicate reflected light.}
 \label{fig:reflections}
 \end{figure}
 
-This pre-generated environment map approach provides convincing reflections at a fraction of the computational cost of real-time reflections. Material properties determine reflection characteristics, with metallic surfaces showing sharper reflections.
-
-This component-based approach, combined with extensive caching of materials and environment maps, allows our game to maintain visual quality while ensuring smooth performance even on less powerful hardware.
+By relying on cached, precomputed reflections, we avoid the high computational cost of real-time reflection techniques. Reflection sharpness and intensity are controlled through each material’s metalness and roughness settings. This component-based, cache-efficient strategy ensures consistent visual fidelity and optimized performance, even on lower-end systems.
 
 \section{Collision Detection Using Octree}
 
