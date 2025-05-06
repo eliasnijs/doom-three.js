@@ -1,8 +1,7 @@
-import { Color, Vector2, WebGLRenderer } from 'three'
+import { Color, WebGLRenderer } from 'three'
 // --- Bloom imports ---
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass'
 
 import { createMap } from './engine/map.ts'
 import { State } from './engine/state.ts'
@@ -38,8 +37,8 @@ async function main(renderer: WebGLRenderer) {
 
 	windowInit(renderer)
 
-	const MAX_DIMENSION = (Math.max(MAZE_X_SIZE, MAZE_Z_SIZE) + 2) * GRID_SIZE; // add +2 for margin
-	const state = new State(MAX_DIMENSION, renderer);
+	const MAX_DIMENSION = (Math.max(MAZE_X_SIZE, MAZE_Z_SIZE) + 2) * GRID_SIZE // add +2 for margin
+	const state = new State(MAX_DIMENSION, renderer)
 	const debugPanel = new DebugPanel(state, renderer)
 	await createMap(debugPanel, state, renderer)
 	new MazePanel(state, renderer)
@@ -49,6 +48,7 @@ async function main(renderer: WebGLRenderer) {
 	renderPass = new RenderPass(state.scene, state.activeCamera)
 	composer.addPass(renderPass)
 
+	// Bloom disabled due to performance issues
 	// const bloomPass = new UnrealBloomPass(
 	// 	new Vector2(window.innerWidth, window.innerHeight),
 	// 	0.5, // strength

@@ -13,7 +13,7 @@ export async function createMap(debugPanel: DebugPanel, state: State, renderer: 
 	const hallwayObjects = await loadHallwayObjects()
 	const propsObjects = await loadPropsObjects()
 
-	// Maze sizes needd to be even
+	// Maze sizes need to be even
 	if (MAZE_Z_SIZE % 2 !== 0 || MAZE_X_SIZE % 2 !== 0) {
 		throw new Error('Maze sizes need to be even')
 	}

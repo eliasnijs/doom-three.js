@@ -75,6 +75,7 @@ export interface OctTree {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Utility Functions
 
+// Returns the octants that the given bounding box overlaps with
 function getOctants(origin: Vector3, size: number, bbl: Vector3, ftr: Vector3): Octant[] {
 	const midPoint = origin.clone().add(new Vector3(size / 2, size / 2, size / 2))
 	const atLeft = bbl.x < midPoint.x
@@ -100,6 +101,7 @@ function getOctants(origin: Vector3, size: number, bbl: Vector3, ftr: Vector3): 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Implementation
 
+// Initializes a new octree with the specified parameters
 export function octTreeInitialize(origin: Vector3, width: number, capacity: number, maxDepth: number): OctTree {
 	const root: CTU = {
 		origin: origin,
@@ -121,9 +123,10 @@ export function octTreeInitialize(origin: Vector3, width: number, capacity: numb
 	}
 }
 
+// Helper function to recursively insert an element into the correct octants
 function _insertRecurse(tree: OctTree, n: CTU, i: number, remainingDepth: number): void {
 	if (tree.elements[i] === undefined) {
-		return
+		return // Skip undefined elements
 	}
 
 	const pos = tree.elements[i].ref.mesh.position
@@ -139,17 +142,18 @@ function _insertRecurse(tree: OctTree, n: CTU, i: number, remainingDepth: number
 			throw new Error('No octants')
 		}
 
-		_insert(tree, n.octants[octant], i, remainingDepth - 1)
+		_insert(tree, n.octants[octant], i, remainingDepth - 1) // Recurse into child octant
 	}
 }
 
+// Inserts an element into the octree, splitting nodes as needed
 function _insert(tree: OctTree, n: CTU, element: number, remainingDepth: number): void {
 	if (remainingDepth == 0) {
 		if (!n.leaf) {
 			throw new Error('No leaf')
 		}
 
-		n.leaf.capacity = Number.MAX_SAFE_INTEGER
+		n.leaf.capacity = Number.MAX_SAFE_INTEGER // Unlimited capacity at max depth
 		n.leaf.indices.push(element)
 		++n.leaf.fill
 
@@ -165,7 +169,7 @@ function _insert(tree: OctTree, n: CTU, element: number, remainingDepth: number)
 
 			return
 		} else {
-			n.state = CtuState.CTU_NODE
+			n.state = CtuState.CTU_NODE // Split leaf into node
 			const octants = [null, null, null, null, null, null, null, null] as [
 				CTU | null,
 				CTU | null,
@@ -200,22 +204,24 @@ function _insert(tree: OctTree, n: CTU, element: number, remainingDepth: number)
 			n.octants = octants as [CTU, CTU, CTU, CTU, CTU, CTU, CTU, CTU]
 
 			for (const i of n.leaf.indices) {
-				_insertRecurse(tree, n, i, remainingDepth - 1)
+				_insertRecurse(tree, n, i, remainingDepth - 1) // Re-insert existing elements
 			}
 
-			n.leaf = null
+			n.leaf = null // Clear leaf data
 		}
 	}
 
-	_insertRecurse(tree, n, element, remainingDepth - 1)
+	_insertRecurse(tree, n, element, remainingDepth - 1) // Recurse for new element
 }
 
+// Public API to insert a BoxCollider into the octree
 export function octTreeInsert(tree: OctTree, element: BoxCollider): void {
 	const elementsLength = tree.elements.length
 	tree.elements.push(element)
 	_insert(tree, tree.root, elementsLength, tree.maxDepth)
 }
 
+// Helper to recursively collect all indices that overlap a bounding box
 function _get(tree: OctTree, n: CTU, bbl: Vector3, ftr: Vector3, result: Set<number>): void {
 	if (n.state === CtuState.CTU_LEAF) {
 		if (!n.leaf) {
@@ -240,10 +246,11 @@ function _get(tree: OctTree, n: CTU, bbl: Vector3, ftr: Vector3, result: Set<num
 			throw new Error('No octants')
 		}
 
-		_get(tree, n.octants[octant], bbl, ftr, result)
+		_get(tree, n.octants[octant], bbl, ftr, result) // Recurse into child octant
 	}
 }
 
+// Public API to get all BoxColliders overlapping a bounding box
 export function octTreeGet(tree: OctTree, bbl: Vector3, ftr: Vector3): BoxCollider[] {
 	const indexSet: Set<number> = new Set<number>()
 	_get(tree, tree.root, bbl, ftr, indexSet)
@@ -253,14 +260,15 @@ export function octTreeGet(tree: OctTree, bbl: Vector3, ftr: Vector3): BoxCollid
 		.filter((item): item is BoxCollider => item !== undefined)
 }
 
-// NOTE(Elias): dead colliders will be removed at the next rebuild
+// Marks a collider as dead so it will be removed on rebuild
 export function octTreeMarkDead(tree: OctTree, element: BoxCollider): void {
 	const index = tree.elements.findIndex(e => e === element)
 	if (index !== -1) {
-		tree.elements[index] = undefined
+		tree.elements[index] = undefined // Mark as undefined
 	}
 }
 
+// Rebuilds the octree, removing dead elements
 export function octTreeRebuild(tree: OctTree): void {
 	const validElements = tree.elements.filter(element => element !== undefined) as BoxCollider[]
 	const newTree = octTreeInitialize(tree.root.origin.clone(), tree.root.size, tree.capacity, tree.maxDepth)
