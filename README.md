@@ -13,12 +13,12 @@ npm run dev
 
 - [x] Window resizing
 - [x] Drawing geometric primitives
-- [ ] Random maze generation
+- [x] Random maze generation
 	- [x] Maze map
 	- [x] Corridors
 	- [x] Light sources
-	- [ ] Random objects
-	- [ ] Benchmark
+	- [x] Random objects
+	- [x] Benchmark
 	- [ ] Spawnpoints*
 	- [ ] Teleport*
 - [x] UI
@@ -26,19 +26,19 @@ npm run dev
 		- [x] Display shortest path in the game
 	- [x] Select a destination on the map
 	- [x] Debug menu
-- [ ] Shortest path finding
+- [x] Shortest path finding
 	- [x] Implementation
-	- [ ] Benchmark
-- [ ] Animation
+	- [x] Benchmark
+- [x] Animation
 - [x] Mouse and keyboard handling
-- [ ] Usage of light and material properties
+- [x] Usage of light and material properties
 	- [x] Bump maps
 	- [x] Normal maps
-	- [ ] At least one object should have a reflection on the floor.
-- [ ] Space partitioning with octtree
+	- [x] At least one object should have a reflection on the floor.
+- [x] Space partitioning with octtree
 	- [x] Partitioning
 	- [x] collision detection
-	- [ ] Benchmark
+	- [x] Benchmark
 - [ ] Ray intersection can be implemented to include shooting on objects*
 
 ### Gallery
