@@ -632,9 +632,16 @@ distribute them uniformly.
 Our benchmarks reveal the following insights:
 
 \begin{itemize}
-    \item \textbf{Scaling Behavior}: Insertion time scales approximately as O(n log n) with the number of elements, as expected for tree-based data structures.
-    \item \textbf{Capacity Impact}: Higher capacity values (16) improved insertion performance up to 5.3× compared to lower values (4) at 100,000 elements. Higher capacities reduce tree subdivisions and overhead.
-    \item \textbf{Max Depth Effect}: Shallow trees (max\_depth=4) outperformed deeper trees (max\_depth=12) by up to 6× at large element counts. Excessive subdivision degrades performance without proportional benefits.
+    \item \textbf{Scaling Behavior}: Insertion time scales as O(n
+	    log n) with the number of elements.
+    \item \textbf{Capacity Impact}: Higher capacity values (16) improved
+	    insertion performance up to 5.3× compared to lower values (4) at
+		100,000 elements. Higher capacities reduce tree subdivisions
+		and overhead.
+    \item \textbf{Max Depth Effect}: Shallow trees (max\_depth=4) outperformed
+	    deeper trees (max\_depth=12) by up to 6× at large element counts.
+		Excessive subdivision degrades performance without proportional
+		benefits.
 \end{itemize}
 
 
@@ -667,11 +674,18 @@ gameplay elements with additional enemy types and weapons.
 While the focus of this project was on the technical implementation of computer graphics concepts, we utilized several third-party 3D models and textures to enhance the visual quality of our game. All assets were used under appropriate licenses, and modifications were made to better suit our game's aesthetic and technical requirements.
 
 \begin{itemize}
-    \item \textbf{Hallway Modules}: The modular hallway system was based on assets from "Spaceship Modules" by ThisIsBranden, available at \url{https://thisisbranden.itch.io/spaceship-modules}.
+    \item \textbf{Hallway Modules}: The modular hallway system was based on
+	    assets from "Spaceship Modules" by ThisIsBranden, available at
+		\url{https://thisisbranden.itch.io/spaceship-modules}.
 
-    \item \textbf{Environmental Props}: Various props such as barrels and crates were sourced from the "Sci-Fi Assets Pack" available on TurboSquid at \url{https://www.turbosquid.com/3d-models/sci-fi-assets-model-1876664}.
+    \item \textbf{Environmental Props}: Various props such as barrels and
+	    crates were sourced from the "Sci-Fi Assets Pack" available on
+		TurboSquid at
+		\url{https://www.turbosquid.com/3d-models/sci-fi-assets-model-1876664}.
 
-    \item \textbf{Weapon Model}: The player's gun was adapted from the "Sci-Fi DMR" model available on TurboSquid at\\\url{https://www.turbosquid.com/3d-models/3d-scifi-dmr-model-1983451}.
+    \item \textbf{Weapon Model}: The player's gun was adapted from the "Sci-Fi
+	    DMR" model available on TurboSquid
+		at\\\url{https://www.turbosquid.com/3d-models/3d-scifi-dmr-model-1983451}.
 \end{itemize}
 
 Small modifications were made to these models using Blender. Texture adjustments were performed using Krita. This was done to maintain a consistent visual style throughout the game environment.
