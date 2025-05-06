@@ -316,7 +316,9 @@ colliders that share the same spatial partition . We then determine the amount
 of overlap between the colliding objects. The system then implements minimum
 penetration axis selection by comparing overlaps in the X, Y, and Z directions
 and only applies that correction (separating axis theorem). Multiple
-simultaneous collisions are handled via a component-wise maximum displacement.
+simultaneous collisions are handled via a normalised sum. This could probably
+be better dealt with with a component-wise max. However, we decided to keep the
+current implementation as it was already working as intended.
 
 \section{Benchmarking}\label{sec:benchmarking}
 To assess the performance and efficiency of our implementation, we conducted a
