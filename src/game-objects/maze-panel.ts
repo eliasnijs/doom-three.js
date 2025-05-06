@@ -82,6 +82,13 @@ export class MazePanel extends GameObject {
 			if (state.grid && this.pathVisualisation && this.playerPosition) {
 				const cellPos = this.getCellPositionFromEvent(e, state.grid)
 				if (cellPos) {
+					const idx = cellPos[0] * state.grid.nCols + cellPos[1]
+					const cell = state.grid.cells[idx]
+					if (cell.walls.every(w => w)) {
+						// All walls closed, do not allow selection
+						return
+					}
+
 					this.destinationPos = cellPos
 					this.pathVisualisation.setDestination(state, this.destinationPos)
 				}
