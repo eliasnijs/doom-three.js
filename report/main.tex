@@ -69,6 +69,10 @@
 \end{figure}
 
 \section{Introduction}\label{sec:introduction}
+\textit{Doom} is a game that has earned a lasting legacy. Even more, its enduring popularity and
+active fanbase have fostered a tradition of recreating the game in various forms ever since
+the open-sourcing of the original source code. In a similar vein, we develop a simplified
+iteration, \textit{MINI-DOOM}.
 \subsection{Tech Choices}
 Our project uses Three.js, a lightweight JavaScript library that abstracts WebGL for accessible 3D graphics programming in browsers. It was a good choice for its robust ecosystem, documentation, and optimized web rendering performance. Development is powered by Vite for fast server capabilities, and we implemented the codebase in TypeScript to benefit from static typing, which improves code reliability and facilitates better team collaboration.
 
@@ -259,9 +263,8 @@ indices into this list. This allows multiple octree nodes to reference the same
 element without duplication. This is required as large objects can span
 multiple partitions.
 
-For efficient octant indexing, we use bit patterns to index the octree,
-leveraging the 1-1 mapping between 3 bits and 8 octants (each bit corresponds
-to an axis).
+We use bit patterns to index the octree. This leverages the 1-1 mapping between
+3 bits and 8 octants (each bit corresponds to an axis).
 
 To prevent excessive subdivision in dense areas, we add a depth limit for the
 octree. Excessive subdivision leads to diminishing returns in performance and
@@ -272,11 +275,22 @@ backing list rather than physically removing them from the nodes. This approach
 avoids costly array operations and simplifies the tree maintenance logic. Dead
 elements are discarded in the next rebuild.
 
+Other ideas to optimize the octtree include:
+\begin{enumerate}
+	\item Trying to exploit caching behavior more aggresively
+	\item Writing an optimized verion in a language such as C
+	\item At the moment there is a lot of type checking because we are
+		using typescript. In a more efficiency-focussed iteration, we would
+		remove these as certain configurations are impossible by
+		construction and thus don't need to be checked.
+
+\end{enumerate}
+
 \subsubsection{Computational Complexity}
 An octree has the following scaling behavior:
 \begin{itemize}
 	\item \textbf{Construction}: $O(n \log n)$, adding an element is
-		$O(\log n)$ and we add  elements
+		$O(\log n)$ and we add $n$  elements
 
 	\item \textbf{Query}: $O(\log n + k)$, finding the element is $O(\log n)$
 		and delivers a subset of size $k$ which needs to be checked linearly.
@@ -285,11 +299,12 @@ An octree has the following scaling behavior:
 The practical benefits of our octree implementation are quantified in the
 benchmarks presented in Section \ref{sec:benchmarking}.
 
+
 \subsection{Engine Integration}
 Our engine maintains two separate octrees: one for static objects (walls,
 floors, stationary props) and another for dynamic objects (player, moving
 doors). The static tree only builds on level-load while the dynamic tree
-updates every frame. This reduces the cost of rebuilding..
+updates every frame. This reduces the cost of rebuilding.
 
 Game objects must manage their own colliders. They must register
 and unregister them with the state management system. This registration process
@@ -317,8 +332,18 @@ of overlap between the colliding objects. The system then implements minimum
 penetration axis selection by comparing overlaps in the X, Y, and Z directions
 and only applies that correction (separating axis theorem). Multiple
 simultaneous collisions are handled via a normalised sum. This could probably
-be better dealt with with a component-wise max. However, we decided to keep the
+be better dealt with by using a component-wise max. However, we decided to keep the
 current implementation as it was already working as intended.
+
+\subsection{Octtree, KD-Tree or BSP-Tree?}
+Octrees excel in 3D applications with uniform space subdivision like our grid
+based game, offering efficient spatial queries for regularly distributed data.
+Their main limitation is their rigid structure, i.e. always splitting into eight
+equal octants. This is unlike kd-trees which adapt splitting planes to data
+distribution or BSP-trees which allow arbitrary splitting. Avoid octrees for
+dimensions beyond 3D, highly skewed data distributions, or complex geometries
+where kd-trees (for irregular data) or BSP-trees (for arbitrary splitting
+planes) would perform better.
 
 \section{Benchmarking}\label{sec:benchmarking}
 To assess the performance and efficiency of our implementation, we conducted a
