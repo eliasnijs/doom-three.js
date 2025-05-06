@@ -68,13 +68,8 @@ async function main(renderer: WebGLRenderer) {
 
 	console.log('starting loop')
 	renderer.setAnimationLoop(time_ms => {
-		// Pass state and renderer
 		animate(time_ms, state, renderer)
 	})
-
-	// TODO(...): figure out where this needs to go and whether it is
-	// necessary in the first place.
-	// window_die(renderer);
 }
 
 const renderer = new WebGLRenderer()
