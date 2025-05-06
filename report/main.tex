@@ -203,7 +203,7 @@ The game also features immersive visual feedback during movement, with a weapon 
 \section{Rendering Components}
 
 \subsection{Lighting}
-The game uses a global ambient light for base illumination. Hallway light fixtures use diffuse materials to emit a soft glow, providing localized illumination without requiring expensive dynamic lighting calculations. Figure \ref{fig:lights} shows an example of these light fixtures in the game.
+The game uses a global ambient light for base illumination. Hallway light fixtures use diffuse materials to simulate lights, providing something that looks like a light, even in the reflections, without requiring expensive dynamic lighting calculations. Figure \ref{fig:lights} shows an example of these light fixtures in the game.
 
 \begin{figure}[h]
 \centering
@@ -246,6 +246,10 @@ Reflections in the scene are implemented via the pre-generated environment maps.
 \end{figure}
 
 By relying on cached, precomputed reflections, we avoid the high computational cost of real-time reflection techniques. Reflection sharpness and intensity are controlled through each material’s metalness and roughness settings. This component-based, cache-efficient strategy ensures consistent visual fidelity and optimized performance, even on lower-end systems.
+
+\subsection{Frustrum Culling}
+
+We use Three.js’s default frustum culling to improve performance by automatically skipping objects outside the camera’s view. This built-in feature checks each object’s bounding volume against the camera’s frustum and omits rendering if it’s not visible, reducing unnecessary GPU processing.
 
 \section{Collision Detection Using Octree}
 
