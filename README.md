@@ -1,8 +1,12 @@
+play it <a href="https://eliasnijs.com/projects/minidoom/index.html">here</a>.
+
 ![image](https://github.com/user-attachments/assets/d425c0be-ea2d-4c91-90fe-6640694e313e)
 
 
 # MiniDoom
 By Elias Nijs & René Van Der Schueren
+
+🎮 Play it [here](https://eliasnijs.com/projects/minidoom/index.html). 🎮
 
 ### Installation
 ```
